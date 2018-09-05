@@ -45,7 +45,7 @@ src/GPUrandom_streams.cu                       GPU version of the RandomStreams 
 ```
 
 ## Car Driving Example
-A car driving example (as described in out [RSS paper](http://motion.comp.nus.edu.sg/wp-content/uploads/2018/06/rss18hyp.pdf)) is provided in folder [src/HyP_examples](src/HyP_examples). The key files in this example are:
+A car driving example (as described in our [RSS paper](http://motion.comp.nus.edu.sg/wp-content/uploads/2018/06/rss18hyp.pdf)) is provided in folder [src/HyP_examples](src/HyP_examples). The key files in this example are:
 ```
 CarDriving/ped_pomdp.cpp                       CPU POMDP model of the car driving problem
 CarDriving/GPU_Car_Drive/GPU_Car_Drive.cu      GPU POMDP model of the car driving problem
@@ -61,7 +61,7 @@ Streams*.txt                                   Text files: Random streams for di
 draw_car_cross.py                              Script: to visualize the execution record output by HyP-DESPOT (through cout and cerr)
 run_Car_hyp_debug.sh                           Script: to run experiments with HyP-DESPOT
 ```
-The best way to perform debuging in HyP-DESPOT is to fix the scenarios and output the search process. This can be acheived by setting the **FIX_SCENARIO** flag defined in [GPUcore/thread_globals.h](src/HypDespot/include/despot/GPUcore/thread_globals.h). Possible vaues are:
+The best way to perform debuging is to fix the scenarios and output the search process. This can be acheived by setting the **FIX_SCENARIO** flag defined in [GPUcore/thread_globals.h](src/HypDespot/include/despot/GPUcore/thread_globals.h). Possible vaues are:
 ```
 0         Normal mode
 1         Read scenarios from Particles*.txt and Streams*.txt
