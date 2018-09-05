@@ -9,6 +9,8 @@
 #include"math_utils.h"
 #include"coord.h"
 
+#include <despot/solver/despot.h>
+
 using namespace std;
 
 
@@ -19,6 +21,8 @@ WorldModel::WorldModel(): freq(ModelParams::control_freq),
 
     InitPedGoals();
 
+	if (DESPOT::Debug_mode)
+		ModelParams::NOISE_GOAL_ANGLE = 0.000001;
 }
 
 void WorldModel::InitPedGoals(){
@@ -258,7 +262,7 @@ bool WorldModel::inCollision(const PomdpStateWorld& state, int &id) {
         if(::inCollision(pedpos.x, pedpos.y, car_pos.x, car_pos.y, forward_pos.x, forward_pos.y)) {
             id=state.peds[i].id;
 
-            cout << "[WorldModel::inCollision] car_pos: ("<< car_pos.x <<","<< car_pos.y<<"), forward_pos: ("
+            logd << "[WorldModel::inCollision] car_pos: ("<< car_pos.x <<","<< car_pos.y<<"), forward_pos: ("
             		<< forward_pos.x <<","<< forward_pos.y<<"), ped_pos: ("
             		<< pedpos.x <<","<< pedpos.y<<")\n";
             return true;
@@ -379,8 +383,9 @@ void WorldModel::PedStep(PedStruct &ped, double& random) {
 
 	//double noise = random.NextGaussian() * ModelParams::NOISE_GOAL_ANGLE;
 	double noise = sqrt(-2 * log(random));
-	if(FIX_SCENARIO!=1)
+	if(FIX_SCENARIO!=1 && !CPUDoPrint){
 		random=QuickRandom::RandGeneration(random);
+	}
 
 	noise *= cos(2 * M_PI * random)* ModelParams::NOISE_GOAL_ANGLE;
     a += noise;
@@ -555,7 +560,7 @@ void WorldModel::RobVelStep(CarStruct &car, double acc, Random& random) {
 void WorldModel::RobVelStep(CarStruct &car, double acc, double& random) {
     const double N = ModelParams::NOISE_ROBVEL;
     if (N>0) {
-    	if(FIX_SCENARIO!=1)
+    	if(FIX_SCENARIO!=1 && !CPUDoPrint)
     		random=QuickRandom::RandGeneration(random);
         double prob = random;
         if (prob > N) {
@@ -616,7 +621,7 @@ void WorldModel::updatePedBelief(PedBelief& b, const PedStruct& curr_ped) {
 
     // normalize
     double total_weight = accumulate(b.prob_goals.begin(), b.prob_goals.end(), double(0.0));
-	if(debug) cout << "total_weight = " << total_weight << endl;
+	if(debug) cout << "[updatePedBelief] total_weight = " << total_weight << endl;
     for(double& w : b.prob_goals) {
         w /= total_weight;
     }
@@ -661,7 +666,7 @@ void WorldStateTracker::cleanPed() {
     ped_list=ped_list_new;
 }
 
-void WorldStateTracker::updatePed(const Pedestrian& ped){
+void WorldStateTracker::updatePed(const Pedestrian& ped, bool doPrint){
     int i=0;
     for(;i<ped_list.size();i++) {
         if (ped_list[i].id==ped.id) {
@@ -669,16 +674,25 @@ void WorldStateTracker::updatePed(const Pedestrian& ped){
             ped_list[i].w=ped.w;
             ped_list[i].h=ped.h;
             ped_list[i].last_update = timestamp();
+            if (doPrint) cout <<"[updatePed] existing ped updated" << ped.id << endl;
             break;
         }
         if (abs(ped_list[i].w-ped.w)<=0.1 && abs(ped_list[i].h-ped.h)<=0.1)   //overlap
+        {
+        	if (doPrint) cout <<"[updatePed] overlapping ped skipped" << ped.id << endl;
             return;
+        }
     }
     if (i==ped_list.size()) {
         //not found, new ped
         ped_list.push_back(ped);
         ped_list.back().last_update = timestamp();
+        if (doPrint) cout <<"[updatePed] new ped added" << ped.id << endl;
     }
+}
+
+void WorldStateTracker::removePeds() {
+	ped_list.resize(0);
 }
 
 void WorldStateTracker::updateCar(const COORD& car, const double dist) {
@@ -702,14 +716,18 @@ void WorldStateTracker::updateVel(double vel) {
 	carvel = vel;
 }
 
-vector<WorldStateTracker::PedDistPair> WorldStateTracker::getSortedPeds() {
+vector<WorldStateTracker::PedDistPair> WorldStateTracker::getSortedPeds(bool doPrint) {
     // sort peds
     vector<PedDistPair> sorted_peds;
 
+    if(doPrint) cout << "[getSortedPeds] state tracker ped_list size " << ped_list.size() << endl;
     for(const auto& p: ped_list) {
         COORD cp(p.w, p.h);
         float dist = COORD::EuclideanDistance(cp, carpos);
         sorted_peds.push_back(PedDistPair(dist, p));
+
+		if(doPrint) cout << "[getSortedPeds] ped id:"<< p.id << endl;
+
     }
     sort(sorted_peds.begin(), sorted_peds.end(),
             [](const PedDistPair& a, const PedDistPair& b) -> bool {
@@ -763,6 +781,7 @@ void WorldBeliefTracker::update() {
     for(const auto& p: peds) {
         if (newpeds.find(p.first) == newpeds.end()) {
             peds_to_remove.push_back(p.first);
+            logi << "["<<__FUNCTION__<< "]" << " removing ped "<< p.first << endl;
         }
     }
     for(const auto& i: peds_to_remove) {
@@ -793,7 +812,7 @@ void WorldBeliefTracker::update() {
 }
 
 int PedBelief::sample_goal() const {
-    double r = double(rand()) / RAND_MAX;
+    double r = /*double(rand()) / RAND_MAX*/ Random::RANDOM.NextDouble();
     int i = 0;
     r -= prob_goals[i];
     while(r > 0) {
@@ -816,12 +835,12 @@ int PedBelief::maxlikely_goal() const {
 }
 
 void WorldBeliefTracker::printBelief() const {
-    return;
+    //return;
 	int num = 0;
     for(int i=0; i < sorted_beliefs.size() && i < ModelParams::N_PED_IN; i++) {
 		auto& p = sorted_beliefs[i];
 		if (COORD::EuclideanDistance(p.pos, model.path[car.pos]) < 10) {
-            cout << "ped belief " << num << ": ";
+            cout << "ped belief " << p.id << ": ";
             for (int g = 0; g < p.prob_goals.size(); g ++)
                 cout << " " << p.prob_goals[g];
             cout << endl;
@@ -849,6 +868,10 @@ PomdpState WorldBeliefTracker::sample() {
 }
 
 vector<PomdpState> WorldBeliefTracker::sample(int num) {
+
+	if(DESPOT::Debug_mode)
+		Random::RANDOM.seed(0);
+
     vector<PomdpState> particles;
     for(int i=0; i<num; i++) {
         particles.push_back(sample());
@@ -991,10 +1014,10 @@ void WorldModel::RVO2PedStep(PedStruct peds[], Random& random, int num_ped, CarS
 
 double GenerateGaussian(double rNum)
 {
-    if(FIX_SCENARIO!=1)
+    if(FIX_SCENARIO!=1 && !CPUDoPrint)
         rNum=QuickRandom::RandGeneration(rNum);
     double result = sqrt(-2 * log(rNum));
-    if(FIX_SCENARIO!=1)
+    if(FIX_SCENARIO!=1 && !CPUDoPrint)
         rNum=QuickRandom::RandGeneration(rNum);
 
     result*= cos(2 * M_PI * rNum);

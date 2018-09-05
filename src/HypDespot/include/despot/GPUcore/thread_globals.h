@@ -148,9 +148,11 @@ void Global_print_value(std::thread::id threadIdx, double value, char* msg);
 
 } // namespace despot
 
-#define FIX_SCENARIO 0
+/*================ Debugging ==================*/
+/* For printing debugging information in the search process of HP-DESPOT */
+#define FIX_SCENARIO 0 // 0: normal mode, 1: read scenarios and particles from files, 2: run and export scenarios and particles as files
 #define DoPrintCPU false
-#define PRINT_ID 195
+#define PRINT_ID 49
 #define ACTION_ID 0
 
 extern bool CPUDoPrint;
@@ -159,7 +161,8 @@ extern int CPUPrintPID;
 #ifdef __CUDACC__
 
 extern __device__ __managed__ bool GPUDoPrint;
-extern __device__ __managed__ int GPUPrintPID;
 
 #endif
+/*================ Debugging ==================*/
+
 #endif /* THREAD_GLOBALS_H_ */

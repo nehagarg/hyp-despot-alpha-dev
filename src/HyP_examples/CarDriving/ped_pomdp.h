@@ -96,7 +96,7 @@ public:
 	void Statistics(const std::vector<PomdpState*> particles) const;
 
 	void PrintState(const State& state, ostream& out = cout) const;
-	void PrintWorldState(const PomdpStateWorld state, ostream& out = cout) const;
+	void PrintWorldState(const PomdpStateWorld& state, ostream& out = cout) const;
 	void PrintObs(const State & state, uint64_t obs, ostream& out = cout) const;
 	void PrintAction(int action, ostream& out = cout) const;
 	void PrintBelief(const Belief& belief, ostream& out = cout) const;

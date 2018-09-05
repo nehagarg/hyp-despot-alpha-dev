@@ -17,7 +17,7 @@ public:
 	Random(unsigned seed);
 
 	unsigned seed();
-
+	void seed(unsigned);
 	unsigned NextUnsigned();
 	int NextInt(int n);
 	int NextInt(int min, int max);

@@ -11,15 +11,14 @@
 using namespace despot;
 static DSPOMDP* ped_pomdp_model;
 static SolverPrior* ped_pomdp_prior;
-
+static ACT_TYPE action = (ACT_TYPE)(-1);
+static OBS_TYPE obs =(OBS_TYPE)(-1);
 
 DSPOMDP* DrivingController::InitializeModel(option::Option* options) {
 	DSPOMDP* model = new PedPomdp();
 	static_cast<PedPomdp*>(model)->world_model=&Simulator::worldModel;
 
-
 	ped_pomdp_model= model;
-
 
 	return model;
 }
@@ -85,31 +84,25 @@ bool DrivingController::RunStep(Solver* solver, World* world, Logger* logger) {
 	double step_start_t = get_time_second();
 
 	double start_t = get_time_second();
-
-	// Sample new particles using belieftracker
-	static_cast<PedPomdpBelief*>(solver->belief())->ResampleParticles(static_cast<const PedPomdp*>(ped_pomdp_model));
-
-	ACT_TYPE action = solver->Search().action;
+	driving_simulator_->UpdateWorld();
 	double end_t = get_time_second();
-	double search_time = (end_t - start_t);
-	logi << "[RunStep] Time spent in " << typeid(*solver).name()
-			<< "::Search(): " << search_time << endl;
-
-	OBS_TYPE obs;
-	start_t = get_time_second();
-	bool terminal = world->ExecuteAction(action, obs);
-	end_t = get_time_second();
-	double execute_time = (end_t - start_t);
-	logi << "[RunStep] Time spent in ExecuteAction(): " << execute_time << endl;
+	double world_update_time = (end_t - start_t);
+	logi << "[RunStep] Time spent in UpdateWorld(): " << world_update_time << endl;
 
 	start_t = get_time_second();
 	solver->BeliefUpdate(action, obs);
 
-
-	///////////////////////// TODO : create and initialize prior_ for Controller /////////////////////////////
-	assert(ped_pomdp_prior->history().Size());
+	//assert(ped_pomdp_prior->history().Size());
 
 	const State* cur_state=world->GetCurrentState();
+
+	assert(cur_state);
+
+	if(DESPOT::Debug_mode){
+		/*cout << "Current simulator state before belief update: \n";
+		static_cast<PedPomdp*>(ped_pomdp_model)->PrintWorldState(static_cast<const PomdpStateWorld&>(*cur_state));*/
+	}
+
 	State* search_state =static_cast<const PedPomdp*>(ped_pomdp_model)->CopyForSearch(cur_state);//create a new state for search
 
 	static_cast<PedPomdpBelief*>(solver->belief())->DeepUpdate(
@@ -121,9 +114,30 @@ bool DrivingController::RunStep(Solver* solver, World* world, Logger* logger) {
 	ped_pomdp_prior->Add(action, cur_state);
 	ped_pomdp_prior->Add_in_search(-1, search_state);
 
+
 	end_t = get_time_second();
 	double update_time = (end_t - start_t);
 	logi << "[RunStep] Time spent in Update(): " << update_time << endl;
+	start_t = get_time_second();
+
+	// Sample new particles using belieftracker
+	static_cast<PedPomdpBelief*>(solver->belief())->ResampleParticles(static_cast<const PedPomdp*>(ped_pomdp_model));
+
+	action = solver->Search().action;
+	end_t = get_time_second();
+	double search_time = (end_t - start_t);
+	logi << "[RunStep] Time spent in " << typeid(*solver).name()
+			<< "::Search(): " << search_time << endl;
+
+	cout << "act= " << action << endl;
+
+	start_t = get_time_second();
+	bool terminal = world->ExecuteAction(action, obs);
+	end_t = get_time_second();
+	double execute_time = (end_t - start_t);
+	logi << "[RunStep] Time spent in ExecuteAction(): " << execute_time << endl;
+
+
 
 	return logger->SummarizeStep(step_++, round_, terminal, action, obs,
 			step_start_t);

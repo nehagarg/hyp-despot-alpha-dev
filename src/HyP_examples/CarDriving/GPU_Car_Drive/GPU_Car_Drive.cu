@@ -539,7 +539,7 @@ DEVICE bool Dvc_PedPomdp::Dvc_Step(Dvc_State& state, float rand_num, int action,
 	Dvc_PomdpState& pedpomdp_state = static_cast<Dvc_PomdpState&>(state);//copy contents, link cells to existing ones
 	__shared__ int iscollision[32];
 
-	if(FIX_SCENARIO==1)
+	if(FIX_SCENARIO==1 || GPUDoPrint)
 		if(GPUDoPrint && pedpomdp_state.scenario_id==PRINT_ID && blockIdx.x==ACTION_ID && threadIdx.y==0){
 			printf("(GPU) Before step: scenario=%d \n", pedpomdp_state.scenario_id);
 			printf("action= %d\n ",action);
@@ -677,7 +677,7 @@ DEVICE bool Dvc_PedPomdp::Dvc_Step(Dvc_State& state, float rand_num, int action,
 
 			const float N = Dvc_ModelParams::NOISE_ROBVEL;
 			if (N>0) {
-				if(FIX_SCENARIO!=1)
+				if(FIX_SCENARIO!=1 && !GPUDoPrint)
 					rand_num=Dvc_QuickRandom::RandGeneration(&Temp, rand_num);
 
 				float prob = rand_num;
@@ -701,11 +701,11 @@ DEVICE bool Dvc_PedPomdp::Dvc_Step(Dvc_State& state, float rand_num, int action,
 			int i=0;
 			while(i<threadIdx.y)
 			{
-				if(FIX_SCENARIO!=1)
+				if(FIX_SCENARIO!=1 && !GPUDoPrint)
 					rand_num=Dvc_QuickRandom::RandGeneration(&Temp, rand_num);
 				i++;
 			}
-			if(threadIdx.y!=0 && FIX_SCENARIO!=1)
+			if(threadIdx.y!=0 && FIX_SCENARIO!=1 && !GPUDoPrint)
 				rand_num=Dvc_QuickRandom::RandGeneration(&Temp, rand_num);
 
 			const Dvc_COORD& goal = goals[pedpomdp_state.peds[threadIdx.y].goal];
@@ -719,7 +719,7 @@ DEVICE bool Dvc_PedPomdp::Dvc_Step(Dvc_State& state, float rand_num, int action,
 				float a = goal_vec.GetAngle();
 				float noise = sqrt(-2 * log(rand_num));
 
-				if(FIX_SCENARIO!=1)
+				if(FIX_SCENARIO!=1 && !GPUDoPrint)
 					rand_num=Dvc_QuickRandom::RandGeneration(&Temp, rand_num);
 				noise *= cos(2 * M_PI * rand_num)* Dvc_ModelParams::NOISE_GOAL_ANGLE;
 				a += noise;

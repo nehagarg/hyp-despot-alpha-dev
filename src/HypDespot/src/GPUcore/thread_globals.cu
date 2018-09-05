@@ -2,13 +2,15 @@
 #include <despot/core/globals.h>
 #include <map>
 #include <ucontext.h>
+
+#include <despot/solver/despot.h>
 using namespace std;
+using namespace despot;
 
 __device__ __managed__ bool GPUDoPrint=false;
-__device__ __managed__ int GPUPrintPID=0; // not used
 
 bool CPUDoPrint = false;
-int CPUPrintPID = 195;
+int CPUPrintPID = 49;
 
 namespace despot {
 
@@ -286,7 +288,7 @@ template<typename T>
 void Global_print_node(std::thread::id threadIdx,void* node_address,int depth,float step_reward,
 		float value,float ub,float uub, float v_loss,float weight,T edge,float WEU, const char* msg)
 {
-	if(false || /*node_address ==NULL ||*/FIX_SCENARIO==1)
+	if(false || /*node_address ==NULL ||*/FIX_SCENARIO==1 || DESPOT::Print_nodes)
 	{
 		lock_guard<mutex> lck(global_mutex);
 		int threadID=MapThread(threadIdx);
@@ -295,7 +297,7 @@ void Global_print_node(std::thread::id threadIdx,void* node_address,int depth,fl
 			cout.precision(4);
 			if(weight!=0)
 			{
-				cout<<"thread "<<threadID<<" "<<msg<<" get old node "<<node_address<<" at depth "<<depth
+				cout<<"thread "<<threadID<<" "<<msg<<" get old node at depth "<<depth
 					<<": weight="<<weight<<", reward="<<step_reward/weight
 					<<", lb="<<value/weight<<", ub="<<ub/weight;
 
@@ -308,7 +310,7 @@ void Global_print_node(std::thread::id threadIdx,void* node_address,int depth,fl
 			}
 			else
 			{
-				cout<<"thread "<<threadID<<" "<<msg<<" get old node "<<node_address<<" at depth "<<depth
+				cout<<"thread "<<threadID<<" "<<msg<<" get old node at depth "<<depth
 					<<": weight="<<weight<<", reward="<<step_reward
 					<<", lb="<<value<<", ub="<<ub;
 				if(uub>-1000)
@@ -347,7 +349,7 @@ void Global_print_child(std::thread::id threadIdx,void* node_address,int depth, 
 }
 void Global_print_expand(std::thread::id threadIdx,void* node_address,int depth, int obs)
 {
-	if(FIX_SCENARIO==1)
+	if(FIX_SCENARIO==1 || DESPOT::Print_nodes)
 	{
 		lock_guard<mutex> lck(global_mutex);
 		int threadID=0;

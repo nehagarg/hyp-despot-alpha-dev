@@ -37,6 +37,11 @@ DEVICE Dvc_ValuedAction Dvc_DefaultPolicy::Value(Dvc_State* particles,
 	ACT_TYPE Action_decision=-1;
 	int terminal;
 
+	if(FIX_SCENARIO==1 || GPUDoPrint)
+		if(GPUDoPrint && particle->scenario_id==PRINT_ID && blockIdx.x==ACTION_ID && threadIdx.y==0){
+			printf("[GPU] start rollout\n");
+		}
+
 	for(depth=init_depth;(depth<MaxDepth && !streams.Exhausted());depth++)
 	{
 		if(threadIdx.y==0)

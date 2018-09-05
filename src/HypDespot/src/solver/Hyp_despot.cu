@@ -582,7 +582,134 @@ Update_and_Step_IntArrayObs(int total_num_scenarios, int num_particles, Dvc_Stat
 		}
 	}
 }
+__global__ void
+PreStep_IntObs(int num_particles, Dvc_State* vnode_particles,
+		const int num_obs_elements,
+		Dvc_RandomStreams* streams, int parent_action,
+		int Shared_mem_per_particle) {
 
+	if (blockIdx.y * blockDim.x + threadIdx.x < num_particles) {
+		__shared__ int Intobs[32*60];
+
+		int PID = (blockIdx.y * blockDim.x + threadIdx.x) % num_particles;
+		int obs_i = threadIdx.y;
+
+		/*Step the particles*/
+		Dvc_State* current_particle = NULL;
+
+		/*make a local copy of the particle in shared memory*/
+		if (obs_i == 0) {
+			DvcModelCopyToShared_(
+					(Dvc_State*) ((int*) localParticles + Shared_mem_per_particle * threadIdx.x),
+					vnode_particles, PID % num_particles, false);
+		}
+		current_particle = (Dvc_State*) ((int*) localParticles + Shared_mem_per_particle * threadIdx.x);
+		__syncthreads();
+
+		float reward = 0;
+		/*step the local particle, get obs and reward*/
+		if(parent_action>=0)
+		{
+			if(DvcModelStepIntObs_)
+			{
+				int terminal = DvcModelStepIntObs_(*current_particle, streams->Entry(current_particle->scenario_id, streams->position_-1),
+					parent_action, reward, Intobs+threadIdx.x*num_obs_elements);
+			}
+			else
+			{
+				printf("Undefined DvcModelStepIntObs_!\n");
+			}
+			__syncthreads();
+
+			if (blockIdx.y * blockDim.x + threadIdx.x < num_particles) {
+				/*Record stepped particles from parent as particles in this node*/
+				if (obs_i == 0 &&  blockIdx.x==0) {
+					Dvc_State* temp = DvcModelGet_(vnode_particles, PID % num_particles);
+					DvcModelCopyNoAlloc_(temp, current_particle,0, false);
+				}
+			}
+			__syncthreads();
+		}
+	}
+}
+
+
+
+__global__ void
+//__launch_bounds__(64, 16)
+Step_IntObs(int total_num_scenarios, int num_particles, Dvc_State* vnode_particles,
+		const int* vnode_particleIDs, float* step_reward_all_a,
+		int* observations_all_a_p,const int num_obs_elements,
+		Dvc_State* new_particles,
+		Dvc_RandomStreams* streams, bool* terminal_all_a_p,
+		int Shared_mem_per_particle) {
+
+	if (blockIdx.y * blockDim.x + threadIdx.x < num_particles) {
+		__shared__ int Intobs[32*60];
+
+		int action = blockIdx.x;
+		int PID = (blockIdx.y * blockDim.x + threadIdx.x) % num_particles;
+		int obs_i = threadIdx.y;
+
+		if (blockIdx.y == 0 && threadIdx.x == 0 && obs_i == 0)
+			step_reward_all_a[action] = 0;
+
+		/*Step the particles*/
+		Dvc_State* current_particle = NULL;
+
+		/*make a local copy of the particle in shared memory*/
+		if (obs_i == 0) {
+			DvcModelCopyToShared_(
+					(Dvc_State*) ((int*) localParticles + Shared_mem_per_particle * threadIdx.x),
+					vnode_particles, PID % num_particles, false);
+		}
+		current_particle = (Dvc_State*) ((int*) localParticles + Shared_mem_per_particle * threadIdx.x);
+		__syncthreads();
+
+		float reward=0;
+		int terminal=false;
+
+		if(FIX_SCENARIO==1 || GPUDoPrint)
+			if(GPUDoPrint && current_particle->scenario_id==PRINT_ID && blockIdx.x==ACTION_ID && threadIdx.y==0){
+				printf("[GPU] step particle \n");
+			}
+
+		if(DvcModelStepIntObs_)
+		{
+			terminal = DvcModelStepIntObs_(*current_particle, streams->Entry(current_particle->scenario_id),
+					action, reward, Intobs+threadIdx.x*num_obs_elements);
+		}
+		else
+		{
+			printf("Undefined DvcModelStepIntObs_!\n");
+		}
+
+		reward = reward * current_particle->weight;
+
+		int parent_PID = vnode_particleIDs[PID];
+		/*Record stepped particles*/
+		int global_list_pos = action * total_num_scenarios + parent_PID;
+
+		if (obs_i == 0) {
+			Dvc_State* temp = DvcModelGet_(new_particles, global_list_pos);
+			DvcModelCopyNoAlloc_(temp, current_particle, 0, false);
+
+			/*Record all observations for CPU usage*/
+			if (!terminal) {
+				for(int i=0;i<num_obs_elements;i++)
+					observations_all_a_p[global_list_pos*num_obs_elements+i] = Intobs[threadIdx.x*num_obs_elements+i];
+			} else {
+				observations_all_a_p[global_list_pos*num_obs_elements] = 0;//no content in obs list
+			}
+
+			/*Accumulate rewards of all particles from the v-node for CPU usage*/
+			atomicAdd(step_reward_all_a + action, reward);
+
+			if (obs_i == 0)
+				terminal_all_a_p[global_list_pos] = terminal;
+		}
+	}
+}
 
 /**
  * InitBounds kernel (Long observation type):
@@ -782,8 +909,8 @@ void DESPOT::PrepareGPUDataForNode(VNode* vnode,const DSPOMDP* model, int Thread
 void DESPOT::MCSimulation(VNode* vnode, int ThreadID,
 		const DSPOMDP* model, RandomStreams& streams,History& history, bool Do_rollout)
 {
-	if(FIX_SCENARIO==1 && vnode->parent()==NULL){
-		GPUDoPrint=true;GPUPrintPID=360;
+	if((FIX_SCENARIO==1 || DESPOT::Print_nodes) && vnode->parent()==NULL){
+		GPUDoPrint=true;
 	}
 #ifdef RECORD_TIME
 	auto start = Time::now();
@@ -832,32 +959,52 @@ void DESPOT::MCSimulation(VNode* vnode, int ThreadID,
 
 	if(Obs_type==OBS_INT_ARRAY)
 	{
-		if(GPUDoPrint){
+		if(GPUDoPrint || DESPOT::Print_nodes){
 			printf("pre-step particle %d\n", vnode->GetGPUparticles());
+			printf("do rollout = %d\n", Do_rollout);
 		}
 		int num_Obs_element=num_Obs_element_in_GPU;
-		if (Globals::config.use_multi_thread_)
-			Update_and_Step_IntArrayObs<<<GridDim, ThreadDim, threadx * Shared_mem_per_particle * sizeof(int),
-					Globals::GetThreadCUDAStream(ThreadID)>>>(Globals::config.num_scenarios,
-					NumParticles, vnode->GetGPUparticles(),
-					Dvc_particleIDs_long[ThreadID], Dvc_r_all_a[ThreadID],
-					Dvc_obs_int_all_a_and_p[ThreadID],num_Obs_element,
-					Dvc_stepped_particles_all_a[ThreadID],
+		if (Globals::config.use_multi_thread_){
+			PreStep_IntObs<<<dim3(1, GridDim.y), ThreadDim, threadx * Shared_mem_per_particle * sizeof(int),
+					Globals::GetThreadCUDAStream(ThreadID)>>>(
+					NumParticles,
+					vnode->GetGPUparticles(),
+					num_Obs_element,
 					Dvc_streams[ThreadID],
-					Dvc_term_all_a_and_p[ThreadID],
 					(vnode->parent()==NULL)?-1:vnode->parent()->edge(),
 					Shared_mem_per_particle);
-		else
-			Update_and_Step_IntArrayObs<<<GridDim, ThreadDim, threadx * Shared_mem_per_particle * sizeof(int)>>>(
-					Globals::config.num_scenarios, NumParticles,
+			if (Do_rollout)
+				Step_IntObs<<<GridDim, ThreadDim, threadx * Shared_mem_per_particle * sizeof(int),
+						Globals::GetThreadCUDAStream(ThreadID)>>>(Globals::config.num_scenarios,
+						NumParticles,
+						vnode->GetGPUparticles(),
+						Dvc_particleIDs_long[ThreadID], Dvc_r_all_a[ThreadID],
+						Dvc_obs_int_all_a_and_p[ThreadID],num_Obs_element,
+						Dvc_stepped_particles_all_a[ThreadID],
+						Dvc_streams[ThreadID],
+						Dvc_term_all_a_and_p[ThreadID],
+						Shared_mem_per_particle);
+		}
+		else{
+			PreStep_IntObs<<<dim3(1, GridDim.y), ThreadDim, threadx * Shared_mem_per_particle * sizeof(int)>>>
+					(NumParticles,
+					vnode->GetGPUparticles(),
+					num_Obs_element,
+					Dvc_streams[ThreadID],
+					(vnode->parent()==NULL)?-1:vnode->parent()->edge(),
+					Shared_mem_per_particle);
+			if (Do_rollout)
+				Step_IntObs<<<GridDim, ThreadDim, threadx * Shared_mem_per_particle * sizeof(int)>>>
+					(Globals::config.num_scenarios,
+					NumParticles,
 					vnode->GetGPUparticles(),
 					Dvc_particleIDs_long[ThreadID], Dvc_r_all_a[ThreadID],
 					Dvc_obs_int_all_a_and_p[ThreadID],num_Obs_element,
 					Dvc_stepped_particles_all_a[ThreadID],
 					Dvc_streams[ThreadID],
 					Dvc_term_all_a_and_p[ThreadID],
-					(vnode->parent()==NULL)?-1:vnode->parent()->edge(),
 					Shared_mem_per_particle);
+		}
 	}
 	else
 	{
@@ -867,15 +1014,15 @@ void DESPOT::MCSimulation(VNode* vnode, int ThreadID,
 					NumParticles, vnode->GetGPUparticles(),
 					Dvc_particleIDs_long[ThreadID], Dvc_streams[ThreadID],
 					(vnode->parent()==NULL)?-1:vnode->parent()->edge());
-
-			Step_LongObs<<<GridDim, ThreadDim, threadx * Shared_mem_per_particle * sizeof(int),
-					Globals::GetThreadCUDAStream(ThreadID)>>>(Globals::config.num_scenarios,
-					NumParticles, vnode->GetGPUparticles(),
-					Dvc_particleIDs_long[ThreadID], Dvc_r_all_a[ThreadID],
-					Dvc_obs_all_a_and_p[ThreadID],
-					Dvc_stepped_particles_all_a[ThreadID],
-					Dvc_streams[ThreadID],
-					Dvc_term_all_a_and_p[ThreadID]);
+			if (Do_rollout)
+				Step_LongObs<<<GridDim, ThreadDim, threadx * Shared_mem_per_particle * sizeof(int),
+						Globals::GetThreadCUDAStream(ThreadID)>>>(Globals::config.num_scenarios,
+						NumParticles, vnode->GetGPUparticles(),
+						Dvc_particleIDs_long[ThreadID], Dvc_r_all_a[ThreadID],
+						Dvc_obs_all_a_and_p[ThreadID],
+						Dvc_stepped_particles_all_a[ThreadID],
+						Dvc_streams[ThreadID],
+						Dvc_term_all_a_and_p[ThreadID]);
 		}
 		else{
 			PreStep_LongObs<<<dim3(1, GridDim.y), ThreadDim, threadx * Shared_mem_per_particle * sizeof(int)>>>
@@ -883,15 +1030,15 @@ void DESPOT::MCSimulation(VNode* vnode, int ThreadID,
 					NumParticles, vnode->GetGPUparticles(),
 					Dvc_particleIDs_long[ThreadID], Dvc_streams[ThreadID],
 					(vnode->parent()==NULL)?-1:vnode->parent()->edge());
-
-			Step_LongObs<<<GridDim, ThreadDim, threadx * Shared_mem_per_particle * sizeof(int)>>>
-					(Globals::config.num_scenarios,
-					NumParticles, vnode->GetGPUparticles(),
-					Dvc_particleIDs_long[ThreadID], Dvc_r_all_a[ThreadID],
-					Dvc_obs_all_a_and_p[ThreadID],
-					Dvc_stepped_particles_all_a[ThreadID],
-					Dvc_streams[ThreadID],
-					Dvc_term_all_a_and_p[ThreadID]);
+			if (Do_rollout)
+				Step_LongObs<<<GridDim, ThreadDim, threadx * Shared_mem_per_particle * sizeof(int)>>>
+						(Globals::config.num_scenarios,
+						NumParticles, vnode->GetGPUparticles(),
+						Dvc_particleIDs_long[ThreadID], Dvc_r_all_a[ThreadID],
+						Dvc_obs_all_a_and_p[ThreadID],
+						Dvc_stepped_particles_all_a[ThreadID],
+						Dvc_streams[ThreadID],
+						Dvc_term_all_a_and_p[ThreadID]);
 		}
 	}
 
@@ -911,9 +1058,11 @@ void DESPOT::MCSimulation(VNode* vnode, int ThreadID,
 		start = Time::now();
 	#endif
 
-
 		if(Obs_type==OBS_INT_ARRAY)
 		{
+			if(GPUDoPrint || DESPOT::Print_nodes){
+				printf("rollout particle %d\n", vnode->GetGPUparticles() );
+			}
 			if (Globals::config.use_multi_thread_)
 				_InitBounds_IntArrayObs<<<GridDim, ThreadDim, threadx * Shared_mem_per_particle * sizeof(int),
 						Globals::GetThreadCUDAStream(ThreadID)>>>(Globals::config.num_scenarios,
@@ -972,7 +1121,7 @@ void DESPOT::MCSimulation(VNode* vnode, int ThreadID,
 	#endif
 	}
 
-	if(FIX_SCENARIO==1 && vnode->parent()==NULL)
+	if((FIX_SCENARIO==1 || DESPOT::Print_nodes) && vnode->parent()==NULL)
 	{
 		HANDLE_ERROR(cudaDeviceSynchronize());
 		GPUDoPrint=false;
@@ -1092,7 +1241,7 @@ void DESPOT::GPU_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
 		lower_bound = (Hst_r_all_a[ThreadID][action]);
 		upper_bound = (Hst_r_all_a[ThreadID][action]);
 
-		bool DoPrint=true;
+		bool DoPrint= DESPOT::Print_nodes;
 		if (FIX_SCENARIO == 1 && DoPrint) {
 			cout.precision(10);
 			if(action==0) cout<<endl;
@@ -1170,7 +1319,7 @@ void DESPOT::GPU_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
 			init_bound_hst_t += Globals::ElapsedTime(start);
 #endif
 
-			if (FIX_SCENARIO == 1 && DoPrint) {
+			if (FIX_SCENARIO == 1 || DoPrint) {
 				cout.precision(10);
 				cout << " [GPU Vnode] New node's bounds: (d= "
 						<< child_vnode->depth() << " ,obs=" << obs << " , lb= "
@@ -1203,7 +1352,7 @@ void DESPOT::GPU_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
 		qnode->default_value = lower_bound; 
 
 		qnode->Weight();
-		if (FIX_SCENARIO == 1 && DoPrint) {
+		if (FIX_SCENARIO == 1 || DoPrint) {
 			cout.precision(10);
 			cout << " [GPU Qnode] New qnode's bounds: (d= " << vnode->depth() + 1
 					<< " ,action=" << action << ", lb= "

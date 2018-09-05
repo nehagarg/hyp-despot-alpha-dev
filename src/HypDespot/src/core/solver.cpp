@@ -67,12 +67,14 @@ Solver::~Solver() {
 void Solver::BeliefUpdate(ACT_TYPE action, OBS_TYPE obs) {
 	double start = get_time_second();
 
-	belief_->Update(action, obs);
-	history_.Add(action, obs);
+	if (action != (ACT_TYPE)(-1) && obs != (OBS_TYPE)(-1)){
+		belief_->Update(action, obs);
+		history_.Add(action, obs);
 
-	logi << "[Solver::Update] Updated belief, history and root with action "
-		<< action << ", observation " << obs
-		<< " in " << (get_time_second() - start) << "s" << endl;
+		logi << "[Solver::Update] Updated belief, history and root with action "
+			<< action << ", observation " << obs
+			<< " in " << (get_time_second() - start) << "s" << endl;
+	}
 }
 
 void Solver::belief(Belief* b) {

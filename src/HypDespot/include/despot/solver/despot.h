@@ -194,6 +194,7 @@ public:
 
 	static double Initial_root_gap;
 	static bool Debug_mode;
+	static bool Print_nodes;
 	/************** HyP-DESPOT ************/
 
 

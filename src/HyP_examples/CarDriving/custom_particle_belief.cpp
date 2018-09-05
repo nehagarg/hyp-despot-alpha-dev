@@ -83,12 +83,16 @@ Belief* PedPomdpBelief::MakeCopy() const{
 
 
 void UpdateState(const PomdpStateWorld* src_world_state, WorldModel& world_model){
-	stateTracker.updateCar(world_model.path[src_world_state->car.pos], src_world_state->car.dist_travelled);
 
+	stateTracker.removePeds();
+	stateTracker.updateCar(world_model.path[src_world_state->car.pos], src_world_state->car.dist_travelled);
+	stateTracker.updateVel(src_world_state->car.vel);
+
+	cout << "[UpdateState] \n";
 	//update the peds in stateTracker
 	for(int i=0; i<src_world_state->num; i++) {
 		Pedestrian p(src_world_state->peds[i].pos.x, src_world_state->peds[i].pos.y, src_world_state->peds[i].id);
-		stateTracker.updatePed(p);
+		stateTracker.updatePed(p, false); // true: print debug info
 	}
 }
 
@@ -153,7 +157,7 @@ bool PedPomdpBelief::DeepUpdate(const std::vector<const State*>& state_history,
 
 	//Sort pedestrians in the current state and update the current search state
 	UpdateState(cur_world_state, world_model_);
-	SortPeds(cur_state_search,cur_world_state);
+	//SortPeds(cur_state_search,cur_world_state);
 
 	for (int hi=0;hi< state_history.size(); hi++){
 	   const PomdpStateWorld* hist_state =
@@ -164,13 +168,20 @@ bool PedPomdpBelief::DeepUpdate(const std::vector<const State*>& state_history,
 	   ReorderPeds(hist_state_search, cur_state_search, hist_state);
 	}
 
+
 	//Update and reorder the belief distributions for peds
 	beliefTracker.update();
+
+	if (Globals::config.silence == false && DESPOT::Debug_mode)
+		beliefTracker.printBelief();
 }
 
 bool PedPomdpBelief::DeepUpdate(const State* cur_state){
+
+	if (cur_state == NULL)
+		return false;
+
 	//Update current belief
-	//const PomdpStateWorld* last_world_state = static_cast<const PomdpStateWorld*>(state_history.back());
 	const PomdpStateWorld* cur_world_state = static_cast<const PomdpStateWorld*>(cur_state);
 
 	//Sort pedestrians in the current state and update the current search state
@@ -178,12 +189,17 @@ bool PedPomdpBelief::DeepUpdate(const State* cur_state){
 
 	//Update and reorder the belief distributions for peds
 	beliefTracker.update();
+
+	return true;
 }
 
 void PedPomdpBelief::ResampleParticles(const PedPomdp* model){
-	vector<PomdpState> samples = beliefTracker.sample(2000);
+	vector<PomdpState> samples = beliefTracker.sample(max(2000,5*Globals::config.num_scenarios));
 
 	vector<State*> particles = model->ConstructParticles(samples);
+
+	if(DESPOT::Debug_mode)
+		std::srand(0);
 
 	particles_ = particles;
 

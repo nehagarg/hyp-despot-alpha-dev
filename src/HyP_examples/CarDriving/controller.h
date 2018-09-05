@@ -22,6 +22,4 @@ public:
 
 	SolverPrior* prior_;
 
-	DSPOMDP* model_;
-
 };

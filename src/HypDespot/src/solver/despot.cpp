@@ -22,7 +22,8 @@ namespace despot {
 bool DESPOT::use_GPU_;
 int DESPOT::num_Obs_element_in_GPU;
 double DESPOT::Initial_root_gap;
-bool DESPOT::Debug_mode = true;
+bool DESPOT::Debug_mode = false;
+bool DESPOT::Print_nodes = false;
 
 MemoryPool<QNode> DESPOT::qnode_pool_;
 MemoryPool<Shared_QNode> DESPOT::s_qnode_pool_;
@@ -107,7 +108,6 @@ VNode* DESPOT::Trial(VNode* root, RandomStreams& streams,
 			}
 
 			TreeExpansionTime += double(clock() - start) / CLOCKS_PER_SEC;
-			//model->Debug();
 		}
 
 		double start = clock();
@@ -116,7 +116,7 @@ VNode* DESPOT::Trial(VNode* root, RandomStreams& streams,
 		if (DoPrint || (FIX_SCENARIO == 1 && qstar))
 		{
 			cout.precision(4);
-			cout << "thread " << 0 << " " << " trace down to QNode" << " get old node " << qstar
+			cout << "thread " << 0 << " " << " trace down to QNode" << " get old node"
 			     << " at depth " << cur->depth() + 1
 			     << ": weight=" << qstar->Weight() << ", reward=" << qstar->step_reward / qstar->Weight()
 			     << ", lb=" << qstar->lower_bound() / qstar->Weight() <<
@@ -126,13 +126,13 @@ VNode* DESPOT::Trial(VNode* root, RandomStreams& streams,
 			     ", v_loss=" << 0;
 			cout << endl;
 		}
-		//model->Debug();
+
 		VNode* next = SelectBestWEUNode(qstar);
 
 		if (DoPrint || (FIX_SCENARIO == 1 && next))
 		{
 			cout.precision(4);
-			cout << "thread " << 0 << " " << " trace down to VNode" << " get old node " << next
+			cout << "thread " << 0 << " " << " trace down to VNode" << " get old node"
 			     << " at depth " << next->depth()
 			     << ": weight=" << next->Weight() << ", reward="
 			     << "--"
@@ -159,8 +159,6 @@ VNode* DESPOT::Trial(VNode* root, RandomStreams& streams,
 
 
 		weu = WEU(cur);
-		/*if(FIX_SCENARIO==1)//debugging
-			weu=1;*/
 
 	} while (cur->depth() < Globals::config.search_depth && weu > 0
 	         && !Globals::Timeout(Globals::config.time_per_move));
@@ -437,20 +435,8 @@ void DESPOT::ExpandTreeServer(RandomStreams streams,
 		num_trials++;
 
 		print_queue.send(root);
-		//if(used_time * (num_trials + 1.0) / num_trials < timeout
-		//		&& (node->upper_bound() - node->lower_bound()) > 1e-6)
-		//{
-		//node_queue.send(node);
-		//print_queue.send(node);
-		//}
-		//else
-		//{
-		//print_queue.WakeOneThread();//send nothing to the queues
-		//}
 
-		//node_queue.WakeOneThread();
-
-		if (DESPOT::Debug_mode && FIX_SCENARIO == 1)
+		if (DESPOT::Debug_mode || FIX_SCENARIO == 1)
 			if (num_trials == 10)
 				break;
 	} while (used_time * (num_trials + 1.0) / num_trials < timeout
@@ -617,13 +603,10 @@ VNode* DESPOT::ConstructTree(vector<State*>& particles, RandomStreams& streams,
 			num_trials++;
 			Globals::AddSerialTime(used_time);
 
-			if (DESPOT::Debug_mode && FIX_SCENARIO == 1)
+			if (DESPOT::Debug_mode || FIX_SCENARIO == 1)
 				if (num_trials == 10)
 					break;
 
-			//if(DESPOT::Debug_mode)
-			//	if(statistics->num_expanded_nodes>=400)
-			//		break;
 		} while (used_time * (num_trials + 1.0) / num_trials < timeout
 		         && !Globals::Timeout(Globals::config.time_per_move)
 		         && (root->upper_bound() - root->lower_bound()) > 1e-6);
@@ -723,7 +706,7 @@ ValuedAction DESPOT::Search() {
 		model_->PrintBelief(*belief_);
 	}
 	Num_searches++;
-	model_->PrintBelief(*belief_);	//added by panpan
+	//model_->PrintBelief(*belief_); // for debugging
 
 	if (Globals::config.time_per_move <= 0) // Return a random action if no time is allocated for planning
 		return ValuedAction(Random::RANDOM.NextInt(model_->NumActions()),
@@ -731,8 +714,9 @@ ValuedAction DESPOT::Search() {
 
 	double start = get_time_second();
 
-	if (Debug_mode)
+	if (Debug_mode){
 		step_counter++;
+	}
 
 	vector<State*> particles;
 	if (FIX_SCENARIO == 1) {
@@ -746,6 +730,8 @@ ValuedAction DESPOT::Search() {
 
 		logi << "[FIX_SCENARIO] particles read from file "<< particle_file << endl;
 	} else {
+		if(Debug_mode)
+			std::srand(0);
 		particles = belief_->Sample(Globals::config.num_scenarios);
 	}
 	logi << "[DESPOT::Search] Time for sampling " << particles.size()
@@ -783,15 +769,19 @@ ValuedAction DESPOT::Search() {
 		}
 	}
 
-	if (Globals::config.silence != true) {
+	if (Debug_mode)
 		model_->PrintParticles(particles);
+	else{
+		if (Globals::config.silence != true) {
+			model_->PrintParticles(particles);
+		}
 	}
 	statistics_ = Shared_SearchStatistics();
 
 	start = get_time_second();
 	static RandomStreams streams;
 
-	if (FIX_SCENARIO == 1) {
+	if (FIX_SCENARIO == 1 || Debug_mode) {
 		std::ifstream fin;
 		string stream_file = "Streams" + std::to_string(step_counter) + ".txt";
 
@@ -800,7 +790,7 @@ ValuedAction DESPOT::Search() {
 		                     Globals::config.search_depth);
 
 		fin.close();
-		logi << "[FIX_SCENARIO] random streams read from file "<< stream_file << endl;
+		cout << "[FIX_SCENARIO] random streams read from file "<< stream_file << endl;
 	} else {
 		streams = RandomStreams(Globals::config.num_scenarios,
 		                        Globals::config.search_depth);
@@ -823,7 +813,7 @@ ValuedAction DESPOT::Search() {
 			initialized = true;
 		}
 	} else {
-		if (FIX_SCENARIO == 1) {
+		if (FIX_SCENARIO == 1 || Debug_mode) {
 			std::ifstream fin;
 			string stream_file = "Streams" + std::to_string(step_counter) + ".txt";
 
@@ -1255,15 +1245,9 @@ VNode* DESPOT::SelectBestWEUNode(QNode* qnode) {
 	double weustar = Globals::NEG_INFTY;
 	VNode* vstar = NULL;
 	map<OBS_TYPE, VNode*>& children = qnode->children();
-	//OBS_TYPE obs_vstar=-1;//Panpan
 	for (map<OBS_TYPE, VNode*>::iterator it = children.begin();
 	        it != children.end(); it++) {
 		VNode* vnode = it->second;
-
-		/*if (vnode && Globals::config.use_multi_thread_ && Globals::config.exploration_mode==UCT)
-		{
-			CalExplorationValue(static_cast<Shared_VNode*>(vnode));
-		}*/
 
 		double weu;
 		if (Globals::config.use_multi_thread_)
@@ -1273,15 +1257,13 @@ VNode* DESPOT::SelectBestWEUNode(QNode* qnode) {
 		if (weu >= weustar) {
 			weustar = weu;
 			vstar = vnode->vstar;
-
-			//obs_vstar=it->first;//Panpan
 		}
 
 		if (FIX_SCENARIO == 1) {
-			if (/*vnode->IsLeaf()*/!Globals::config.use_multi_thread_)
+			if (!Globals::config.use_multi_thread_)
 			{
 				cout.precision(4);
-				cout << "thread " << 0 << " " << "   Compare children vnode" << " get old node " << vnode
+				cout << "thread " << 0 << " " << "   Compare children vnode" << " get old node"
 				     << " at depth " << vnode->depth()
 				     << ": weight=" << vnode->Weight() << ", reward=-"
 				     << ", lb=" << vnode->lower_bound() / vnode->Weight() <<
@@ -1342,48 +1324,9 @@ QNode* DESPOT::SelectBestUpperBoundNode(VNode* vnode) {
 			upperstar = qnode->upper_bound();
 			astar = action;
 		}
-		/*if(astar==action)
-		{
-			if(FIX_SCENARIO==1){
-				cout.precision(4);
-				cout<<"thread "<<0<<" "<<"   (Selected) compare children qnode"<<" get old node "<<qnode
-						<<" at depth "<<vnode->depth()+1
-						<<": weight="<<qnode->Weight()<<", reward="<<qnode->step_reward/qnode->Weight()
-						<<", lb="<<qnode->lower_bound()/qnode->Weight()<<
-						", ub="<<qnode->upper_bound()/qnode->Weight()<<
-						", uub="<<qnode->utility_upper_bound()/qnode->Weight()<<
-						", edge="<<qnode->edge()<<
-						", v_loss="<<0;
-				cout<<endl;
-			}
-		}
-		else
-		{
-			if(FIX_SCENARIO==1){
-
-				cout.precision(4);
-				cout<<"thread "<<0<<" "<<"   Compare children qnode"<<" get old node "<<qnode
-						<<" at depth "<<vnode->depth()+1
-						<<": weight="<<qnode->Weight()<<", reward="<<qnode->step_reward/qnode->Weight()
-						<<", lb="<<qnode->lower_bound()/qnode->Weight()<<
-						", ub="<<qnode->upper_bound()/qnode->Weight()<<
-						", uub="<<qnode->utility_upper_bound()/qnode->Weight()<<
-						", edge="<<qnode->edge()<<
-						", v_loss="<<0;
-				cout<<endl;
-			}
-		}*/
 	}
-	/*cout << " [Trace] Best child for Vnode (d= "
-		<< vnode->depth() << " ,num_children=" << vnode->children().size()
-		<< ", astar= "
-		<< astar
-		<< " ,max_upper= "
-		<< upperstar
-		<< " ,weight= "
-		<< vnode->Weight() << " )" << endl;*/
+
 	assert(astar >= 0);
-	//cout<<"trace action "<<astar<<endl;
 	return vnode->Child(astar);
 }
 
@@ -1599,7 +1542,7 @@ void DESPOT::Backup(VNode* vnode, bool real) {
 		} else
 		{
 			Update(vnode, real);
-			/*if(FIX_SCENARIO==1){
+			if(FIX_SCENARIO==1){
 				cout.precision(4);
 				cout<<"thread "<<0<<" "<<msg<<" get old node "<<vnode
 						<<" at depth "<<vnode->depth()
@@ -1610,7 +1553,7 @@ void DESPOT::Backup(VNode* vnode, bool real) {
 						", edge="<<vnode->edge()<<
 						", v_loss="<<0;
 				cout<<endl;
-			}*/
+			}
 		}
 
 		QNode* parentq = vnode->parent();
@@ -1636,7 +1579,7 @@ void DESPOT::Backup(VNode* vnode, bool real) {
 		} else
 		{
 			Update(parentq, real);
-			/*if(FIX_SCENARIO==1)
+			if(FIX_SCENARIO==1)
 			{
 				cout.precision(4);
 				cout<<"thread "<<0<<" "<<msg<<" get old node "<<parentq
@@ -1648,7 +1591,7 @@ void DESPOT::Backup(VNode* vnode, bool real) {
 						", edge="<<parentq->edge()<<
 						", v_loss="<<0;
 				cout<<endl;
-			}*/
+			}
 		}
 
 		logd << " Updated Q-node to (" << parentq->lower_bound() << ", "
@@ -1709,11 +1652,6 @@ void DESPOT::Expand(VNode* vnode, ScenarioLowerBound* lower_bound,
 	for (ACT_TYPE action = 0; action < model->NumActions(); action++) {
 		logd << " Action " << action << endl;
 
-		/*if(FIX_SCENARIO==1 && (vnode->depth()==PrintDepth ||vnode->depth()==PrintDepth-1) && !use_GPU_)
-		{
-			cout <<"Begin action "<< action<<" :"<<endl;
-		}*/
-
 		//Create new Q-nodes for each action
 		QNode* qnode;
 
@@ -1747,21 +1685,21 @@ void DESPOT::Expand(VNode* vnode, ScenarioLowerBound* lower_bound,
 }
 
 void DESPOT::EnableDebugInfo(QNode* qnode) {
-	if (FIX_SCENARIO == 1)
-		if (qnode->parent()->parent() == NULL && qnode->edge() == 0) {
+	if (FIX_SCENARIO == 1 || DESPOT::Print_nodes)
+		if (qnode->parent()->depth() == 1 && qnode->edge() == 0) {
 			CPUDoPrint = true;
 		}
 }
 
 void DESPOT::EnableDebugInfo(VNode* vnode, QNode* qnode) {
-	if (FIX_SCENARIO == 1)
-		if (vnode->edge() == 10056092121440029199 && qnode->edge() == 0) {
+	if (FIX_SCENARIO == 1 || DESPOT::Print_nodes)
+		if (vnode->edge() == /*16617342961956436967*/0 && qnode->edge() == 0) {
 			CPUDoPrint = true;
 		}
 }
 
 void DESPOT::DisableDebugInfo() {
-	if (FIX_SCENARIO == 1)
+	if (FIX_SCENARIO == 1 || DESPOT::Print_nodes)
 		if (CPUDoPrint)
 			CPUDoPrint = false;
 }
@@ -1820,12 +1758,12 @@ void DESPOT::Expand(QNode* qnode, ScenarioLowerBound* lb,
 	step_reward = Globals::Discount(parent->depth()) * step_reward
 	              - Globals::config.pruning_constant;	//pruning_constant is used for regularization
 
-	bool doPrint = false;
+	bool doPrint = DESPOT::Print_nodes;
 
 	if (FIX_SCENARIO == 1 || doPrint) {
 		cout.precision(10);
 		if (qnode->edge() == 0) cout << endl;
-		cout << /*"qnode with action " << qnode->edge() << */"step reward (d= " << parent->depth() + 1 << " ): "
+		cout << "step reward (d= " << parent->depth() + 1 << " ): "
 		     << step_reward / parent->Weight() << endl;
 	}
 
@@ -1870,7 +1808,7 @@ void DESPOT::Expand(QNode* qnode, ScenarioLowerBound* lb,
 		logd << " New node's bounds: (" << vnode->lower_bound() << ", "
 		     << vnode->upper_bound() << ")" << endl;
 
-		if (FIX_SCENARIO == 1 || doPrint/*||true*/) {
+		if (FIX_SCENARIO == 1 || doPrint) {
 			cout.precision(10);
 			cout << " [CPU Vnode] New node's bounds: (d= " << vnode->depth()
 			     << " ,obs=" << obs << " ,lb= "
@@ -1903,7 +1841,7 @@ void DESPOT::Expand(QNode* qnode, ScenarioLowerBound* lb,
 	qnode->utility_upper_bound(upper_bound + Globals::config.pruning_constant);
 	qnode->Weight();
 	qnode->default_value = lower_bound; // for debugging
-	if (FIX_SCENARIO == 1 || doPrint/*||true*/) {
+	if (FIX_SCENARIO == 1 || doPrint) {
 		cout.precision(10);
 		cout << " [CPU Qnode] New qnode's bounds: (d= " << parent->depth() + 1
 		     << " ,action=" << qnode->edge() << ", lb= "

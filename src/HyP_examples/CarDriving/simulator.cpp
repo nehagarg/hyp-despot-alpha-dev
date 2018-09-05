@@ -53,6 +53,7 @@ Simulator::Simulator(DSPOMDP* model, unsigned seed)/// set the path to be a stra
 	worldModel.setPath(path);
 	num_of_peds_world=0;
 	stateTracker=new WorldStateTracker(worldModel);
+	rand_ = new Random(Globals::config.root_seed);
 }
 
 Simulator::~Simulator()
@@ -73,7 +74,7 @@ State* Simulator::Initialize(){
 		if(DESPOT::Debug_mode)
 		{
 			ImportPeds("Peds.txt", world_state);
-			cout << "[FIX_SCENARIO] load pedestrians from "<< "Peds.txt" << endl;
+			cout << "[FIX_SCENARIO] load peds from "<< "Peds.txt" << endl;
 		}
 		else
 		{
@@ -86,7 +87,7 @@ State* Simulator::Initialize(){
 	else if(FIX_SCENARIO==1)
 	{
 		ImportPeds("Peds.txt", world_state);
-		cout << "[FIX_SCENARIO] load pedestrians from "<< "Peds.txt" << endl;
+		cout << "[FIX_SCENARIO] load peds from "<< "Peds.txt" << endl;
 	}
 	else if(FIX_SCENARIO==2)
 	{
@@ -104,43 +105,46 @@ State* Simulator::Initialize(){
 	int step = 0;
 	cout<<"LASER_RANGE= "<<ModelParams::LASER_RANGE<<endl;
 
-	stateTracker->updateCar(path[world_state.car.pos], world_state.car.dist_travelled);
+	/*stateTracker->updateCar(path[world_state.car.pos], world_state.car.dist_travelled);
 
 	//update the peds in stateTracker
 	for(int i=0; i<num_of_peds_world; i++) {
 		Pedestrian p(world_state.peds[i].pos.x, world_state.peds[i].pos.y, world_state.peds[i].id);
 		stateTracker->updatePed(p);
-	}
+	}*/
 }
 
 State* Simulator::GetCurrentState() const{
 	static PomdpStateWorld current_state;
 
+	//cout << "[GetCurrentState] current num peds in simulator: " << num_of_peds_world << endl;
+
+	std::vector<PedDistPair> sorted_peds = stateTracker->getSortedPeds();
+	if (sorted_peds.size() ==0){
+		return NULL;
+	}
+
 	current_state.car.pos = world_state.car.pos;
 	current_state.car.vel = world_state.car.vel;
 	current_state.car.dist_travelled = world_state.car.dist_travelled;
-	current_state.num = num_of_peds_world;
-	std::vector<PedDistPair> sorted_peds = stateTracker->getSortedPeds();
+	current_state.num = /*num_of_peds_world*/sorted_peds.size();
+
 
 	//update s.peds to the nearest n_peds peds
-	for(int i=0; i<num_of_peds_world; i++) {
-		//cout << sorted_peds[i].second.id << endl;
+	for(int i=0; i<current_state.num; i++) {
+		//cout << "[GetCurrentState] ped id:"<< sorted_peds[i].second.id << endl;
 		if(i<sorted_peds.size())
 			current_state.peds[i] = world_state.peds[sorted_peds[i].second.id];
 	}
 	return &current_state;
 }
 
-bool Simulator::ExecuteAction(ACT_TYPE action, OBS_TYPE& obs){
+void Simulator::UpdateWorld(){
 
-	if(FIX_SCENARIO==1){
-		cout << "[FIX_SCENARIO] act= " << action << endl;
-		action=0;
-		cout << "[FIX_SCENARIO] rewrite act to " << action << endl;
-	}
+	cout << "[Simulator::UpdateWorld] \n";
 
-	double reward;
 	stateTracker->updateCar(path[world_state.car.pos], world_state.car.dist_travelled);
+	stateTracker->updateVel(world_state.car.vel);
 
 	//update the peds in stateTracker
 	for(int i=0; i<num_of_peds_world; i++) {
@@ -151,7 +155,7 @@ bool Simulator::ExecuteAction(ACT_TYPE action, OBS_TYPE& obs){
 #ifdef CROSS_CASE
 	if(FIX_SCENARIO==0){
 		int new_ped_count=0;
-		while(new_ped_count<3 && numPedInCircle(world_state.peds, num_of_peds_world,path[world_state.car.pos].x, path[world_state.car.pos].y)<n_peds
+		while(new_ped_count<1 && numPedInCircle(world_state.peds, num_of_peds_world,path[world_state.car.pos].x, path[world_state.car.pos].y)<n_peds
 			&& num_of_peds_world < ModelParams::N_PED_WORLD)
 		{
 			PedStruct new_ped= randomFarPed(path[world_state.car.pos].x, path[world_state.car.pos].y);
@@ -172,6 +176,14 @@ bool Simulator::ExecuteAction(ACT_TYPE action, OBS_TYPE& obs){
 				<< endl;
 	}
 #endif
+
+	if(DESPOT::Debug_mode)
+		static_cast<PedPomdp*>(model_)->PrintWorldState(world_state);
+}
+
+
+bool Simulator::ExecuteAction(ACT_TYPE action, OBS_TYPE& obs){
+
 	if(worldModel.isGlobalGoal(world_state.car)) {
 		cout << "-------------------------------------------------------" << endl;
 		cout << "goal_reached=1" << endl;
@@ -185,16 +197,22 @@ bool Simulator::ExecuteAction(ACT_TYPE action, OBS_TYPE& obs){
 	}
 #ifdef LINE_CASE
 	else if(worldModel.inCollision(s,collision_peds_id)) {
-		//cout << "close=1: " << collision_peds_id<<endl;
 	}
 #elif defined(CROSS_CASE)
 	else if(worldModel.inCollision(world_state,collision_peds_id)) {
-		//cout << "close=1: " << collision_peds_id<<endl;
 	}
 #endif
 
+	if(FIX_SCENARIO==1){
+		cout << "[FIX_SCENARIO] act= " << action << endl;
+		action=0;
+		cout << "[FIX_SCENARIO] rewrite act to " << action << endl;
+	}
+
+	double reward;
+
 	bool terminate = static_cast<PedPomdp*>(model_)->Step(world_state,
-			Random::RANDOM.NextDouble(),
+			rand_->NextDouble(),
 			action, reward, obs);
 
 	obs=static_cast<PedPomdp*>(model_)->StateToIndex(GetCurrentState());
@@ -207,7 +225,13 @@ bool Simulator::ExecuteAction(ACT_TYPE action, OBS_TYPE& obs){
 	if(terminate) {
 		cout << "-------------------------------------------------------" << endl;
 		cout << "simulation terminate=1" << endl;
+
+		if(DESPOT::Debug_mode){
+			cout << "- final_state:\n";
+			static_cast<PedPomdp*>(model_)->PrintWorldState(static_cast<PomdpStateWorld&>(*GetCurrentState()), cout);
+		}
 		return true;
+
 	}
 	return false;
 }
@@ -278,15 +302,15 @@ void Simulator::ExportPeds(std::string filename, PomdpStateWorld& world_state){
 #ifdef LINE_CASE
 PedStruct Simulator::randomPed() {
 	int n_goals = worldModel.goals.size();
-	int goal = Random::RANDOM.NextInt(n_goals);
-	double x = Random::RANDOM.NextDouble(PED_X0, PED_X1);
-	double y = Random::RANDOM.NextDouble(PED_Y0, PED_Y1);
+	int goal = rand_->NextInt(n_goals);
+	double x = rand_->NextDouble(PED_X0, PED_X1);
+	double y = rand_->NextDouble(PED_Y0, PED_Y1);
 	if(goal == n_goals-1) {
 		// stop intention
 		while(path.mindist(COORD(x, y)) < 1.0) {
 			// dont spawn on the path
-			x = Random::RANDOM.NextDouble(PED_X0, PED_X1);
-			y = Random::RANDOM.NextDouble(PED_Y0, PED_Y1);
+			x = rand_->NextDouble(PED_X0, PED_X1);
+			y = rand_->NextDouble(PED_Y0, PED_Y1);
 		}
 	}
 	int id = 0;
@@ -302,39 +326,41 @@ PedStruct Simulator::randomPed() {
    double goal1_x_min = 6.5, goal1_x_max = 13.5;
    double goal1_y_min = /*-1*/-10, goal1_y_max = 4;
 
-   if(Random::RANDOM.NextInt(100)>95) goal=worldModel.goals.size() - 1; //setting stop intention with 5% probability.
-   else goal = Random::RANDOM.NextInt(worldModel.goals.size() - 1); //uniformly randomly select a goal from those that not is not stopping
+
+
+   if(rand_->NextInt(100)>95) goal=worldModel.goals.size() - 1; //setting stop intention with 5% probability.
+   else goal = rand_->NextInt(worldModel.goals.size() - 1); //uniformly randomly select a goal from those that not is not stopping
 
    double x;
    double y;
    double speed=ModelParams::PED_SPEED;
    if(goal == 0){
-	   x = Random::RANDOM.NextDouble(goal0_x_min, goal0_x_max);
-	   y = Random::RANDOM.NextDouble(goal0_y_min, goal0_y_max);
+	   x = rand_->NextDouble(goal0_x_min, goal0_x_max);
+	   y = rand_->NextDouble(goal0_y_min, goal0_y_max);
    }
    else if(goal == 1){
-	   x = Random::RANDOM.NextDouble(goal1_x_min, goal1_x_max);
-	   y = Random::RANDOM.NextDouble(goal1_y_min, goal1_y_max);
+	   x = rand_->NextDouble(goal1_x_min, goal1_x_max);
+	   y = rand_->NextDouble(goal1_y_min, goal1_y_max);
    }
    else{// stop intention
 	   speed=0;
-	   if(Random::RANDOM.NextInt(2)==0){
-		   x = Random::RANDOM.NextDouble(goal0_x_min, goal0_x_max);
-		   y = Random::RANDOM.NextDouble(goal0_y_min, goal0_y_max);
+	   if(rand_->NextInt(2)==0){
+		   x = rand_->NextDouble(goal0_x_min, goal0_x_max);
+		   y = rand_->NextDouble(goal0_y_min, goal0_y_max);
 	   }
 	   else{
-		   x = Random::RANDOM.NextDouble(goal1_x_min, goal1_x_max);
-		   y = Random::RANDOM.NextDouble(goal1_y_min, goal1_y_max);
+		   x = rand_->NextDouble(goal1_x_min, goal1_x_max);
+		   y = rand_->NextDouble(goal1_y_min, goal1_y_max);
 	   }
 	   while(path.mindist(COORD(x, y)) < 1.0) {
 		   // dont spawn on the path
-		   if(Random::RANDOM.NextInt(2)==0){
-			   x = Random::RANDOM.NextDouble(goal0_x_min, goal0_x_max);
-			   y = Random::RANDOM.NextDouble(goal0_y_min, goal0_y_max);
+		   if(rand_->NextInt(2)==0){
+			   x = rand_->NextDouble(goal0_x_min, goal0_x_max);
+			   y = rand_->NextDouble(goal0_y_min, goal0_y_max);
 		   }
 		   else{
-			   x = Random::RANDOM.NextDouble(goal1_x_min, goal1_x_max);
-			   y = Random::RANDOM.NextDouble(goal1_y_min, goal1_y_max);
+			   x = rand_->NextDouble(goal1_x_min, goal1_x_max);
+			   y = rand_->NextDouble(goal1_y_min, goal1_y_max);
 		   }
 	   }
    }
@@ -353,27 +379,29 @@ PedStruct Simulator::randomFarPed(double car_x, double car_y) { //generate pedes
     double x;
     double y;
 
-    if(Random::RANDOM.NextInt(2)==0){
+    cout << __FUNCTION__ << " rand seed = " << rand_->seed() << endl;
+
+    if(rand_->NextInt(2)==0){
         goal = 0;
-        x = Random::RANDOM.NextDouble(goal0_x_min, goal0_x_max);
-        y = Random::RANDOM.NextDouble(goal0_y_min, goal0_y_max);
+        x = rand_->NextDouble(goal0_x_min, goal0_x_max);
+        y = rand_->NextDouble(goal0_y_min, goal0_y_max);
     }
     else{
         goal = 1;
-        x = Random::RANDOM.NextDouble(goal1_x_min, goal1_x_max);
-        y = Random::RANDOM.NextDouble(goal1_y_min, goal1_y_max);
+        x = rand_->NextDouble(goal1_x_min, goal1_x_max);
+        y = rand_->NextDouble(goal1_y_min, goal1_y_max);
     }
 
     while(COORD::EuclideanDistance(COORD(car_x, car_y), COORD(x, y)) < 2.0) {
-        if(Random::RANDOM.NextInt(2)==0){
+        if(rand_->NextInt(2)==0){
             goal = 0;
-            x = Random::RANDOM.NextDouble(goal0_x_min, goal0_x_max);
-            y = Random::RANDOM.NextDouble(goal0_y_min, goal0_y_max);
+            x = rand_->NextDouble(goal0_x_min, goal0_x_max);
+            y = rand_->NextDouble(goal0_y_min, goal0_y_max);
         }
         else{
             goal = 1;
-            x = Random::RANDOM.NextDouble(goal1_x_min, goal1_x_max);
-            y = Random::RANDOM.NextDouble(goal1_y_min, goal1_y_max);
+            x = rand_->NextDouble(goal1_x_min, goal1_x_max);
+            y = rand_->NextDouble(goal1_y_min, goal1_y_max);
         }
     }
 

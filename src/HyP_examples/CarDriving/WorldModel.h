@@ -86,14 +86,15 @@ public:
 
     WorldStateTracker(WorldModel& _model): model(_model) {}
 
-    void updatePed(const Pedestrian& ped);
+    void updatePed(const Pedestrian& ped, bool doPrint = false);
     void updateCar(const COORD& car, const double dist=0);
     void updateVel(double vel);
     void cleanPed();
+    void removePeds();
 
     bool emergency();
 
-    std::vector<PedDistPair> getSortedPeds();
+    std::vector<PedDistPair> getSortedPeds(bool doPrint = false);
 
     PomdpState getPomdpState();
 

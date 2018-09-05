@@ -9,6 +9,9 @@
 
 #include "custom_particle_belief.h"
 
+#include <despot/solver/despot.h>
+
+
 static std::map<uint64_t, std::vector<int>> Obs_hash_table;
 static PomdpState hashed_state;
 
@@ -69,6 +72,7 @@ PedPomdp::PedPomdp(WorldModel &model_) :
 	random_(Random((unsigned) Seeds::Next()))
 {
 	use_rvo = false;
+
 }
 
 PedPomdp::PedPomdp() :
@@ -145,7 +149,7 @@ bool PedPomdp::Step(State& state_, double rNum, int action, double& reward, uint
 	PomdpState& state = static_cast<PomdpState&>(state_);
 	reward = 0.0;
 
-	if(FIX_SCENARIO==1){
+	if(FIX_SCENARIO==1 || DESPOT::Print_nodes){
 		if(CPUDoPrint && state_.scenario_id==CPUPrintPID){
 			printf("(CPU) Before step: scenario%d \n", state_.scenario_id);
 			printf("action= %d \n",action);
@@ -271,26 +275,20 @@ std::vector<std::vector<double>> PedPomdp::GetBeliefVector(const std::vector<Sta
 }
 
 Belief* PedPomdp::InitialBelief(const State* state, string type) const {
-	/*assert(false);
-	return NULL;*/
-	assert(state);
-	const PomdpStateWorld* world_state=static_cast<const PomdpStateWorld*>(state);
 
 	//Uniform initial distribution
 	std::vector<State*> empty; 
 
 	empty.resize(Globals::config.num_scenarios);
 	for (int i =0;i< empty.size();i++){
-
 		empty[i] = memory_pool_.Allocate();
-
 		empty[i]->SetAllocated();
 		empty[i]->weight = 1.0/empty.size();
 	}
 
-
 	PedPomdpBelief* belief=new PedPomdpBelief(empty , this);
 
+	const PomdpStateWorld* world_state=static_cast<const PomdpStateWorld*>(state);
 	belief->DeepUpdate(world_state);
 
 	return belief;
@@ -429,6 +427,9 @@ ScenarioUpperBound* PedPomdp::CreateScenarioUpperBound(string name,
 
 void PedPomdp::PrintState(const State& s, ostream& out) const {
 
+	if (DESPOT::Debug_mode)
+		return;
+
 	if (static_cast<const PomdpStateWorld*> (&s)!=NULL){
 		PrintWorldState(static_cast<const PomdpStateWorld&> (s), out);
 		return;
@@ -454,7 +455,7 @@ void PedPomdp::PrintState(const State& s, ostream& out) const {
 		min_dist = COORD::EuclideanDistance(carpos, state.peds[0].pos);
 	out << "MinDist: " << min_dist << endl;
 }
-void PedPomdp::PrintWorldState(const PomdpStateWorld state, ostream& out) const {
+void PedPomdp::PrintWorldState(const PomdpStateWorld& state, ostream& out) const {
 
 	out << "World state:\n";
 	COORD& carpos = world_model->path[state.car.pos];
@@ -507,7 +508,11 @@ void PedPomdp::PrintParticles(const vector<State*> particles, ostream& out) cons
 		return;
 	const PomdpState* pomdp_state = static_cast<const PomdpState*>(particles.at(0));
 
-	//PrintState(*pomdp_state);
+	if(DESPOT::Debug_mode){
+		DESPOT::Debug_mode = false;
+		PrintState(*pomdp_state);
+		DESPOT::Debug_mode = true;
+	}
 
 	for (int i = 0; i < particles.size(); i ++) {
 		//PomdpState* state = particles[i];
@@ -765,9 +770,12 @@ SolverPrior* PedPomdp::CreateSolverPrior(World* world, std::string name) const{
 	}
 
 	const State* init_state=world->GetCurrentState();
-	prior->Add(-1, init_state);
-	State* init_search_state_=CopyForSearch(init_state);//the state is used in search
-	prior->Add_in_search(-1, init_search_state_);
+
+	if (init_state != NULL){
+		prior->Add(-1, init_state);
+		State* init_search_state_=CopyForSearch(init_state);//the state is used in search
+		prior->Add_in_search(-1, init_search_state_);
+	}
 
 	return prior;
 }

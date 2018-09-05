@@ -23,6 +23,10 @@ unsigned Random::seed() {
 	return seed_;
 }
 
+void Random::seed(unsigned value) {
+	seed_ = value;
+}
+
 unsigned Random::NextUnsigned() {
 	return rand_r(&seed_);
 }

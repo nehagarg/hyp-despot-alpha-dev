@@ -36,6 +36,8 @@ public:
 
 	void PrintWorldState(PomdpStateWorld state, ostream& out = cout);
 
+	void UpdateWorld();
+
     COORD start, goal;
 
     Path path;
@@ -45,6 +47,7 @@ public:
 	PomdpStateWorld world_state;
 	int num_of_peds_world;
 
+	Random* rand_;
 
 public:
 
