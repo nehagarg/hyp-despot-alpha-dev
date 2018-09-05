@@ -1,6 +1,9 @@
 # HyP-DESPOT-Release
 
-The HyP-DESPOT package is developed based on [the DESPOT package](https://github.com/AdaCompNUS/despot). The algorithm was initially published in our RSS paper:
+The HyP-DESPOT package is developed based on [the DESPOT package](https://github.com/AdaCompNUS/despot). The API in HyP-DESPOT closely follows that in the DESPOT package. See [here](https://github.com/AdaCompNUS/despot/tree/API_redesign/doc) for a detailed documentations of the DESPOT package.
+
+The algorithm was initially published in our RSS paper:
+
 Cai, P., Luo, Y., Hsu, D. and Lee, W.S., 2018. HyP-DESPOT: A Hybrid Parallel Algorithm for Online Planning under Uncertainty. arXiv preprint arXiv:1802.06215.[(pdf)](http://motion.comp.nus.edu.sg/wp-content/uploads/2018/06/rss18hyp.pdf)
 
 ## Pre-requisites
