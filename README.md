@@ -1,4 +1,8 @@
 # HyP-DESPOT-Release
+
+The HyP-DESPOT package is developed based on [the DESPOT package](https://github.com/AdaCompNUS/despot). The algorithm was initially published in our RSS paper:
+Cai, P., Luo, Y., Hsu, D. and Lee, W.S., 2018. HyP-DESPOT: A Hybrid Parallel Algorithm for Online Planning under Uncertainty. arXiv preprint arXiv:1802.06215.[(pdf)](http://motion.comp.nus.edu.sg/wp-content/uploads/2018/06/rss18hyp.pdf)
+
 ## Pre-requisites
 ros
 catkin
@@ -37,7 +41,7 @@ src/GPUrandom_streams.cu                       GPU version of the RandomStreams 
 ```
 
 ## Car Driving Example
-A car driving example (as described in out RSS paper) is provided in folder [src/HyP_examples](src/HyP_examples). The key files in this example are:
+A car driving example (as described in out [RSS paper](http://motion.comp.nus.edu.sg/wp-content/uploads/2018/06/rss18hyp.pdf)) is provided in folder [src/HyP_examples](src/HyP_examples). The key files in this example are:
 ```
 CarDriving/ped_pomdp.cpp                       CPU POMDP model of the car driving problem
 CarDriving/GPU_Car_Drive/GPU_Car_Drive.cu      GPU POMDP model of the car driving problem
