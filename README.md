@@ -22,7 +22,7 @@ mv HyP-DESPOT-Release HyP_despot
 cd ~/catkin_ws
 catkin_make --pkg hyp_despot -DCMAKE_BUILD_TYPE=Release 
 ```
-## Main extensions in HyP-DESPOT from the DESPOT package
+## Main Extensions in HyP-DESPOT from the DESPOT Package
 The source files of the HyP-DESPOT solver is in folder [src/HypDespot](src/HypDespot). Main extensions in the folder from DESPOT includes:
 ```
 include/despot/GPUinterface/                   Header files: GPU extension of interface classes in DESPOT
@@ -35,11 +35,19 @@ src/solvers/Hyp_despot.cu                      Main file of the HyP-DESPOT solve
 src/Parallel_planner.cu                        Parallel extension of the planner class in DESPOT
 src/GPUrandom_streams.cu                       GPU version of the RandomStreams class in DESPOT
 ```
-## Debugging tools in HyP-DESPOT package
+## Debugging Tools in HyP-DESPOT Package
 The  [tools](tools) folder provides tools for debugging HyP-DESPOT, including:
 ```
 Particles*.txt                                 Text files: Particles for different simulation steps to be loaded and used to fix scenarios in HyP-DESPOT.
 Streams*.txt                                   Text files: Random streams for different simulation steps to be loaded and used to fix scenarios in HyP-DESPOT
 draw_car_cross.py                              Script: to visualize the execution record output by HyP-DESPOT (through cout and cerr)
 run_Car_hyp_debug.sh                           Script: to run experiments with HyP-DESPOT
+```
+## Car Driving Example
+A car driving example (as described in out RSS paper) is provided in folder [src/HyP_examples](src/HyP_examples). The key files in this example are:
+```
+CarDriving/ped_pomdp.cpp                       CPU POMDP model of the car driving problem
+CarDriving/GPU_Car_Drive/GPU_Car_Drive.cu      GPU POMDP model of the car driving problem
+CarDriving/simulator.cpp                       Custom World (simulator) of the problem
+CarDriving/controller.cpp                      The custom planner and the main function
 ```
