@@ -34,10 +34,10 @@ catkin_make --pkg hyp_despot -DCMAKE_BUILD_TYPE=Release
 The source files of the HyP-DESPOT solver is in folder [src/HypDespot](src/HypDespot). Main extensions in the folder from DESPOT includes:
 ```
 include/despot/GPUinterface/                   Header files: GPU extension of interface classes in DESPOT
-src/GPUinterface                               Source files: GPU extension of interface classes in DESPOT
 include/despot/GPUcore/                        Header files: GPU extension of core classes in DESPOT
-src/GPUcore                                    Source files: GPU extension of core classes in DESPOT
 include/despot/GPUutil/                        Header files: GPU extension of utility classes in DESPOT
+src/GPUinterface                               Source files: GPU extension of interface classes in DESPOT
+src/GPUcore                                    Source files: GPU extension of core classes in DESPOT
 src/GPUutil                                    Source files: GPU extension of utility classes in DESPOT
 src/solvers/Hyp_despot.cu                      Main file of the HyP-DESPOT solver
 src/Parallel_planner.cu                        Parallel extension of the planner class in DESPOT
