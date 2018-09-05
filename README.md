@@ -9,9 +9,9 @@ Cai, P., Luo, Y., Hsu, D. and Lee, W.S., 2018. HyP-DESPOT: A Hybrid Parallel Alg
 ## Getting Started
 
 ### Pre-requisites
-..*ros
-..*catkin
-..*cmake (version >=3.8)
+..* ros
+..* catkin
+..* cmake (version >=3.8)
 
 1. Create a catkin workspace:
 ```bash
