@@ -6,12 +6,13 @@ The algorithm was initially published in our RSS paper:
 
 Cai, P., Luo, Y., Hsu, D. and Lee, W.S., 2018. HyP-DESPOT: A Hybrid Parallel Algorithm for Online Planning under Uncertainty. arXiv preprint arXiv:1802.06215.[(pdf)](http://motion.comp.nus.edu.sg/wp-content/uploads/2018/06/rss18hyp.pdf)
 
-## Pre-requisites
-ros
-catkin
-cmake (version >=3.8)
-
 ## Getting Started
+
+### Pre-requisites
+..*ros
+..*catkin
+..*cmake (version >=3.8)
+
 1. Create a catkin workspace:
 ```bash
 source /opt/ros/kinetic/setup.bash
@@ -52,7 +53,7 @@ CarDriving/simulator.cpp                       Custom World (simulator) of the p
 CarDriving/controller.cpp                      The custom planner and the main function
 ```
 
-## Debugging Tools in HyP-DESPOT Package
+## (Optional) Debugging Tools in HyP-DESPOT Package
 The  [tools](tools) folder provides tools for debugging HyP-DESPOT, including:
 ```
 Particles*.txt                                 Text files: Particles for different simulation steps to be loaded and used to fix scenarios in HyP-DESPOT.
