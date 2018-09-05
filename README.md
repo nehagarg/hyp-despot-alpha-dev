@@ -4,7 +4,7 @@ The HyP-DESPOT package is developed based on [the DESPOT package](https://github
 
 The algorithm was initially published in our RSS paper:
 
-Cai, P., Luo, Y., Hsu, D. and Lee, W.S., 2018. HyP-DESPOT: A Hybrid Parallel Algorithm for Online Planning under Uncertainty. arXiv preprint arXiv:1802.06215.[(pdf)](http://motion.comp.nus.edu.sg/wp-content/uploads/2018/06/rss18hyp.pdf)
+Cai, P., Luo, Y., Hsu, D. and Lee, W.S., HyP-DESPOT: A Hybrid Parallel Algorithm for Online Planning under Uncertainty. Robotics: Science & System 2018. [(PDF)](http://motion.comp.nus.edu.sg/wp-content/uploads/2018/06/rss18hyp.pdf)
 
 ## Getting Started
 
