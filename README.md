@@ -9,23 +9,23 @@ Cai, P., Luo, Y., Hsu, D. and Lee, W.S., 2018. HyP-DESPOT: A Hybrid Parallel Alg
 ## Getting Started
 
 ### Pre-requisites
-..* ros
-..* catkin
-..* cmake (version >=3.8)
+* ros
+* catkin
+* cmake (version >=3.8)
 
-1. Create a catkin workspace:
+### Create a catkin workspace:
 ```bash
 source /opt/ros/kinetic/setup.bash
 mkdir -p ~/catkin_ws/src
 cd ~/catkin_ws/
 catkin_make
 ```
-2. Download HyP-DESPOT package:
+### Download HyP-DESPOT package:
 ```bash
 git clone https://github.com/AdaCompNUS/HyP-DESPOT-Release.git
 mv HyP-DESPOT-Release HyP_despot
 ```
-3. Compile HyP-DESPOT package:
+### Compile HyP-DESPOT package:
 ```bash
 cd ~/catkin_ws
 catkin_make --pkg hyp_despot -DCMAKE_BUILD_TYPE=Release 
