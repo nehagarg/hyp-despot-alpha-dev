@@ -1,6 +1,6 @@
 # HyP-DESPOT-Release
 
-The HyP-DESPOT package is developed based on [the DESPOT package](https://github.com/AdaCompNUS/despot). The API in HyP-DESPOT closely follows that in the DESPOT package. See [here](https://github.com/AdaCompNUS/despot/tree/API_redesign/doc) for a detailed documentations of the DESPOT package.
+The HyP-DESPOT package is developed based on [the DESPOT package](https://github.com/AdaCompNUS/despot). The API in HyP-DESPOT closely follows that in the DESPOT package. See [here](https://github.com/AdaCompNUS/despot/tree/API_redesign/doc) for detailed documentations of the DESPOT package.
 
 The algorithm was initially published in our RSS paper:
 
@@ -20,18 +20,18 @@ mkdir -p ~/catkin_ws/src
 cd ~/catkin_ws/
 catkin_make
 ```
-### Download HyP-DESPOT package:
+### Download the HyP-DESPOT package:
 ```bash
 git clone https://github.com/AdaCompNUS/HyP-DESPOT-Release.git
 mv HyP-DESPOT-Release HyP_despot
 ```
-### Compile HyP-DESPOT package:
+### Compile HyP-DESPOT and examples:
 ```bash
 cd ~/catkin_ws
 catkin_make --pkg hyp_despot -DCMAKE_BUILD_TYPE=Release 
 ```
 ## Main Extensions in HyP-DESPOT from the DESPOT Package
-The source files of the HyP-DESPOT solver is in folder [src/HypDespot](src/HypDespot). Main extensions from DESPOT includes:
+The source files of HyP-DESPOT and examples are in folder [src/HypDespot](src/HypDespot). Main extensions from DESPOT include:
 ```
 include/despot/GPUinterface/             Header files: GPU extension of interface classes in DESPOT
 include/despot/GPUcore/                  Header files: GPU extension of core classes in DESPOT
@@ -45,7 +45,7 @@ src/GPUrandom_streams.cu                 GPU version of the RandomStreams class 
 ```
 
 ## Car Driving Example
-A car driving example (as described in our [RSS paper](http://motion.comp.nus.edu.sg/wp-content/uploads/2018/06/rss18hyp.pdf)) is provided in folder [src/HyP_examples](src/HyP_examples). The key files in this example are:
+A car driving example (as presented in our [RSS paper](http://motion.comp.nus.edu.sg/wp-content/uploads/2018/06/rss18hyp.pdf)) is provided in folder [src/HyP_examples](src/HyP_examples). The key files in this example are:
 ```
 CarDriving/ped_pomdp.cpp                       CPU POMDP model of the car driving problem
 CarDriving/GPU_Car_Drive/GPU_Car_Drive.cu      GPU POMDP model of the car driving problem
@@ -61,7 +61,7 @@ Streams*.txt                             Text files: Random streams in scenarios
 draw_car_cross.py                        Script: to visualize the execution record output by HyP-DESPOT (through cout and cerr)
 run_Car_hyp_debug.sh                     Script: to run experiments with HyP-DESPOT
 ```
-The best way to debug is to fix the scenarios and output the search process. This can be acheived by setting the **FIX_SCENARIO** flag defined in [GPUcore/thread_globals.h](src/HypDespot/include/despot/GPUcore/thread_globals.h). Possible vaues are:
+The best way to debug is to fix the scenarios and output the search process. This can be acheived by setting the **FIX_SCENARIO** flag defined in [GPUcore/thread_globals.h](src/HypDespot/include/despot/GPUcore/thread_globals.h). Possible vaues to be set are:
 ```
 0         Normal mode
 1         Read scenarios from Particles*.txt and Streams*.txt
