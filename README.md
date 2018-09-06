@@ -10,7 +10,7 @@ Cai, P., Luo, Y., Hsu, D. and Lee, W.S., HyP-DESPOT: A Hybrid Parallel Algorithm
 
 ### Pre-requisites
 * ROS
-..* ROS enables HyP-DESPOT to bridge with external system 
+... ROS enables HyP-DESPOT to bridge with external system 
 * Catkin
 ..* Catkin is a compliation tool designed for ROS based on CMake.
 * Cmake 
