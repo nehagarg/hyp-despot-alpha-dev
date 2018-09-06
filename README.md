@@ -12,11 +12,11 @@ Cai, P., Luo, Y., Hsu, D. and Lee, W.S., HyP-DESPOT: A Hybrid Parallel Algorithm
 * ROS
   * ROS enables HyP-DESPOT to bridge with external system 
 * Catkin
-..* Catkin is a compliation tool designed for ROS based on CMake.
+  * Catkin is a compliation tool designed for ROS based on CMake.
 * Cmake 
-..* Version >=3.8 is required for CUDA integration
-* CUDA
-
+  * Version >=3.8 is required for CUDA integration
+* CUDA and an NVIDIA GPU with computational capacity >=3.0
+  
 ### 1. Create a catkin workspace:
 ```bash
 source /opt/ros/kinetic/setup.bash
