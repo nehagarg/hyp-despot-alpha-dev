@@ -26,6 +26,7 @@ catkin_make
 ```
 ### 2. Download the HyP-DESPOT package:
 ```bash
+cd ~/catkin_ws/src
 git clone https://github.com/AdaCompNUS/HyP-DESPOT-Release.git
 mv HyP-DESPOT-Release HyP_despot
 ```
