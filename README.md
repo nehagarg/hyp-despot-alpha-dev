@@ -67,4 +67,4 @@ The best way to debug is to fix the scenarios and output the search process. Thi
 1         Read scenarios from Particles*.txt and Streams*.txt
 2         Run in normal mode and export Particles*.txt and Streams*.txt during each simulation step
 ```
-Alternatively, setting the **DESPOT::Debug_mode** to be **true** will fix all random seeds used in HyP-DESPOT, and thus the search will be fully determinized for easier debugging.
+Alternatively, setting the **DESPOT::Debug_mode** defined in [despot.cpp](src/HypDespot/src/solver/despot.cpp) to be **true** will fix all random seeds used in HyP-DESPOT, and thus the search will be fully determinized for easier debugging.
