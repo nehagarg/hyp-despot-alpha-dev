@@ -13,19 +13,19 @@ Cai, P., Luo, Y., Hsu, D. and Lee, W.S., HyP-DESPOT: A Hybrid Parallel Algorithm
 * Catkin
 * Cmake (version >=3.8)
 
-### Create a catkin workspace:
+### 1. Create a catkin workspace:
 ```bash
 source /opt/ros/kinetic/setup.bash
 mkdir -p ~/catkin_ws/src
 cd ~/catkin_ws/
 catkin_make
 ```
-### Download the HyP-DESPOT package:
+### 2. Download the HyP-DESPOT package:
 ```bash
 git clone https://github.com/AdaCompNUS/HyP-DESPOT-Release.git
 mv HyP-DESPOT-Release HyP_despot
 ```
-### Compile HyP-DESPOT and examples:
+### 3. Compile HyP-DESPOT and examples:
 ```bash
 cd ~/catkin_ws
 catkin_make --pkg hyp_despot -DCMAKE_BUILD_TYPE=Release 
