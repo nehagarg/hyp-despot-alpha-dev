@@ -54,16 +54,17 @@ CarDriving/controller.cpp                      The custom planner and the main f
 ```
 
 ## (Optional) Debugging Tools in HyP-DESPOT Package
-The  [tools](tools) folder provides tools for debugging HyP-DESPOT, including:
+The  [tools](tools) folder provides tools for debugging HyP-DESPOT when implementing new problems, including:
 ```
 Particles*.txt                                 Text files: Particles for different simulation steps to be loaded and used to fix scenarios in HyP-DESPOT.
 Streams*.txt                                   Text files: Random streams for different simulation steps to be loaded and used to fix scenarios in HyP-DESPOT
 draw_car_cross.py                              Script: to visualize the execution record output by HyP-DESPOT (through cout and cerr)
 run_Car_hyp_debug.sh                           Script: to run experiments with HyP-DESPOT
 ```
-The best way to perform debuging is to fix the scenarios and output the search process. This can be acheived by setting the **FIX_SCENARIO** flag defined in [GPUcore/thread_globals.h](src/HypDespot/include/despot/GPUcore/thread_globals.h). Possible vaues are:
+The best way to debug is to fix the scenarios and output the search process. This can be acheived by setting the **FIX_SCENARIO** flag defined in [GPUcore/thread_globals.h](src/HypDespot/include/despot/GPUcore/thread_globals.h). Possible vaues are:
 ```
 0         Normal mode
 1         Read scenarios from Particles*.txt and Streams*.txt
 2         Run in normal mode and export Particles*.txt and Streams*.txt during each simulation step
 ```
+Alternatively, setting the **DESPOT::Debug_mode** to be **true** will fix all random seeds used in HyP-DESPOT, and thus the search will be fully determinized for easier debugging.
