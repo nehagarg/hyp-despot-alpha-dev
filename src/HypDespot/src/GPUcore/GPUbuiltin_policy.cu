@@ -18,7 +18,7 @@ DEVICE double* DvcRandomPolicy_action_probs_ = NULL;
  * =============================================================================*/
 
 DEVICE Dvc_ValuedAction Dvc_DefaultPolicy::Value(Dvc_State* particles,
-	Dvc_RandomStreams& streams, Dvc_History& Local_history) {
+	Dvc_RandomStreams& streams, Dvc_History& Local_history, int dummy_startnode) {
 
 	Dvc_State* particle = particles;
 	int scenarioID=particle->scenario_id;

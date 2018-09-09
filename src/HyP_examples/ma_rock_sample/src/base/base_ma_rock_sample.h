@@ -17,6 +17,7 @@
 #define OBS_BIT_MASK ((1 << MAX_OBS_BIT)-1)
 #define MAX_NUM_AGENTS 3
 
+
 namespace despot {
 //#define POLICY_GRAPH_SIZE 1000
 /* =============================================================================
@@ -206,32 +207,30 @@ public:
 	State* ImportState(std::istream& in) const;
 	void ImportStateList(std::vector<State*>& particles, std::istream& in) const;
 
-	virtual Dvc_State* AllocGPUParticles(int numParticles,int alloc_mode) const;
-	virtual void CopyGPUParticles(Dvc_State* des,Dvc_State* src,int src_offset,int* IDs,
+	virtual Dvc_State* AllocGPUParticles(int numParticles, MEMORY_MODE mode, Dvc_State*** particles_for_all_actions) const;
+	virtual void CopyGPUParticlesFromParent(Dvc_State* des,Dvc_State* src,int src_offset,int* IDs,
 			int num_particles,bool interleave,
 			Dvc_RandomStreams* streams, int stream_pos,
 			void* CUDAstream=NULL, int shift=0) const;
-	virtual void CopyGPUWeight1(void* cudaStream, int shift=0) const;
-	virtual float CopyGPUWeight2(void* cudaStream, int shift=0) const;
-	virtual void DeleteGPUParticles( int num_particles) const;
-	virtual void DeleteGPUParticles(Dvc_State* particles, int num_particles) const;
-	virtual Dvc_State* GetGPUParticles() const;
 
-	virtual Dvc_State* CopyToGPU(const std::vector<State*>& particles , bool copy_cells) const;
-	virtual void CopyToGPU(const std::vector<int>& particleIDs,int* Dvc_ptr, void* CUDAstream=NULL) const;
+	virtual void DeleteGPUParticles(MEMORY_MODE mode, Dvc_State** particles_for_all_actions) const;
 
-	virtual void ReadBackToCPU(std::vector<State*>& particles ,
+	virtual Dvc_State* CopyParticlesToGPU(Dvc_State* dvc_particles, const std::vector<State*>& particles , bool copy_cells) const;
+	virtual void CopyParticleIDsToGPU(int* Dvc_ptr, const std::vector<int>& particleIDs,void* CUDAstream=NULL) const;
+
+	virtual void ReadParticlesBackToCPU(std::vector<State*>& particles ,
 			const Dvc_State* dvc_particles,
-			bool deepcopy) const;
-	virtual void CreateMemoryPool(int mode) const;
-	virtual void DestroyMemoryPool(int mode) const;
+			bool copycells) const;
+	virtual void CreateMemoryPool() const;
+	virtual void DestroyMemoryPool(MEMORY_MODE mode) const;
 
-	virtual void DebugGPUParticles(Dvc_State* particles, const std::vector<int>& particleIDs) const ;
-	virtual void DebugGPUParticleList(Dvc_State* dvc_particles, int listlength, char* msg) const ;
 	virtual void PrintParticles(const std::vector<State*> particles, std::ostream& out = std::cout) const;
 
 };
-
+class PolicyGraph;
+extern PolicyGraph* policy_graph;
 } // namespace despot
+
+
 
 #endif

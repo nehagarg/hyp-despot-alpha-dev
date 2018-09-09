@@ -1,9 +1,16 @@
 #include "base_ma_rock_sample.h"
 #include <bitset>
 #include <despot/solver/despot.h>//debugging
+#include <despot/core/particle_belief.h>
+#include <despot/core/builtin_upper_bounds.h>
+#include <despot/core/builtin_lower_bounds.h>
+#include <despot/core/builtin_policy.h>
+#include <despot/core/builtin_policygraph.h>
+
 using namespace std;
 
 namespace despot {
+PolicyGraph* policy_graph= NULL;
 
 /* ==============================================================================
  * MARockSampleState class
@@ -759,6 +766,13 @@ public:
 			}
 		}
 
+
+		/*if(FIX_SCENARIO==1 && CPUDoPrint){
+			cout <<"particle id "<<state.scenario_id<<" state_id "<< state.state_id
+					 <<" joint_pos "<< rockstate.joint_pos<<endl;
+			cout<<"particle id "<<state.scenario_id<<" ub "
+					<<value*state.weight<<endl;
+		}*/
 		return value;
 	}
 };
@@ -805,7 +819,9 @@ public:
 				* Globals::Discount(grid_.xsize() - rs_model_->GetX(rockstate, rid) - 1);
 			}
 		}
-
+		/*if(FIX_SCENARIO==1 && CPUDoPrint){
+			cout<<"particle id "<<rockstate->scenario_id<<" lb "<<value/particles.size()<<endl;
+		}*/
 		return ValuedAction(Compass::EAST*rs_model_->RobNumAction()+Compass::EAST,value);
 	}
 };
@@ -816,7 +832,6 @@ ScenarioLowerBound* BaseMultiAgentRockSample::CreateScenarioLowerBound(string na
 	if (name == "TRIVIAL") {
 		return new TrivialParticleLowerBound(this);
 	} else if ( name == "DEFAULT" ||name == "EAST") {
-		// scenario_lower_bound_ = new BlindPolicy(this, Compass::EAST);
 		cout<<"Blind east rollout"<<endl;
 		Globals::config.rollout_type="BLIND";
 		return new MARockSampleEastScenarioLowerBound(this);
@@ -825,16 +840,7 @@ ScenarioLowerBound* BaseMultiAgentRockSample::CreateScenarioLowerBound(string na
 		Globals::config.rollout_type="INDEPENDENT";
 		return new RandomPolicy(this,
 			CreateParticleLowerBound(particle_bound_name));
-	}else if (name == "RANDOM_GRAPH") {
-		cout<<"Policy graph rollout"<<endl;
-		RandomPolicyGraph* tmp=new RandomPolicyGraph(this,
-				CreateParticleLowerBound(particle_bound_name));
-		tmp->ConstructGraph(POLICY_GRAPH_SIZE, NumObservations());
-		tmp->SetEntry(0);
-		Globals::config.rollout_type="GRAPH";
-		return tmp;
 	} else if (name == "MODE") {
-		// scenario_lower_bound_ = new ModeStatePolicy(this);
 		return NULL; // TODO
 	} else {
 		cerr << "Unsupported lower bound algorithm: " << name << endl;

@@ -323,7 +323,7 @@ Dvc_State* PedPomdp::AllocGPUParticles(int numParticles, MEMORY_MODE mode, Dvc_S
 
 		if(particles_for_all_actions[0] == NULL){
 			particles_for_all_actions[0]=new Dvc_State*[num_threads];
-			//Allocate pedestrian memory seperately
+			//Allocate pedestrian memory separately
 			Dvc_PedStruct*  peds_tmp=gpu_ped_pool_->Allocate((NumActions()*num_threads)*numParticles*ModelParams::N_PED_IN);
 
 			for(int i=0;i<num_threads;i++)
@@ -467,7 +467,6 @@ void PedPomdp::CopyParticleIDsToGPU( int* Dvc_ptr, const std::vector<int>& parti
 		logd << "Dvc_ptr = "<< Dvc_ptr << " particleIDs.size() = " << particleIDs.size()<< " cudaStream = "<< cudaStream<< endl;
 		HANDLE_ERROR(cudaMemcpy(Dvc_ptr,particleIDs.data(),particleIDs.size()*sizeof(int), cudaMemcpyHostToDevice));
 	}
-	//return Dvc_particleIDs;
 }
 
 

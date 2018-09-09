@@ -14,7 +14,7 @@ namespace despot {
  * RockSample class
  * =============================================================================*/
 
-class Dvc_MultiAgentRockSample: public Dvc_DSPOMDP {
+class Dvc_MultiAgentRockSample {
 public:
 	enum { // FRAGILE: Don't change!
 			E_BAD = 0,
@@ -41,9 +41,8 @@ public:
 	DEVICE static Dvc_ValuedAction Dvc_GetBestAction() {
 		return Dvc_ValuedAction(E_SAMPLE+1, 0);
 	}
-	DEVICE static float Dvc_GetMaxReward(){
-		return 10;
-	}
+	DEVICE static float Dvc_GetMaxReward() {return 10;}
+
 	DEVICE static Dvc_State* Dvc_Get(Dvc_State* particles, int pos);
 	DEVICE static void Dvc_Copy_NoAlloc(Dvc_State* des, const Dvc_State* src, int pos, bool offset_des=true);
 

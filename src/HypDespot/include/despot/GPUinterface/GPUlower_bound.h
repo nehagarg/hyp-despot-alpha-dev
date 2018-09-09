@@ -112,7 +112,7 @@ public:
 	//static DvcParticleLowerBound_ValuePtr DvcParticleLowerBound_Value_;
 };
 
-DEVICE extern Dvc_ValuedAction (*DvcLowerBoundValue_)( Dvc_State *, Dvc_RandomStreams&, Dvc_History&);
+DEVICE extern Dvc_ValuedAction (*DvcLowerBoundValue_)( Dvc_State *, Dvc_RandomStreams&, Dvc_History&, int);
 DEVICE extern Dvc_ValuedAction (*DvcParticleLowerBound_Value_) (int, Dvc_State *);
 
 } // namespace despot

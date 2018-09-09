@@ -7,6 +7,7 @@
 #include <despot/GPUinterface/GPUupper_bound.h>
 #include <despot/GPUinterface/GPUlower_bound.h>
 #include <despot/GPUinterface/GPUdefault_policy.h>
+#include <despot/GPUinterface/GPUpolicy_graph.h>
 
 #include <despot/planner.h>
 #include <string.h>
@@ -765,8 +766,15 @@ _InitBounds_LongObs(int total_num_scenarios, int num_particles,
 	}
 
 	local_streams.position(depth);
-	Dvc_ValuedAction local_lower = DvcLowerBoundValue_( current_particle, local_streams,
-				local_history);
+	Dvc_ValuedAction local_lower;
+
+	if(DvcChooseEdge_)
+		local_lower = DvcLowerBoundValue_( current_particle, local_streams,
+				local_history, DvcChooseEdge_(action,observations_all_a_p[global_list_pos]));
+	else
+		local_lower = DvcLowerBoundValue_( current_particle, local_streams,
+				local_history, 0);
+
 	local_lower.value *= Dvc_Globals::Dvc_Discount(Dvc_config, depth);
 	local_streams.position(depth);
 
@@ -792,7 +800,7 @@ __global__ void
 _InitBounds_IntArrayObs(int total_num_scenarios, int num_particles,
 		Dvc_State* new_particles, const int* vnode_particleIDs,
 		float* upper_all_a_p, float* utility_upper_all_a_p,
-		Dvc_ValuedAction* default_move_all_a_p,
+		Dvc_ValuedAction* default_move_all_a_p, OBS_TYPE* observations_all_a_p,
 		Dvc_RandomStreams* streams, Dvc_History* history, int depth,
 		int hist_size,int Shared_mem_per_particle) {
 
@@ -838,8 +846,14 @@ _InitBounds_IntArrayObs(int total_num_scenarios, int num_particles,
 
 		//Lower bound
 		local_streams.position(depth);
-		Dvc_ValuedAction local_lower = DvcLowerBoundValue_( current_particle, local_streams,
-					local_history);
+		Dvc_ValuedAction local_lower;
+		if(DvcChooseEdge_)
+			local_lower = DvcLowerBoundValue_( current_particle, local_streams,
+					local_history, DvcChooseEdge_(action,observations_all_a_p[global_list_pos]));
+		else
+			local_lower = DvcLowerBoundValue_( current_particle, local_streams,
+					local_history, 0);
+
 		local_lower.value *= Dvc_Globals::Dvc_Discount(Dvc_config, depth);
 		local_streams.position(depth);
 
@@ -1069,7 +1083,7 @@ void DESPOT::MCSimulation(VNode* vnode, int ThreadID,
 						NumParticles, Dvc_stepped_particles_all_a[ThreadID],
 						Dvc_particleIDs_long[ThreadID], Dvc_ub_all_a_p[ThreadID],
 						Dvc_uub_all_a_p[ThreadID], Dvc_lb_all_a_p[ThreadID],
-						 Dvc_streams[ThreadID],
+						Dvc_obs_all_a_and_p[ThreadID], Dvc_streams[ThreadID],
 						Dvc_history[ThreadID], vnode->depth() + 1,
 						history.Size() + 1,Shared_mem_per_particle);
 			else
@@ -1078,7 +1092,7 @@ void DESPOT::MCSimulation(VNode* vnode, int ThreadID,
 						Dvc_stepped_particles_all_a[ThreadID],
 						Dvc_particleIDs_long[ThreadID], Dvc_ub_all_a_p[ThreadID],
 						Dvc_uub_all_a_p[ThreadID], Dvc_lb_all_a_p[ThreadID],
-						Dvc_streams[ThreadID],
+						Dvc_obs_all_a_and_p[ThreadID],Dvc_streams[ThreadID],
 						Dvc_history[ThreadID], vnode->depth() + 1,
 						history.Size() + 1,Shared_mem_per_particle);
 		}
@@ -1452,7 +1466,7 @@ void DESPOT::GPU_InitBounds(VNode* vnode, ScenarioLowerBound* lower_bound,
 					NumParticles, vnode->GetGPUparticles(),
 					Dvc_particleIDs_long[ThreadID], Dvc_ub_all_a_p[ThreadID],
 					Dvc_uub_all_a_p[ThreadID], Dvc_lb_all_a_p[ThreadID],
-					 Dvc_streams[ThreadID],
+					Dvc_obs_all_a_and_p[ThreadID], Dvc_streams[ThreadID],
 					Dvc_history[ThreadID], vnode->depth(),
 					history.Size(),Shared_mem_per_particle);
 		else
@@ -1461,7 +1475,7 @@ void DESPOT::GPU_InitBounds(VNode* vnode, ScenarioLowerBound* lower_bound,
 					vnode->GetGPUparticles(),
 					Dvc_particleIDs_long[ThreadID], Dvc_ub_all_a_p[ThreadID],
 					Dvc_uub_all_a_p[ThreadID], Dvc_lb_all_a_p[ThreadID],
-					Dvc_streams[ThreadID],
+					Dvc_obs_all_a_and_p[ThreadID], Dvc_streams[ThreadID],
 					Dvc_history[ThreadID], 
 					vnode->depth(),
 					history.Size(),Shared_mem_per_particle);

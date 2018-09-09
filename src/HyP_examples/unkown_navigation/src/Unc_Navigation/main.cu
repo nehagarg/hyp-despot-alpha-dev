@@ -1,13 +1,22 @@
-/*#include <despot/simple_tui.h>
-#include <despot/solver/GPUdespot.h>
+#include <despot/planner.h>
+#include <despot/solver/Hyp_despot.h>
 #include <despot/util/optionparser.h>
 #include <stdlib.h>
-#include <Unc_Navigation/UncNavigation.h>
+#include <UncNavigation.h>
 #include <iostream>
 #include <ostream>
 
-#include "../../../../../src/GPUcore/GPU_Unk_nav/GPU_UncNavigation.h"
-#include <despot/GPUcore/GPUpolicy_graph.h>
+#include "../GPU_Unk_nav/GPU_UncNavigation.h"
+#include "UncNavigation.h"
+
+#include <despot/GPUinterface/GPUpolicy_graph.h>
+#include <despot/GPUinterface/GPUupper_bound.h>
+
+#include <despot/GPUcore/GPUbuiltin_lower_bound.h>
+#include <despot/GPUcore/GPUbuiltin_policy.h>
+#include <despot/interface/policy_graph.h>
+
+#include <despot/planner.h>
 
 using namespace std;
 using namespace despot;
@@ -18,46 +27,58 @@ static Dvc_PolicyGraph* graph_lowerbound=NULL;
 static Dvc_TrivialParticleLowerBound* b_lowerbound=NULL;
 static Dvc_UncNavigationParticleUpperBound1* upperbound=NULL;
 
+PolicyGraph* GetPolicyGraph(){return policy_graph;}
+
 __global__ void PassModelFuncs(Dvc_UncNavigation* model)
 {
 	DvcModelStep_=&(model->Dvc_Step);
-	Dvc_DSPOMDP::DvcModelAlloc_=&(model->Dvc_Alloc);
-	Dvc_DSPOMDP::DvcModelCopy_=&(model->Dvc_Copy);
 	DvcModelCopyNoAlloc_=&(model->Dvc_Copy_NoAlloc);
 	DvcModelCopyToShared_=&(model->Dvc_Copy_NoAlloc);
-	//DvcModelCopyNoAlloc_(NULL, NULL, 0);
-	Dvc_DSPOMDP::DvcModelFree_=&(model->Dvc_Free);
 	DvcModelGet_=&(model->Dvc_Get);
 	DvcModelGetBestAction_=&(model->Dvc_GetBestAction);
 	DvcModelGetMaxReward_=&(model->Dvc_GetMaxReward);
+	DvcModelNumActions_ = &(model->NumActions);
 }
 
-__global__ void PassActionValueFuncs(Dvc_UncNavigation* model, Dvc_RandomPolicy* lowerbound,Dvc_TrivialParticleLowerBound* b_lowerbound,
+void UncNavigation::InitGPUModel(){
+	UncNavigation* Hst =static_cast<UncNavigation*>(this);
+
+	HANDLE_ERROR(cudaMalloc((void**)&Dvc, sizeof(Dvc_UncNavigation)));
+	PassModelFuncs<<<1,1,1>>>(Dvc);
+	HANDLE_ERROR(cudaDeviceSynchronize());
+}
+
+__global__ void UnkNabPassUbValueFuncs(
 		Dvc_UncNavigationParticleUpperBound1* upperbound)
+{
+	DvcUpperBoundValue_ = &(upperbound->Value);
+}
+
+void UncNavigation::InitGPUUpperBound(string name,	string particle_bound_name) const{
+	HANDLE_ERROR(cudaMalloc((void**)&upperbound, sizeof(Dvc_UncNavigationParticleUpperBound1)));
+	UnkNabPassUbValueFuncs<<<1,1,1>>>(upperbound);
+	HANDLE_ERROR(cudaDeviceSynchronize());
+}
+
+
+__global__ void UnkNavPassActionValueFuncs(Dvc_UncNavigation* model, Dvc_RandomPolicy* lowerbound,Dvc_TrivialParticleLowerBound* b_lowerbound)
 {
 	lowerbound->Init(model->NumActions());
 	DvcDefaultPolicyAction_=&(lowerbound->Action);
 
-	DvcLowerBoundValue_=&(lowerbound->Value);//DvcRandomPolicy.Value
-	DvcUpperBoundValue_=&(upperbound->Value);//DvcUncNavigationParticleUpperBound1.Value
+	DvcLowerBoundValue_=&(lowerbound->Value);
 
-	DvcParticleLowerBound_Value_=&(b_lowerbound->Value);//DvcTrivialParticleLowerBound.Value
-	//DvcPolicyValue_=&();
-	//Dvc_DSPOMDP::DvcModelFreeList_=&(dvc->Dvc_FreeList);
+	DvcParticleLowerBound_Value_=&(b_lowerbound->Value);
 }
 
-__global__ void PassValueFuncs(Dvc_PolicyGraph* lowerbound,
-		Dvc_TrivialParticleLowerBound* b_lowerbound,
-		Dvc_UncNavigationParticleUpperBound1* upperbound)
+__global__ void UnkNavPassValueFuncs(Dvc_PolicyGraph* lowerbound,
+		Dvc_TrivialParticleLowerBound* b_lowerbound)
 {
-	DvcLowerBoundValue_=&(lowerbound->Value);//DvcRandomPolicy.Value
-	DvcUpperBoundValue_=&(upperbound->Value);//DvcUncNavigationParticleUpperBound1.Value
+	DvcLowerBoundValue_=&(lowerbound->Value);
 	DvcChooseEdge_=&(lowerbound->Edge);
-	DvcParticleLowerBound_Value_=&(b_lowerbound->Value);//DvcTrivialParticleLowerBound.Value
-
-	//DvcPolicyValue_=&();
-	//Dvc_DSPOMDP::DvcModelFreeList_=&(dvc->Dvc_FreeList);
+	DvcParticleLowerBound_Value_=&(b_lowerbound->Value);
 }
+
 __global__ void PassPolicyGraph_nav(int graph_size, int num_edges_per_node, int* action_nodes, int* obs_edges)
 {
 	graph_size_=graph_size;
@@ -66,133 +87,95 @@ __global__ void PassPolicyGraph_nav(int graph_size, int num_edges_per_node, int*
 	obs_edges_=obs_edges;
 }
 
-__global__ void ClearPolicyGraph()
-{
-	free(action_nodes_);
-	free(obs_edges_);
+void UncNavigation::InitGPULowerBound(string name,	string particle_bound_name) const{
+	if(Globals::config.rollout_type=="INDEPENDENT")
+		HANDLE_ERROR(cudaMalloc((void**)&inde_lowerbound, sizeof(Dvc_RandomPolicy)));
+	if(Globals::config.rollout_type=="GRAPH"){
+
+		PolicyGraph* hostGraph = GetPolicyGraph();
+		HANDLE_ERROR(cudaMalloc((void**)&graph_lowerbound, sizeof(Dvc_PolicyGraph)));
+
+		int* tmp_node_list; int* tmp_edge_list;
+		HANDLE_ERROR(cudaMalloc((void**)&tmp_node_list, hostGraph->graph_size_*sizeof(int)));
+		HANDLE_ERROR(cudaMalloc((void**)&tmp_edge_list, hostGraph->graph_size_*hostGraph->num_edges_per_node_*sizeof(int)));
+
+		HANDLE_ERROR(cudaMemcpy(tmp_node_list, hostGraph->action_nodes_.data(), hostGraph->graph_size_*sizeof(int), cudaMemcpyHostToDevice));
+
+		for (int i = 0; i < hostGraph->num_edges_per_node_; i++)
+		{
+			HANDLE_ERROR(cudaMemcpy(tmp_edge_list+i*hostGraph->graph_size_, hostGraph->obs_edges_[(OBS_TYPE)i].data(), hostGraph->graph_size_*sizeof(int), cudaMemcpyHostToDevice));
+		}
+
+		PassPolicyGraph_nav<<<1,1,1>>>(hostGraph->graph_size_,hostGraph->num_edges_per_node_,
+				tmp_node_list,tmp_edge_list );
+		HANDLE_ERROR(cudaDeviceSynchronize());
+	}
+
+	HANDLE_ERROR(cudaMalloc((void**)&b_lowerbound, sizeof(Dvc_TrivialParticleLowerBound)));
+
+	if(Globals::config.rollout_type=="INDEPENDENT")
+		UnkNavPassActionValueFuncs<<<1,1,1>>>(Dvc,static_cast<Dvc_RandomPolicy*>(inde_lowerbound),b_lowerbound);
+	if(Globals::config.rollout_type=="GRAPH")
+		UnkNavPassValueFuncs<<<1,1,1>>>(static_cast<Dvc_PolicyGraph*>(graph_lowerbound),b_lowerbound);
+	HANDLE_ERROR(cudaDeviceSynchronize());
+}
+
+void UncNavigation::DeleteGPUModel(){
+	HANDLE_ERROR(cudaFree(Dvc));
+
+}
+
+void UncNavigation::DeleteGPUUpperBound(string name, string particle_bound_name){
+	HANDLE_ERROR(cudaFree((void**)&upperbound));
+}
+
+void UncNavigation::DeleteGPULowerBound(string name, string particle_bound_name){
+	if(Globals::config.rollout_type=="INDEPENDENT")
+		HANDLE_ERROR(cudaFree((void**)&inde_lowerbound));
+	if(Globals::config.rollout_type=="GRAPH"){
+		HANDLE_ERROR(cudaFree((void**)&graph_lowerbound));
+	}
+
+	HANDLE_ERROR(cudaFree((void**)&b_lowerbound));
 }
 
 
 
-class TUI: public SimpleTUI {
+class UnkNavPlanner: public Planner {
 public:
-  TUI() {
+  UnkNavPlanner() {
   }
 
   DSPOMDP* InitializeModel(option::Option* options) {
 
-    DSPOMDP* model = NULL;
-		if (options[E_PARAMS_FILE]) {
-			cerr << "Map file is not supported" << endl;
-			exit(0);
-			//model = new UncNavigation(options[E_PARAMS_FILE].arg);
-		} else {
-			int size = 7, number = 8;
-			if (options[E_SIZE])
-				size = atoi(options[E_SIZE].arg);
-			else {
-				if(FIX_SCENARIO)
-					size=8;
-				else
-					size=13;
-				//cerr << "Specify map size using --size option" << endl;
-				//exit(0);
-			}
-			if (options[E_NUMBER]) {
-				number = atoi(options[E_NUMBER].arg);
-			} else {
-				number =0;
-				//cerr << "Specify number of rocks using --number option" << endl;
-				//exit(0);
-			}
+	  DSPOMDP* model = NULL;
+	  if (options[E_PARAMS_FILE]) {
+		  cerr << "Map file is not supported" << endl;
+		  exit(0);
+	  } else {
+		  int size = 7, number = 8;
+		  if (options[E_SIZE])
+			  size = atoi(options[E_SIZE].arg);
+		  else {
+			  if(FIX_SCENARIO)
+				  size=8;
+			  else
+				  size=13;
+		  }
+		  if (options[E_NUMBER]) {
+			  number = atoi(options[E_NUMBER].arg);
+		  } else {
+			  number =0;
+		  }
 
-			model = new UncNavigation(size, number);
-
-
-		}
-		//Globals::config.useGPU=false;
-		//logging::level(1);
-    return model;
-  }
-
-  void InitializedGPUModel(std::string rollout_type, DSPOMDP* Hst_model)
-  {
-	  HANDLE_ERROR(cudaMalloc((void**)&Dvc, sizeof(Dvc_UncNavigation)));
-	  if(rollout_type=="INDEPENDENT")
-		  HANDLE_ERROR(cudaMalloc((void**)&inde_lowerbound, sizeof(Dvc_RandomPolicy)));
-	  if(rollout_type=="GRAPH")
-		  HANDLE_ERROR(cudaMalloc((void**)&graph_lowerbound, sizeof(Dvc_PolicyGraph)));
-
-	  HANDLE_ERROR(cudaMalloc((void**)&b_lowerbound, sizeof(Dvc_TrivialParticleLowerBound)));
-	  HANDLE_ERROR(cudaMalloc((void**)&upperbound, sizeof(Dvc_UncNavigationParticleUpperBound1)));
-
-	  PassModelFuncs<<<1,1,1>>>(Dvc);
-	  if(rollout_type=="INDEPENDENT")
-		  PassActionValueFuncs<<<1,1,1>>>(Dvc,static_cast<Dvc_RandomPolicy*>(inde_lowerbound),b_lowerbound,upperbound);
-	  if(rollout_type=="GRAPH")
-		  PassValueFuncs<<<1,1,1>>>(static_cast<Dvc_PolicyGraph*>(graph_lowerbound),b_lowerbound,upperbound);
-	  HANDLE_ERROR(cudaDeviceSynchronize());
-  }
-
-
-  void InitializeGPUPolicyGraph(PolicyGraph* hostGraph)
-  {
-	  int* tmp_node_list; int* tmp_edge_list;
-	  HANDLE_ERROR(cudaMalloc((void**)&tmp_node_list, hostGraph->graph_size_*sizeof(int)));
-	  HANDLE_ERROR(cudaMalloc((void**)&tmp_edge_list, hostGraph->graph_size_*hostGraph->num_edges_per_node_*sizeof(int)));
-
-	  HANDLE_ERROR(cudaMemcpy(tmp_node_list, hostGraph->action_nodes_.data(), hostGraph->graph_size_*sizeof(int), cudaMemcpyHostToDevice));
-
-	  for (int i = 0; i < hostGraph->num_edges_per_node_; i++)
-	  {
-		  HANDLE_ERROR(cudaMemcpy(tmp_edge_list+i*hostGraph->graph_size_, hostGraph->obs_edges_[(OBS_TYPE)i].data(), hostGraph->graph_size_*sizeof(int), cudaMemcpyHostToDevice));
+		  model = new UncNavigation(size, number);
 	  }
-
-	  PassPolicyGraph_nav<<<1,1,1>>>(hostGraph->graph_size_,hostGraph->num_edges_per_node_,
-			  tmp_node_list,tmp_edge_list );
-	  HANDLE_ERROR(cudaDeviceSynchronize());
+	  return model;
   }
 
-  void InitializeGPUGlobals()
+  World* InitializeWorld(std::string& world_type, DSPOMDP* model, option::Option* options)
   {
-	  HANDLE_ERROR(cudaMallocManaged((void**)&Dvc_Globals::config, sizeof(Dvc_Config)));
-	  Dvc_Globals::config->search_depth=Globals::config.search_depth;
-	  Dvc_Globals::config->discount=Globals::config.discount;
-	  Dvc_Globals::config->root_seed=Globals::config.root_seed;
-	  Dvc_Globals::config->time_per_move=Globals::config.time_per_move;  // CPU time available to construct the search tree
-	  Dvc_Globals::config->num_scenarios=Globals::config.num_scenarios;
-	  Dvc_Globals::config->pruning_constant=Globals::config.pruning_constant;
-	  Dvc_Globals::config->xi=Globals::config.xi; // xi * gap(root) is the target uncertainty at the root.
-	  Dvc_Globals::config->sim_len=Globals::config.sim_len; // Number of steps to run the simulation for.
-	  Dvc_Globals::config->max_policy_sim_len=Globals::config.max_policy_sim_len; // Maximum number of steps for simulating the default policy
-	  Dvc_Globals::config->noise=Globals::config.noise;
-	  Dvc_Globals::config->silence=Globals::config.silence;
-
-	  //PassConfig<<<1,1,1>>>(Dvc_Globals::config);
-	 // HANDLE_ERROR(cudaDeviceSynchronize());
-  }
-
-
-  void DeleteGPUModel()
-  {
-	  HANDLE_ERROR(cudaFree(Dvc));
-	  if(inde_lowerbound)HANDLE_ERROR(cudaFree(inde_lowerbound));
-	  if(graph_lowerbound)HANDLE_ERROR(cudaFree(graph_lowerbound));
-	  HANDLE_ERROR(cudaFree(b_lowerbound));
-	  HANDLE_ERROR(cudaFree(upperbound));
-  }
-
-  void DeleteGPUGlobals()
-  {
-      HANDLE_ERROR(cudaFree(Dvc_Globals::config));
-      //ClearConfig<<<1,1,1>>>();
-     // HANDLE_ERROR(cudaDeviceSynchronize());
-  }
-
-  void DeleteGPUPolicyGraph()
-  {
-	  //ClearPolicyGraph<<<1,1,1>>>();
-	  //HANDLE_ERROR(cudaDeviceSynchronize());
+	  return InitializePOMDPWorld(world_type, model, options);
   }
 
   void InitializeDefaultParameters() {
@@ -208,21 +191,27 @@ public:
 	Obs_type=OBS_LONG64;
 
 	Globals::config.exploration_mode=UCT;
-	Globals::config.exploration_constant=0.8;
-	Globals::config.exploration_constant_o=0.01;
+	Globals::config.exploration_constant=/*0.095*/0.8;
+	Globals::config.exploration_constant_o=/*0.095*/0.01;
+
+	switch(FIX_SCENARIO){
+	case 0:		PolicyGraph::Load_Graph=false; break;
+	case 1:     PolicyGraph::Load_Graph=true; break;
+	case 2:     PolicyGraph::Load_Graph=false; break;
+	}
+	cout<<"Load_Graph="<<PolicyGraph::Load_Graph<<endl;
+	}
 
 
-	//DESPOT::num_Obs_element_in_GPU=1+ModelParams::N_PED_IN*2+2;
-
+	std::string ChooseSolver(){
+		return "DESPOT";
 	}
 };
 
 int main(int argc, char* argv[]) {
 
-
-
-  return TUI().run(argc, argv);
-}*/
+  return UnkNavPlanner().RunPlanning(argc, argv);
+}
 
 
 

@@ -31,20 +31,14 @@ class Dvc_DSPOMDP;
  * =============================================================================*/
 
 class Dvc_DefaultPolicy: public Dvc_ScenarioLowerBound{
-public:
-
-	/**
-	 * Assign all funtion pointers to static member functions in your custom policy class.
-	 */
-
-	//HOST virtual void AssignFunctionPointers() = 0; // inherited from Dvc_ScenarioLowerBound
 
 public:
 
 	DEVICE static Dvc_ValuedAction Value(
 		Dvc_State* particles,
 		Dvc_RandomStreams& streams,
-		Dvc_History& history);
+		Dvc_History& history,
+		int dummy_startnode);
 
 	/**
 	 * Returns default action to perform roll-out.
@@ -54,8 +48,6 @@ public:
 	 *		Dvc_RandomStreams& streams,	Dvc_History& history);
 	 */
 	
-	//static DEVICE ACT_TYPE (*DvcDefaultPolicyAction_)(int,const Dvc_State* ,Dvc_RandomStreams&, Dvc_History&);
-	//static DvcDefaultPolicyActionPtr DvcDefaultPolicyAction_;
 };
 
 DEVICE extern ACT_TYPE (*DvcDefaultPolicyAction_)(int,const Dvc_State* ,Dvc_RandomStreams&, Dvc_History&);

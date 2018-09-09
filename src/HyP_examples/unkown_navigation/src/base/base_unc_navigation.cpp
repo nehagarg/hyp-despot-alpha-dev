@@ -1,6 +1,11 @@
 #include "base_unc_navigation.h"
 
-#include "../../../../../src/GPUcore/GPU_Unk_nav/GPU_base_unc_navigation.h"
+#include "../GPU_Unk_nav/GPU_base_unc_navigation.h"
+#include <despot/core/particle_belief.h>
+#include <despot/core/builtin_upper_bounds.h>
+#include <despot/core/builtin_lower_bounds.h>
+#include <despot/core/builtin_policy.h>
+#include <despot/core/builtin_policygraph.h>
 
 using namespace std;
 
@@ -16,6 +21,9 @@ const Coord NavCompass::DIRECTIONS[] = {  Coord(0, 1), Coord(1, 0),Coord(0, -1),
 	Coord(-1, 0), Coord(1, 1), Coord(1, -1), Coord(-1, -1), Coord(-1, 1) };
 const string NavCompass::CompassString[] = { "North", "East","South", "West",
 	"NE", "SE", "SW", "NW" };
+
+PolicyGraph* policy_graph = NULL;
+
 /* ==============================================================================
  * UncNavigationState class
  * ==============================================================================*/
@@ -63,30 +71,10 @@ string UncNavigationState::text() const {
 
 
 BaseUncNavigation::BaseUncNavigation(int size, int obstacles) :
-	//grid_(size, size),
 	size_(size),
 	num_obstacles_(obstacles) 
 {
 	cout<<__FUNCTION__<<endl;
-
-	/*if (size == 4 && obstacles == 4) {
-		Init_4_4();
-	} else if (size == 5 && obstacles == 5) {
-		Init_5_5();
-	} else if (size == 5 && obstacles == 7) {
-		Init_5_7();
-	} else if (size == 7 && obstacles == 8) {
-		Init_7_8();
-	} else if (size == 11 && obstacles == 11) {
-		Init_11_11();
-	} else {
-		InitGeneral();
-	}*/
-	// put obstacles in random positions
-	//InitGeneral();
-	// InitStates();
-	CreateMemoryPool(0);
-
 }
 
 
@@ -499,13 +487,7 @@ ScenarioUpperBound* BaseUncNavigation::CreateScenarioUpperBound(string name,
 		bound = new UncNavigationParticleUpperBound1(this);
 	} else if (name ==/* "DEFAULT" || */"TRIVIAL") {
 		bound = new TrivialParticleUpperBound(this);
-	} /*else if (name == "UB2") {
-		bound = new UncNavigationParticleUpperBound2(this);
-	} else if (name == "DEFAULT" || name == "MDP") {
-		bound = new UncNavigationMDPParticleUpperBound(this);
-	} else if (name == "APPROX") {
-		bound = new UncNavigationApproxParticleUpperBound(this);
-	}*/ else {
+	} else {
 		cerr << "Unsupported scenario upper bound: " << name << endl;
 		exit(0);
 	}
@@ -516,28 +498,21 @@ ScenarioLowerBound* BaseUncNavigation::CreateScenarioLowerBound(string name, str
 	particle_bound_name) const {
 	if (name == "TRIVIAL") {
 		return new TrivialParticleLowerBound(this);
-	} /*else if (name == "DEFAULT" || name == "EAST") {
-		// scenario_lower_bound_ = new BlindPolicy(this, NavCompass::EAST);
-		return new UncNavigationEastScenarioLowerBound(this);
-	} */else if (name == "RANDOM") {
-		cout<<"Policy tree rollout"<<endl;
+	} else if (name == "RANDOM") {
+		cout << "Policy tree rollout"<<endl;
 		Globals::config.rollout_type="INDEPENDENT";
 		return new RandomPolicy(this,
 			CreateParticleLowerBound(particle_bound_name));
-	}else if (name == "DEFAULT" || name == "RANDOM_GRAPH") {
-		cout<<"Policy graph rollout"<<endl;
+	} else if (name == "DEFAULT" || name == "RANDOM_GRAPH") {
+		cout << "Policy graph rollout"<<endl;
 		RandomPolicyGraph* tmp=new RandomPolicyGraph(this,
 				CreateParticleLowerBound(particle_bound_name));
 		tmp->ConstructGraph(POLICY_GRAPH_SIZE, NumObservations());
 		tmp->SetEntry(0);
 		Globals::config.rollout_type="GRAPH";
+		policy_graph = tmp;
 		return tmp;
-	}  /*else if (name == "MMAP") {
-		return new UncNavigationMMAPStateScenarioLowerBound(this);
-	} else if (name == "MODE") {
-		// scenario_lower_bound_ = new ModeStatePolicy(this);
-		return NULL; // TODO
-	} */else {
+	} else {
 		cerr << "Unsupported lower bound algorithm: " << name << endl;
 		exit(0);
 		return NULL;

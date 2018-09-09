@@ -49,6 +49,7 @@ struct Config {
 	    exploration_constant(0.3),
 	    exploration_constant_o(0.3)
 	{
+		rollout_type = "INDEPENDENT";
 	}
 };
 

@@ -58,12 +58,14 @@ add_library(
   src/interface/lower_bound.cpp
   src/interface/upper_bound.cpp
   src/interface/default_policy.cpp
+  src/interface/policy_graph.cpp
   src/core/particle_belief.cpp
   src/core/globals.cpp
   src/core/builtin_lower_bounds.cpp
   src/core/mdp.cpp
   src/core/node.cpp
   src/core/builtin_policy.cpp
+  src/core/builtin_policygraph.cpp
   src/core/pomdp_world.cpp
   src/core/solver.cpp
   src/core/builtin_upper_bounds.cpp
@@ -101,6 +103,7 @@ add_library(
   src/GPUinterface/GPUupper_bound.cu  
   src/GPUcore/GPUbuiltin_lower_bound.cu
   src/GPUcore/GPUbuiltin_policy.cu
+  src/GPUcore/GPUpolicy_graph.cu
   src/GPUcore/GPUbuiltin_upper_bound.cu
   src/GPUcore/GPUconfig.cu   
   src/GPUcore/GPUhistory.cu      

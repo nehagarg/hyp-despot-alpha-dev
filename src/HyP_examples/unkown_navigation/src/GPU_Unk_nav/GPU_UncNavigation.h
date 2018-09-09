@@ -6,6 +6,8 @@
 #include <despot/GPUutil/GPUcoord.h>
 //#include <despot/util/grid.h>
 #include <despot/GPUcore/CudaInclude.h>
+
+#include "base_unc_navigation.h"
 namespace despot {
 
 enum RollOut
@@ -19,13 +21,12 @@ enum RollOut
  * Dvc_UncNavigation class
  * =============================================================================*/
 
-class Dvc_UncNavigation : public Dvc_DSPOMDP {
+class Dvc_UncNavigation {
 
 protected:
 
 	DEVICE static OBS_TYPE Dvc_GetObservation(double rand_num, const Dvc_UncNavigationState& navstate);
 	DEVICE static OBS_TYPE Dvc_GetObservation_parallel(double rand_num,const Dvc_UncNavigationState& nav_state);
-
 
 public:
 	enum OBS_enum{ //Dvc_State flag of cells in the map. FRAGILE: Don't change!
@@ -47,27 +48,26 @@ public:
 		E_ON_OE_OS_OW = 15,
 	};
 
-
 	enum { //Actions of the robot. FRAGILE: Don't change!
 		E_STAY = 8,
 		E_SOUTH = 2,
 		E_EAST = 1,
 		E_WEST = 3,
 		E_NORTH = 0,
+		//"NE", "SE", "SW", "NW"
 		E_SOUTH_EAST = 5,
 		E_SOUTH_WEST = 6,
 		E_NORTH_EAST = 4,
 		E_NORTH_WEST = 7,
 	};
+
 public:
-	DEVICE Dvc_UncNavigation();
+
+	DEVICE Dvc_UncNavigation(/*int size, int obstacles*/);
 	DEVICE ~Dvc_UncNavigation();
 	DEVICE static bool Dvc_Step(Dvc_State& state, float rand_num, int action, float& reward,
 		OBS_TYPE& obs);
-	DEVICE int NumActions() const;
-	DEVICE static float ObsProb(OBS_TYPE obs, const Dvc_State& state, int action);
-	DEVICE virtual bool Step(Dvc_State& state, double rand_num, int action,
-		double& reward, OBS_TYPE& obs) const = 0;
+
 	DEVICE static int Dvc_NumObservations();
 
 	DEVICE Dvc_State* Allocate(int state_id, double weight) const;
@@ -81,9 +81,11 @@ public:
 		return Dvc_ValuedAction(E_STAY, -0.1);
 	}
 
-	DEVICE static float Dvc_GetMaxReward(){
-		return GOAL_REWARD;
-	}
+	DEVICE static float Dvc_GetMaxReward() {return GOAL_REWARD;}
+
+	DEVICE static int NumActions(){return 9;}
+
+
 };
 
 } // namespace despot

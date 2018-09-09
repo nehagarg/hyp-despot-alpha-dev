@@ -195,15 +195,15 @@ public:
 		if(cells!=NULL && !b_Extern_cells)
 			delete [] cells;
 	}
-	/*DEVICE void SetAllocated()
+	DEVICE void SetAllocated()
 	{
 		allocated_=true;
-	}*/
+	}
 
-	HOST static void CopyToGPU(Dvc_UncNavigationState* Dvc, int scenarioID, const UncNavigationState*, bool copy_cells=true);
-	HOST static void CopyToGPU2(Dvc_UncNavigationState* Dvc, int NumParticles, bool copy_cells=true);
-	HOST static void ReadBackToCPU(const Dvc_UncNavigationState*,UncNavigationState*, bool copy_cells=true);
-	HOST static void ReadBackToCPU2(const Dvc_UncNavigationState* Dvc,std::vector<State*>, bool copy_cells=true);
+	HOST static void CopyMainStateToGPU(Dvc_UncNavigationState* Dvc, int scenarioID, const UncNavigationState*, bool deep_copy=true);
+	HOST static void CopyCellsToGPU(Dvc_UncNavigationState* Dvc, int NumParticles, bool deep_copy=true);
+	HOST static void ReadMainStateBackToCPU(const Dvc_UncNavigationState*,UncNavigationState*, bool deep_copy=true);
+	HOST static void ReadCellsBackToCPU(const Dvc_UncNavigationState* Dvc,std::vector<State*>, bool deep_copy=true);
 
 };
 

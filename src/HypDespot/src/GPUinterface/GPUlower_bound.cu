@@ -8,7 +8,7 @@ namespace despot {
 DvcLowerBoundValue_ = NULL;
 DvcParticleLowerBound_Value_ = NULL;*/
 
-DEVICE Dvc_ValuedAction (*DvcLowerBoundValue_)( Dvc_State *, Dvc_RandomStreams&, Dvc_History&) = NULL;
+DEVICE Dvc_ValuedAction (*DvcLowerBoundValue_)( Dvc_State *, Dvc_RandomStreams&, Dvc_History&, int) = NULL;
 DEVICE Dvc_ValuedAction (*DvcParticleLowerBound_Value_) (int, Dvc_State *)=NULL;
 
 /* =============================================================================
