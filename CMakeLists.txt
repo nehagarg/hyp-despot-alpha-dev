@@ -76,8 +76,8 @@ add_subdirectory(src/HypDespot/)
 
 
 add_subdirectory(src/HyP_examples/CarDriving)
-# add_subdirectory(src/HyP_examples/ma_rock_sample)
-# add_subdirectory(src/HyP_examples/unkown_navigation)
+add_subdirectory(src/HyP_examples/ma_rock_sample)
+add_subdirectory(src/HyP_examples/unkown_navigation)
 
 set_target_properties( "${PROJECT_NAME}"
                        PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
