@@ -2,6 +2,7 @@
 #include <despot/util/logging.h>
 #include <despot/interface/pomdp.h>
 #include <despot/interface/belief.h>
+#include <iomanip>      // std::setprecision
 
 using namespace std;
 
@@ -35,7 +36,7 @@ ostream& operator<<(ostream& os, const SearchStatistics& statistics) {
 		<< statistics.initial_ub << ")" << endl;
 	os << "Final bounds: (" << statistics.final_lb << ", "
 		<< statistics.final_ub << ")" << endl;
-	os << "Time (CPU s): path / expansion / backup / total = "
+	os << std::setprecision(5) << "Time (CPU s): path / expansion / backup / total = "
 		<< statistics.time_path << " / " << statistics.time_node_expansion
 		<< " / " << statistics.time_backup << " / " << statistics.time_search
 		<< endl;

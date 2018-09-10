@@ -380,13 +380,15 @@ Dvc_State* BaseUncNavigation::AllocGPUParticles(int numParticles, MEMORY_MODE mo
 		for(int i=0;i<num_threads;i++)
 			HANDLE_ERROR(cudaMalloc(&Dvc_temp_weight[i], sizeof(float)));
 
-		return NULL;
-
-	case ALLOC_ROOT:
 
 		HANDLE_ERROR(cudaMallocManaged((void**)&Managed_rootnode_particles, numParticles*sizeof(Dvc_UncNavigationState)));
 		AllocCells<<<grid, threads>>>(Managed_rootnode_particles,size_, size_,numParticles);
 		HANDLE_ERROR(cudaDeviceSynchronize());
+
+		return NULL;
+
+	case ALLOC_ROOT:
+
 		return Managed_rootnode_particles;
 
 	case ALLOC:
@@ -506,11 +508,6 @@ void BaseUncNavigation::DeleteGPUParticles(MEMORY_MODE mode, Dvc_State** particl
 
 	switch (mode){
 	case DESTROY:
-
-		FreeCells<<<grid, threads>>>(static_cast<Dvc_UncNavigationState*>(Managed_rootnode_particles),num_particles);
-		HANDLE_ERROR(cudaDeviceSynchronize());
-		HANDLE_ERROR(cudaFree(static_cast<Dvc_UncNavigationState*>(Managed_rootnode_particles)));
-
 		for(int i=0;i<Globals::config.NUM_THREADS;i++)
 		{
 			if(particles_for_all_actions[i]!=NULL)
@@ -545,9 +542,16 @@ void BaseUncNavigation::DeleteGPUParticles(MEMORY_MODE mode, Dvc_State** particl
 			cudaFree(Dvc_temp_weight[i]);
 		}
 		delete [] Dvc_temp_weight;
+
+
+		FreeCells<<<grid, threads>>>(static_cast<Dvc_UncNavigationState*>(Managed_rootnode_particles),num_particles);
+		HANDLE_ERROR(cudaDeviceSynchronize());
+		HANDLE_ERROR(cudaFree(static_cast<Dvc_UncNavigationState*>(Managed_rootnode_particles)));
+
 		break;
 
 	case RESET:
+
 		break;
 	};
 

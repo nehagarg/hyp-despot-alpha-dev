@@ -1,5 +1,6 @@
 #include <despot/core/pomdp_world.h>
 #include <despot/logger.h>
+#include <iomanip>      // std::setprecision
 
 using namespace std;
 
@@ -219,7 +220,7 @@ void Logger::InitRound(State* state) {
 
 double Logger::EndRound() {
 	if (!Globals::config.silence && out_) {
-		*out_ << "Total discounted reward = " << total_discounted_reward_
+		*out_ << std::setprecision(5) << "Total discounted reward = " << total_discounted_reward_
 				<< endl << "Total undiscounted reward = "
 				<< total_undiscounted_reward_ << endl;
 	}
@@ -299,7 +300,7 @@ bool Logger::SummarizeStep(int step, int round, bool terminal, ACT_TYPE action,
 			<< EvalLog::allocated_time << endl;
 
 	if (!Globals::config.silence && out_)
-		*out_ << "- Reward = " << reward_ << endl << "- Current rewards:"
+		*out_ << std::setprecision(5) << "- Reward = " << reward_ << endl << "- Current rewards:"
 				<< endl << "  discounted / undiscounted = "
 				<< total_discounted_reward_ << " / "
 				<< total_undiscounted_reward_ << endl;
@@ -349,11 +350,11 @@ bool Logger::SummarizeStep(int step, int round, bool terminal, ACT_TYPE action,
 }
 
 void Logger::PrintStatistics(int num_runs) {
-	cout << "\nCompleted " << num_runs << " run(s)." << endl;
-	cout << "Average total discounted reward (stderr) = "
+	cout << std::setprecision(5) << "\nCompleted " << num_runs << " run(s)." << endl;
+	cout << std::setprecision(5) << "Average total discounted reward (stderr) = "
 			<< AverageDiscountedRoundReward() << " ("
 			<< StderrDiscountedRoundReward() << ")" << endl;
-	cout << "Average total undiscounted reward (stderr) = "
+	cout << std::setprecision(5) << "Average total undiscounted reward (stderr) = "
 			<< AverageUndiscountedRoundReward() << " ("
 			<< StderrUndiscountedRoundReward() << ")" << endl;
 }

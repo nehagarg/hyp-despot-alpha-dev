@@ -510,13 +510,13 @@ void PedPomdp::DeleteGPUParticles( MEMORY_MODE mode, Dvc_State** particles_for_a
 			cudaFreeHost(Hst_temp_mainstates[i]);
 		}
 
-		HANDLE_ERROR(cudaFree(static_cast<Dvc_PomdpState*>(Managed_rootnode_particles)));
-
 		delete [] Dvc_tempPeds;
 		delete [] Hst_tempPeds;
 		delete [] Hst_temp_mainstates;
 		break;
 	case RESET:
+		HANDLE_ERROR(cudaFree(static_cast<Dvc_PomdpState*>(Managed_rootnode_particles)));
+
 		break;
 	};
 

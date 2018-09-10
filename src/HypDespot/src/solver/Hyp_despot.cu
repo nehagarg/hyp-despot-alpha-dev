@@ -386,10 +386,10 @@ PreStep_LongObs(int total_num_scenarios, int num_particles, Dvc_State* vnode_par
 		/*make a local copy of the particle in shared memory*/
 		if (threadIdx.y == 0) {
 			DvcModelCopyToShared_(
-					(Dvc_State*) ((int*) localParticles + 8 * threadIdx.x),
+					(Dvc_State*) ((int*) localParticles + 60 * threadIdx.x),
 					vnode_particles, PID % num_particles, false);
 		}
-		Dvc_State* current_particle = (Dvc_State*) ((int*) localParticles + 8 * threadIdx.x);
+		Dvc_State* current_particle = (Dvc_State*) ((int*) localParticles + 60 * threadIdx.x);
 		__syncthreads();
 
 		OBS_TYPE obs = (OBS_TYPE) (-1);
@@ -439,10 +439,10 @@ Step_LongObs(int total_num_scenarios, int num_particles, Dvc_State* vnode_partic
 		/*make a local copy of the particle in shared memory*/
 		if (threadIdx.y == 0) {
 			DvcModelCopyToShared_(
-					(Dvc_State*) ((int*) localParticles + 8 * threadIdx.x),
+					(Dvc_State*) ((int*) localParticles + 60 * threadIdx.x),
 					vnode_particles, PID % num_particles, false);
 		}
-		current_particle = (Dvc_State*) ((int*) localParticles + 8 * threadIdx.x);
+		current_particle = (Dvc_State*) ((int*) localParticles + 60 * threadIdx.x);
 		__syncthreads();
 
 		OBS_TYPE obs = (OBS_TYPE) (-1);
@@ -725,12 +725,11 @@ _InitBounds_LongObs(int total_num_scenarios, int num_particles,
 		Dvc_ValuedAction* default_move_all_a_p, OBS_TYPE* observations_all_a_p,
 		Dvc_RandomStreams* streams, Dvc_History* history, int depth,
 		int hist_size) {
-
 	int action = blockIdx.x;
 	int PID = (blockIdx.y * blockDim.x + threadIdx.x) % num_particles;
 
 	int parent_PID = vnode_particleIDs[PID];
-	Dvc_State* current_particle = (Dvc_State*) ((int*) localParticles + 8 * threadIdx.x);
+	Dvc_State* current_particle = (Dvc_State*) ((int*) localParticles + 60 * threadIdx.x);
 
 	int global_list_pos = action * total_num_scenarios + parent_PID;
 

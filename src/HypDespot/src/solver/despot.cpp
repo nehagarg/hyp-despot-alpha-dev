@@ -371,7 +371,7 @@ void DESPOT::ExpandTreeServer(RandomStreams streams,
                               double& explore_time, double& backup_time, int& num_trials,
                               double timeout, MsgQueque<Shared_VNode>& node_queue,
                               MsgQueque<Shared_VNode>& print_queue, int threadID) {
-	cout << "Create expansion thread " << this_thread::get_id() << endl;
+	//cout << "Create expansion thread " << this_thread::get_id() << endl;
 	Globals::ChooseGPUForThread();			//otherwise the GPUID would be 0 (default)
 	Globals::AddMappedThread(this_thread::get_id(), threadID);
 	used_time = 0;
@@ -450,7 +450,7 @@ void DESPOT::ExpandTreeServer(RandomStreams streams,
 }
 
 void PrintServer(MsgQueque<Shared_VNode>& print_queue, float timeout) {
-	cout << "Create printing thread " << this_thread::get_id() << endl;
+	//cout << "Create printing thread " << this_thread::get_id() << endl;
 	for (;;) {
 		Shared_VNode* node = print_queue.receive(false, timeout);
 		if (node == NULL || Globals::Timeout(timeout)) {
@@ -554,7 +554,7 @@ VNode* DESPOT::ConstructTree(vector<State*>& particles, RandomStreams& streams,
 		    async(launch::async, &PrintServer, ref(Print_queue), timeout));
 
 		double passed_time = Globals::ElapsedTime();
-		cout << std::setprecision(5) << "All thread started at the "
+		cout << std::setprecision(5) << Globals::config.NUM_THREADS << " threads started at the "
 		     << passed_time << "'th second" << endl;
 		try {
 			while (!futures.empty()) {
@@ -575,10 +575,6 @@ VNode* DESPOT::ConstructTree(vector<State*>& particles, RandomStreams& streams,
 		passed_time = Globals::ElapsedTime();
 		cout << std::setprecision(5) << "Tree expansion in "
 		     << passed_time << " s" << endl;
-
-		float speedup = Globals::SpeedUp(passed_time);
-		float efficiency = Globals::Efficiency(passed_time);
-		cout << "Speedup=" << speedup << ", Efficiency=" << efficiency << endl;
 
 	} else {
 

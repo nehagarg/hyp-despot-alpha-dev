@@ -32,6 +32,9 @@ set(CMAKE_PREFIX_PATH "/home/yuanfu/workspace/catkin_ws/devel;/opt/ros/kinetic")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse2 -mfpmath=sse")
 set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -arch=sm_30")
+if (CMAKE_BUILD_TYPE MATCHES "Debug")
+  set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -G")
+endif()
 set(CMAKE_MODULE_PATH ${CMAKE_PREFIX_PATH} "${PROJECT_SOURCE_DIR}/cmake")
 
 if (CUDA)

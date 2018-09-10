@@ -491,17 +491,22 @@ ScenarioUpperBound* BaseUncNavigation::CreateScenarioUpperBound(string name,
 		cerr << "Unsupported scenario upper bound: " << name << endl;
 		exit(0);
 	}
+
+	InitGPUUpperBound(name,	particle_bound_name);
 	return bound;
 }
 
 ScenarioLowerBound* BaseUncNavigation::CreateScenarioLowerBound(string name, string
 	particle_bound_name) const {
+
+	ScenarioLowerBound* lb;
+
 	if (name == "TRIVIAL") {
-		return new TrivialParticleLowerBound(this);
+		lb = new TrivialParticleLowerBound(this);
 	} else if (name == "RANDOM") {
 		cout << "Policy tree rollout"<<endl;
 		Globals::config.rollout_type="INDEPENDENT";
-		return new RandomPolicy(this,
+		lb = new RandomPolicy(this,
 			CreateParticleLowerBound(particle_bound_name));
 	} else if (name == "DEFAULT" || name == "RANDOM_GRAPH") {
 		cout << "Policy graph rollout"<<endl;
@@ -511,12 +516,15 @@ ScenarioLowerBound* BaseUncNavigation::CreateScenarioLowerBound(string name, str
 		tmp->SetEntry(0);
 		Globals::config.rollout_type="GRAPH";
 		policy_graph = tmp;
-		return tmp;
+		lb = tmp;
 	} else {
 		cerr << "Unsupported lower bound algorithm: " << name << endl;
 		exit(0);
-		return NULL;
+		lb = NULL;
 	}
+
+	InitGPULowerBound(name, particle_bound_name);
+	return lb;
 }
 
 void BaseUncNavigation::PrintState(const State& state, ostream& out) const {
@@ -862,47 +870,8 @@ void BaseUncNavigation::DecY(UncNavigationState* state) const {
 	state->rob.y-=1;
 }
 
-
-/*UncNavigationState BaseUncNavigation::NextState(UncNavigationState& s, int a) const {
-	if (s.rob==s.goal)// terminal state is an absorbing state
-		return s;
-
-    double Rand=Random::RANDOM.NextDouble();
-	Coord rob_pos = s.rob;
-	UncNavigationState newState(s);
-	if (a < E_STAY) {//movement actions
-	    if(Rand<0.8)// only succeed with 80% chance
-	    	rob_pos += NavCompass::DIRECTIONS[a];
-		if (s.Inside(rob_pos) && s.CollisionCheck(rob_pos)==false) {
-			newState.rob=rob_pos;//move the robot
-		} else {
-			;// don't move the robot
-		}
-		return newState;
-	} else if (a == E_STAY) {//stay action
-		return newState;
-	} else //unsupported action
-		return s;
-}*/
-
-/*double BaseUncNavigation::Reward(UncNavigationState& s, int a) const {
-	if (s.rob==s.goal)// at terminal state, no reward
-		return 0;
-	Coord rob_pos = s.rob;
-	if (a < E_STAY) {
-	    double Rand=Random::RANDOM.NextDouble();
-	    if(Rand<0.8)// only succeed with 80% chance
-	    	rob_pos += NavCompass::DIRECTIONS[a];
-	    if(rob_pos==s.goal)// arrive goal
-	    	return 10;
-		if (s.Inside(rob_pos) && s.CollisionCheck(rob_pos)==false) {
-			return -0.1;// small cost for each move
-		} else
-			return -1;//run into obstacles or walls
-	} else if (a == E_STAY) {
-		return -0.1;// small cost for each step
-	} else //unsupported action
-		return 0;
-}*/
+void BaseUncNavigation::PrintParticles(const std::vector<State*> particles, std::ostream& out) const
+{
+}
 
 } // namespace despot

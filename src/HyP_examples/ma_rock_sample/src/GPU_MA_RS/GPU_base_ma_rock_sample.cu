@@ -340,7 +340,6 @@ void BaseMultiAgentRockSample::DeleteGPUParticles(MEMORY_MODE mode, Dvc_State** 
 
 	switch (mode){
 	case DESTROY:
-		HANDLE_ERROR(cudaFree(static_cast<Dvc_MARockSampleState*>(Managed_rootnode_particles)));
 
 		for(int i=0;i<thread_count;i++)
 		{
@@ -372,6 +371,9 @@ void BaseMultiAgentRockSample::DeleteGPUParticles(MEMORY_MODE mode, Dvc_State** 
 		break;
 
 	case RESET:
+
+		HANDLE_ERROR(cudaFree(static_cast<Dvc_MARockSampleState*>(Managed_rootnode_particles)));
+
 		break;
 	};
 

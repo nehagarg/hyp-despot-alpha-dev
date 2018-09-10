@@ -247,6 +247,7 @@ public:
 	void PrintBeliefMap(float** map,std::ostream& out = std::cout) const;
 	virtual void PrintObs(const State& state, OBS_TYPE observation, std::ostream& out = std::cout) const = 0;
 	void PrintAction(int action, std::ostream& out = std::cout) const;
+	void PrintParticles(const std::vector<State*> particles, std::ostream& out = std::cout) const;
 
 	State* Allocate(int state_id, double weight) const;
 	State* Copy(const State* particle) const;

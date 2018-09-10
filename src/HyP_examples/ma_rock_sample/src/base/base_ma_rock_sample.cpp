@@ -39,17 +39,17 @@ BaseMultiAgentRockSample::BaseMultiAgentRockSample(string map) {
 	fin >> tmp >> tmp >> size_ >> size_;
 	fin >> tmp >> num_agents_;
 
-	char tok;
+	string tok;
 	for (int r = size_ - 1; r >= 0; r--) {
 		for (int c = 0; c < size_; c++) {
 			fin >> tok;
-			if (num_agents_>=1 && tok == 'R1')
+			if (num_agents_>=1 && tok == "R1")
 				start_poses_[0] = Coord(c, r);
-			if (num_agents_>=2 && tok == 'R2')
+			if (num_agents_>=2 && tok == "R2")
 				start_poses_[1] = Coord(c, r);
-			if (num_agents_>=3 && tok == 'R3')
+			if (num_agents_>=3 && tok == "R3")
 				start_poses_[2] = Coord(c, r);
-			else if (tok == '-') {
+			else if (tok == "-") {
 				rock_pos_.push_back(Coord(c, r));
 			}
 		}
@@ -63,14 +63,6 @@ BaseMultiAgentRockSample::BaseMultiAgentRockSample(string map) {
 	}
 
 	InitStates();
-
-	/*
-	 clock_t start = clock();
-	 cerr << "Initializing transitions" << endl;
-	 InitializeTransitions();
-	 cerr << "Done " << (double (clock() - start) / CLOCKS_PER_SEC) << endl;
-	 ComputeOptimalPolicyUsingVI();
-	 */
 }
 
 BaseMultiAgentRockSample::BaseMultiAgentRockSample(int size, int rocks) :
@@ -792,6 +784,8 @@ ScenarioUpperBound* BaseMultiAgentRockSample::CreateScenarioUpperBound(string na
 		cerr << "Unsupported scenario upper bound: " << name << endl;
 		exit(0);
 	}
+
+	InitGPUUpperBound(name,	particle_bound_name);
 	return bound;
 }
 
@@ -829,24 +823,30 @@ public:
 
 ScenarioLowerBound* BaseMultiAgentRockSample::CreateScenarioLowerBound(string name, string
 	particle_bound_name) const {
+
+	ScenarioLowerBound* lb;
+
 	if (name == "TRIVIAL") {
-		return new TrivialParticleLowerBound(this);
+		lb = new TrivialParticleLowerBound(this);
 	} else if ( name == "DEFAULT" ||name == "EAST") {
 		cout<<"Blind east rollout"<<endl;
 		Globals::config.rollout_type="BLIND";
-		return new MARockSampleEastScenarioLowerBound(this);
+		lb = new MARockSampleEastScenarioLowerBound(this);
 	} else if (name == "RANDOM") {
 		cout<<"Policy tree rollout"<<endl;
 		Globals::config.rollout_type="INDEPENDENT";
-		return new RandomPolicy(this,
+		lb = new RandomPolicy(this,
 			CreateParticleLowerBound(particle_bound_name));
 	} else if (name == "MODE") {
-		return NULL; // TODO
+		lb = NULL; // TODO
 	} else {
 		cerr << "Unsupported lower bound algorithm: " << name << endl;
 		exit(0);
-		return NULL;
+		lb = NULL;
 	}
+
+	InitGPULowerBound(name, particle_bound_name);
+	return lb;
 }
 
 void BaseMultiAgentRockSample::PrintState(const State& state, ostream& out) const {

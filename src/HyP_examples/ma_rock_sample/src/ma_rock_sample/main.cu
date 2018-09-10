@@ -235,6 +235,9 @@ public:
 
 
 		}
+
+		model->InitGPUModel();
+
 		return model;
 	}
 	World* InitializeWorld(std::string& world_type, DSPOMDP* model, option::Option* options)
@@ -251,19 +254,19 @@ public:
 		Globals::config.GPUid=1;//default GPU
 		Globals::config.useGPU=true;
 
-		Globals::config.use_multi_thread_=false;
-		Globals::config.NUM_THREADS=10;
-		Globals::config.sim_len=40;
+		Globals::config.use_multi_thread_=true;
+		Globals::config.NUM_THREADS=5;
+		Globals::config.sim_len=90;
 		Globals::config.max_policy_sim_len=10;
-		Globals::config.time_per_move=2;
-		Globals::config.num_scenarios=1;
+		Globals::config.time_per_move=1;
+		Globals::config.num_scenarios=500;
 		Globals::config.discount=0.983;
 
 		Obs_type=OBS_LONG64;
 
 		Globals::config.exploration_mode=UCT;
-		Globals::config.exploration_constant=/*0.8*/0.1;
-		Globals::config.exploration_constant_o=0.1;
+		Globals::config.exploration_constant=/*0.8*/0.3;
+		Globals::config.exploration_constant_o=0.3;
 
 		switch(FIX_SCENARIO){
 		case 0:		PolicyGraph::Load_Graph=false; break;
