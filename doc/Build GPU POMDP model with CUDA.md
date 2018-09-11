@@ -26,7 +26,7 @@ public:
 	 * Used when the raw observation is an integer array (like the car driving problem)
 	 *
 	 * The function in your custom POMDP model should be:
-   */
+   	 */
 
 	 DEVICE static bool Dvc_Step_IntObs(Dvc_State& state, float random_num, ACT_TYPE action, 
 	    	float& reward, int* obs);
@@ -40,7 +40,7 @@ public:
 	 * The function in your custom POMDP model should be:
 	 */
 
-   DEVICE static int NumActions();
+   	 DEVICE static int NumActions();
 
 	/* ========================================================================
 	 * Memory management.
@@ -53,9 +53,9 @@ public:
 	 * The function in your custom POMDP model should be:
 	 */
    
-   DEVICE static void Dvc_Copy_NoAlloc(Dvc_State* des, const Dvc_State* src, int pos, bool offset_des);
+   	 DEVICE static void Dvc_Copy_NoAlloc(Dvc_State* des, const Dvc_State* src, int pos, bool offset_des);
 	
-  /**
+  	/**
 	 * Copy the state from a particle at entry pos in src list to a particle at entry pos (or 0 when offset_des is false) in des list.
 	 * des list resides in the shared memory of GPU as contiguous list.
 	 * !! Only contiguous memory is allowed in shared memory (pointer-linked members in class should be specially treated) !!
@@ -63,7 +63,7 @@ public:
 	 * The function in your custom POMDP model should be: 
 	 */
 
-   DEVICE static void Dvc_Copy_ToShared(Dvc_State* des, const Dvc_State* src, int pos, bool offset_des);
+   	 DEVICE static void Dvc_Copy_ToShared(Dvc_State* des, const Dvc_State* src, int pos, bool offset_des);
   
 	/**
 	 * Returns the pointer to a particle at pos in the list.
@@ -71,7 +71,7 @@ public:
 	 * The function in your custom POMDP model should be:
 	 */
    
-   DEVICE static Dvc_State* Dvc_Get(const Dvc_State* particles, int pos);
+   	 DEVICE static Dvc_State* Dvc_Get(const Dvc_State* particles, int pos);
 
 	/* ========================================================================
 	 * Bound-related functions.
@@ -83,7 +83,7 @@ public:
 	 * The function in your custom POMDP model should be:
 	 */
    
-   DEVICE static Dvc_ValuedAction Dvc_GetBestAction();
+   	 DEVICE static Dvc_ValuedAction Dvc_GetBestAction();
    
 	/**
 	 * Returns the maximum reward.
@@ -91,12 +91,12 @@ public:
 	 * The function in your custom POMDP model should be: 
 	 */
    
-   DEVICE static float Dvc_GetMaxReward();
+   	 DEVICE static float Dvc_GetMaxReward();
 };
 
 ```
 
-Custom GPU POMDP classes can be defined following this template. There is no need to inherit the *Dvc_DSPOMDP* class.
+Custom GPU POMDP classes can be defined following this template. ___There is no need to inherit the *Dvc_DSPOMDP* class.___
 
 ## Extentions in the DSPOMDP class
 
