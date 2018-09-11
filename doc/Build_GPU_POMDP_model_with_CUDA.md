@@ -279,7 +279,7 @@ DEVICE extern Dvc_ValuedAction (*DvcParticleLowerBound_Value_) (int, Dvc_State *
 DEVICE extern ACT_TYPE (*DvcDefaultPolicyAction_)(int,const Dvc_State* ,Dvc_RandomStreams&, Dvc_History&);
 ```
 
-* in [GPUcore/GPUpolicy_graph.h](../src/HypDespot/include/despot/GPUcore/GPUpolicy_graph.h):
+* in [GPUinterface/GPUpolicy_graph.h](../src/HypDespot/include/despot/GPUinterface/GPUpolicy_graph.h):
 ```c++
 
 ```
