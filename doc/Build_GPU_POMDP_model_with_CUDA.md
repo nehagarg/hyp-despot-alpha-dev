@@ -4,7 +4,7 @@ HyP-DESPOT requires a GPU counterpart of the POMDP model defined by the **DSPOMD
 in order to perform parallel expansions and rollouts in the GPU.
 
 ## GPU POMDP model class
-A template for such a GPU model is provided in [GPUinterface/GPUpomdp.h](src/HypDespot/include/despot/GPUinterface/GPUpomdp.h).
+A template for such a GPU model is provided in [GPUinterface/GPUpomdp.h](../src/HypDespot/include/despot/GPUinterface/GPUpomdp.h).
 
 ```c++
 class Dvc_DSPOMDP {
@@ -100,7 +100,7 @@ Custom GPU POMDP classes can be defined following this template. ___There is no 
 
 ## Extentions in the DSPOMDP class
 
-HyP-DESPOT requires additional functions in the DSPOMDP class to communicate with the GPU POMDP model.
+HyP-DESPOT requires additional functions in the [DSPOMDP class](../src/HypDespot/include/despot/interface/pomdp.h) to communicate with the GPU POMDP model.
 
 ```c++
 class DSPOMDP {
@@ -246,7 +246,7 @@ public:
 ## Linking GPU functions to global function pointers
 
 HyP-DESPOT applied a function pointer trick to achieve polymorphism in GPU code. This requires the user to mannually link static functions in the GPU model, upper bound, and lower bound classes to global device function pointers. These pointers includes:
-* [GPUinterface/GPUpomdp.h](src/HypDespot/include/despot/GPUinterface/GPUpomdp.h):
+* [GPUinterface/GPUpomdp.h](../src/HypDespot/include/despot/GPUinterface/GPUpomdp.h):
 ```c++
 DEVICE extern bool (*DvcModelStep_)(Dvc_State&, float, ACT_TYPE, float&, OBS_TYPE&);
 DEVICE extern bool (*DvcModelStepIntObs_)(Dvc_State&, float, ACT_TYPE, float&, int*);
@@ -262,24 +262,24 @@ DEVICE extern float (*DvcModelGetMaxReward_)();
 ```
 They should be linked with static functions in the GPU model in the **InitGPUModel** function.
 
-* in [GPUinterface/GPUupper_bound.h](src/HypDespot/include/despot/GPUinterface/GPUupper_bound.h):
+* in [GPUinterface/GPUupper_bound.h](../src/HypDespot/include/despot/GPUinterface/GPUupper_bound.h):
 ```c++
 DEVICE extern float (*DvcUpperBoundValue_)(const Dvc_State*, int, Dvc_History&);
 ```
 They should be linked with static functions in the GPU upper bound in the **InitGPUUpperBound** function.
 
-* in [GPUinterface/GPUlower_bound.h](src/HypDespot/include/despot/GPUinterface/GPUlower_bound.h):
+* in [GPUinterface/GPUlower_bound.h](../src/HypDespot/include/despot/GPUinterface/GPUlower_bound.h):
 ```c++
 DEVICE extern Dvc_ValuedAction (*DvcLowerBoundValue_)( Dvc_State *, Dvc_RandomStreams&, Dvc_History&, int);
 DEVICE extern Dvc_ValuedAction (*DvcParticleLowerBound_Value_) (int, Dvc_State *);
 ```
 
-* in [GPUinterface/GPUdefault_policy.h](src/HypDespot/include/despot/GPUinterface/GPUdefault_policy.h):
+* in [GPUinterface/GPUdefault_policy.h](../src/HypDespot/include/despot/GPUinterface/GPUdefault_policy.h):
 ```c++
 DEVICE extern ACT_TYPE (*DvcDefaultPolicyAction_)(int,const Dvc_State* ,Dvc_RandomStreams&, Dvc_History&);
 ```
 
-* in [GPUcore/GPUpolicy_graph.h](src/HypDespot/include/despot/GPUcore/GPUpolicy_graph.h):
+* in [GPUcore/GPUpolicy_graph.h](../src/HypDespot/include/despot/GPUcore/GPUpolicy_graph.h):
 ```c++
 
 ```
