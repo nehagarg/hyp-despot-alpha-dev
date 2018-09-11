@@ -281,6 +281,6 @@ DEVICE extern ACT_TYPE (*DvcDefaultPolicyAction_)(int,const Dvc_State* ,Dvc_Rand
 
 * in [GPUinterface/GPUpolicy_graph.h](../src/HypDespot/include/despot/GPUinterface/GPUpolicy_graph.h):
 ```c++
-
+DEVICE extern int (*DvcChooseEdge_)( int, OBS_TYPE);
 ```
 They should be linked with static functions in the GPU upper bound in the **InitGPULowerBound** function.
