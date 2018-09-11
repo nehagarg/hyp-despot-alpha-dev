@@ -48,6 +48,7 @@ src/solvers/Hyp_despot.cu                Main file of the HyP-DESPOT solver
 src/Parallel_planner.cu                  Parallel extension of the planner class in DESPOT
 src/GPUrandom_streams.cu                 GPU version of the RandomStreams class in DESPOT
 ```
+See this [GPU model documentation](doc/Build GPU POMDP model with CUDA.md) for detailed descriptions on these extensions and how to build a custom GPU POMDP model.
 
 ## Car Driving Example
 A car driving example (as presented in our [RSS paper](http://motion.comp.nus.edu.sg/wp-content/uploads/2018/06/rss18hyp.pdf)) is provided in folder [src/HyP_examples](src/HyP_examples). The key files in this example are:
