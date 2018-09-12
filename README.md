@@ -23,6 +23,7 @@ source /opt/ros/kinetic/setup.bash
 mkdir -p ~/catkin_ws/src
 cd ~/catkin_ws/
 catkin_make
+source ~/catkin_ws/devel/setup.bash
 ```
 ### 2. Download the HyP-DESPOT package:
 ```bash
@@ -48,14 +49,31 @@ src/solvers/Hyp_despot.cu                Main file of the HyP-DESPOT solver
 src/Parallel_planner.cu                  Parallel extension of the planner class in DESPOT
 src/GPUrandom_streams.cu                 GPU version of the RandomStreams class in DESPOT
 ```
+See this [GPU model documentation](doc/Build_GPU_POMDP_model_with_CUDA.md) for detailed descriptions on these extensions and how to build a custom GPU POMDP model.
 
-## Car Driving Example
-A car driving example (as presented in our [RSS paper](http://motion.comp.nus.edu.sg/wp-content/uploads/2018/06/rss18hyp.pdf)) is provided in folder [src/HyP_examples](src/HyP_examples). The key files in this example are:
+## Examples
+The HyP-DESPOT package implements the three examples presented in our [RSS paper](http://motion.comp.nus.edu.sg/wp-content/uploads/2018/06/rss18hyp.pdf). They include:
+
+* Autonomous driving in a crowd [(HyP_examples/CarDriving/)](src/HyP_examples/CarDriving/). The key files in this example are:
 ```
-CarDriving/ped_pomdp.cpp                       CPU POMDP model of the car driving problem
-CarDriving/GPU_Car_Drive/GPU_Car_Drive.cu      GPU POMDP model of the car driving problem
-CarDriving/simulator.cpp                       Custom World (simulator) of the problem
-CarDriving/controller.cpp                      The custom planner and the main function
+ped_pomdp.cpp                       CPU POMDP model of the car driving problem
+GPU_Car_Drive/GPU_Car_Drive.cu      GPU POMDP model of the car driving problem
+simulator.cpp                       Custom World (simulator) of the problem
+controller.cpp                      The custom planner and the main function
+```
+
+* Navigation in a partially known map [(HyP_examples/unkown_navigation/)](src/HyP_examples/unkown_navigation/src). The key files in this example are:
+```
+Unc_Navigation/UncNavigation.cpp       CPU POMDP model of the navigation problem
+GPU_Unk_nav/GPU_UncNavigation.cu       GPU POMDP model of the navigation problem
+Unc_Navigation/main.cu                 The custom planner and the main function
+```
+
+* Multi-agent RockSample [(HyP_examples/ma_rock_sample/)](src/HyP_examples/ma_rock_sample/src). The key files in this example are:
+```
+ma_rock_sample/ma_rock_sample.cpp       CPU POMDP model of the car driving problem
+GPU_MA_RS/GPU_ma_rock_sample.cu         GPU POMDP model of the MARS problem
+ma_rock_sample/main.cu                  The custom planner and the main function
 ```
 
 ## (Optional) Debugging Tools in HyP-DESPOT Package
