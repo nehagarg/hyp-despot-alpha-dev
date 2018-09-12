@@ -23,6 +23,7 @@ source /opt/ros/kinetic/setup.bash
 mkdir -p ~/catkin_ws/src
 cd ~/catkin_ws/
 catkin_make
+source ~/catkin_ws/devel/setup.bash
 ```
 ### 2. Download the HyP-DESPOT package:
 ```bash
