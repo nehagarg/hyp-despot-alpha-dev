@@ -23,7 +23,6 @@ public:
 		Dvc_RandomStreams& streams,
 		Dvc_History& history);
 
-	HOST virtual void AssignFunctionPointers();
 };
 
 
@@ -74,8 +73,6 @@ public:
 						(state->car.vel - Dvc_ModelParams::VEL_MAX) / Dvc_ModelParams::VEL_MAX,value);
 		return Dvc_ValuedAction(ACT_CUR,  value);
 	}
-
-	HOST virtual void AssignFunctionPointers();
 };
 
 #endif /* DVCPEDPOMDPSMARTSCENARIOLOWERBOUNDPOLICY_H_ */

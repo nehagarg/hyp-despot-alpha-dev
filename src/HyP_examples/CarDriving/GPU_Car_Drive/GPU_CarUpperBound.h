@@ -21,7 +21,6 @@ public:
 
 	DEVICE static float Value(const Dvc_State* particles, int scenarioID, Dvc_History& history);
 
-	HOST virtual void AssignFunctionPointers();
 };
 #endif /* DVCPEDPOMDPSMARTSCENARIOLOWERBOUNDPOLICY_H_ */
 

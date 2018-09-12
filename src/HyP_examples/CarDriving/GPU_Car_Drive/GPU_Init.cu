@@ -99,14 +99,6 @@ __global__ void PassPedPomdpParams(	double _in_front_angle_cos, double _freq,
 	 
 }
 
-HOST void Dvc_PedPomdp::AssignFunctionPointers(const DSPOMDP* Hst_model){
-
-	cout << "here" << endl;
-
-	PassPedPomdpFunctionPointers<<<1,1,1>>>(this);
-	HANDLE_ERROR(cudaDeviceSynchronize());
-}
-
 __global__ void UpdatePathKernel(Dvc_COORD* _path, int pathsize)
 {
 	if(path) {delete path; path=new Dvc_Path();}
@@ -124,7 +116,6 @@ void PedPomdp::InitGPUModel(){
 
 	HANDLE_ERROR(cudaMallocManaged((void**)&Dvc_pomdpmodel, sizeof(Dvc_PedPomdp)));
 
-	//Dvc_pomdpmodel->AssignFunctionPointers(Hst);
 	PassPedPomdpFunctionPointers<<<1,1,1>>>(Dvc_pomdpmodel);
 	HANDLE_ERROR(cudaDeviceSynchronize());
 
@@ -182,7 +173,6 @@ __global__ void PassActionValueFuncs(
 void PedPomdp::InitGPUUpperBound(string name,
 		string particle_bound_name) const{
 	HANDLE_ERROR(cudaMalloc((void**)&upperbound, sizeof(Dvc_PedPomdpParticleUpperBound1)));
-	//upperbound->AssignFunctionPointers();
 
 	PassActionValueFuncs<<<1,1,1>>>(upperbound);
 
@@ -205,14 +195,12 @@ __global__ void PassPedPomdpPlbFuncPointers(Dvc_PedPomdpParticleLowerBound* b_lo
 void PedPomdp::InitGPULowerBound(string name,
 		string particle_bound_name) const{
 	HANDLE_ERROR(cudaMallocManaged((void**)&smart_lowerbound, sizeof(Dvc_PedPomdpSmartPolicy)));
-	//smart_lowerbound->AssignFunctionPointers();
 
 	PassPedPomdpPolicyFuncPointers<<<1,1,1>>>(smart_lowerbound);
 
 	HANDLE_ERROR(cudaDeviceSynchronize());
 
 	HANDLE_ERROR(cudaMallocManaged((void**)&b_smart_lowerbound, sizeof(Dvc_PedPomdpParticleLowerBound)));
-	//b_smart_lowerbound->AssignFunctionPointers();
 
 	PassPedPomdpPlbFuncPointers<<<1,1,1>>>(b_smart_lowerbound);
 

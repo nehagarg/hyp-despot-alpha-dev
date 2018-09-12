@@ -50,13 +50,6 @@ class Dvc_ScenarioLowerBound {
 public:
 
 	/**
-	 * Assign all funtion pointers to static member functions in your custom lower bound class.
-	 */
-
-	HOST virtual void AssignFunctionPointers() = 0;
-
-
-	/**
 	 * Returns a lower bound for the maximum total discounted reward obtainable
 	 * by a policy on a set of weighted scenarios. The horizon is infinite. The
 	 * first action that need to be followed to obtain the bound is also

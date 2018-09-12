@@ -17,8 +17,6 @@ class Dvc_DSPOMDP;
 
 class Dvc_TrivialParticleLowerBound: public Dvc_ParticleLowerBound {
 public:
-
-	HOST virtual void AssignFunctionPointers();
 	/**
 	 * Returns a trival lower bound value calculated as 1/(1-gamma)*max_a{V_worstcase(s,a)}.
 	 *

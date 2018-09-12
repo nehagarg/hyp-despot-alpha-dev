@@ -132,11 +132,6 @@ __global__ void PassRandPolicyActionValueFunc(Dvc_RandomPolicy* lowerbound)
 	DvcLowerBoundValue_= &(lowerbound->Value) ;
 }
 
-HOST void Dvc_RandomPolicy::AssignFunctionPointers(){
-	PassRandPolicyActionValueFunc<<<1,1,1>>>(this);
-	HANDLE_ERROR(cudaDeviceSynchronize());
-}
-
 /* =============================================================================
  * Dvc_BlindPolicy class
  * =============================================================================*/
@@ -150,11 +145,6 @@ __global__ void PassBlindPolicyActionValueFunc(Dvc_BlindPolicy* lowerbound)
 {
 	DvcDefaultPolicyAction_=&(lowerbound->Action);
 	DvcLowerBoundValue_=&(lowerbound->Value);
-}
-
-HOST void Dvc_BlindPolicy::AssignFunctionPointers(){
-	PassBlindPolicyActionValueFunc<<<1,1,1>>>(this);
-	HANDLE_ERROR(cudaDeviceSynchronize());
 }
 
 } // namespace despot

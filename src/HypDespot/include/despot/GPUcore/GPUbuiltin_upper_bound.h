@@ -24,8 +24,6 @@ protected:
 	const Dvc_DSPOMDP* model_;
 public:
 
-	HOST virtual void AssignFunctionPointers();
-
 	/*
 	 * Returns an upper bound calculated as 1/(1-gamma)*v_max.
 	 */

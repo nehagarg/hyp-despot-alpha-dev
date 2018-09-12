@@ -30,12 +30,6 @@ struct Dvc_ValuedAction;
 class Dvc_ScenarioUpperBound {
 public:
 
-	/**
-	 * Assign all funtion pointers to static member functions in your custom upper bound class.
-	 */
-	HOST virtual void AssignFunctionPointers() = 0;
-
-
 	/*
 	 * Returns an upper bound to the maximum total discounted reward over an
 	 * infinite horizon for the (unweighted) particle.

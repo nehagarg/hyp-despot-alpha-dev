@@ -24,10 +24,4 @@ __global__ void PassLbValueFunc(Dvc_TrivialParticleLowerBound* lowerbound)
 	DvcParticleLowerBound_Value_=&(lowerbound->Value);
 }
 
-HOST void Dvc_TrivialParticleLowerBound::AssignFunctionPointers(){
-	PassLbValueFunc<<<1,1,1>>>(this);
-	HANDLE_ERROR(cudaDeviceSynchronize());
-}
-
-
 } // namespace despot

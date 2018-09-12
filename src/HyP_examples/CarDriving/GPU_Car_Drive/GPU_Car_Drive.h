@@ -113,9 +113,6 @@ public:
 		ACT_ACC,
 		ACT_DEC
 	};
-
-	HOST virtual void AssignFunctionPointers(const DSPOMDP* hst_model);
-
 };
 
 

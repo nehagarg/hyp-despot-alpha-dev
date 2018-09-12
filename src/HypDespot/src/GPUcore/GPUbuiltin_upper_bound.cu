@@ -21,9 +21,4 @@ __global__ void PassUbValueFunc(Dvc_TrivialParticleUpperBound* upperbound)
 	DvcUpperBoundValue_=&(upperbound->Value);
 }
 
-HOST void Dvc_TrivialParticleUpperBound::AssignFunctionPointers(){
-	PassUbValueFunc<<<1,1,1>>>(this);
-	HANDLE_ERROR(cudaDeviceSynchronize());
-}
-
 } // namespace despot

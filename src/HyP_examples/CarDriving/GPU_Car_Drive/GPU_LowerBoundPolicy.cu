@@ -11,33 +11,6 @@ using despot::Dvc_State;
 
 #include <despot/GPUinterface/GPUpomdp.h>
 
-/*
-__global__ void PassPedPomdpPolicyFuncPointers(Dvc_PedPomdpSmartPolicy* lowerbound)
-{
-	DvcDefaultPolicyAction_=&(lowerbound->Action);
-	DvcLowerBoundValue_=&(lowerbound->Value);
-}
-
-__global__ void PassPedPomdpPlbFuncPointers(Dvc_PedPomdpParticleLowerBound* b_lowerbound)
-{
-	DvcParticleLowerBound_Value_=&(b_lowerbound->Value);
-}
-
-HOST void Dvc_PedPomdpSmartPolicy::AssignFunctionPointers(){
-
-	PassPedPomdpPolicyFuncPointers<<<1,1,1>>>(this);
-
-	HANDLE_ERROR(cudaDeviceSynchronize());
-}
-
-HOST void Dvc_PedPomdpParticleLowerBound::AssignFunctionPointers(){
-
-	PassPedPomdpPlbFuncPointers<<<1,1,1>>>(this);
-
-	HANDLE_ERROR(cudaDeviceSynchronize());
-}
-*/
-
 DEVICE int Dvc_PedPomdpSmartPolicy::Action(
 		int scenarioID, const Dvc_State* particles,
 				Dvc_RandomStreams& streams,

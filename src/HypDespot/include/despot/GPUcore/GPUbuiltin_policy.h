@@ -30,11 +30,8 @@ class Dvc_DSPOMDP;
 
 
 class Dvc_BlindPolicy: public Dvc_DefaultPolicy {
-private:
 
 public:
-	HOST virtual void AssignFunctionPointers();
-
 	/**
 	 * [ Compulsory ]
 	 * Call a kernel function to initialize DvcBlindPolicy_action_ in device memory
@@ -54,12 +51,8 @@ extern DEVICE ACT_TYPE DvcBlindPolicy_action_;
  * =============================================================================*/
 
 class Dvc_RandomPolicy: public Dvc_DefaultPolicy {
-private:
-
 
 public:
-	HOST virtual void AssignFunctionPointers();
-
 	DEVICE static void Init(int num_actions, double* action_probs_ = NULL);
 	DEVICE static ACT_TYPE Action(int scenarioID, const Dvc_State* particles,
 			Dvc_RandomStreams& streams,
