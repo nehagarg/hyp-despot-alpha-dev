@@ -39,7 +39,7 @@ endif()
 
 find_package(catkin REQUIRED COMPONENTS
   roscpp
-  ${PROJECT_NAME}
+#  ${PROJECT_NAME}
 )
 
 

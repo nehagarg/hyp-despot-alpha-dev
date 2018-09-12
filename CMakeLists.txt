@@ -28,7 +28,7 @@ set(DESPOT_BUILD_POMDPX ON CACHE BOOL "Build POMDPX example")
 set(DESPOT_BUILD_GPUS ON CACHE BOOL "Build GPU despot")
 
 
-set(CMAKE_PREFIX_PATH "/home/yuanfu/workspace/catkin_ws/devel;/opt/ros/kinetic")
+set(CMAKE_PREFIX_PATH "/opt/ros/kinetic")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse2 -mfpmath=sse")
 set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -arch=sm_30")
@@ -72,7 +72,7 @@ catkin_package(
   #INCLUDE_DIRS src/planner/
 #  LIBRARIES ped_path_predictor
   CATKIN_DEPENDS roscpp #std_msgs
-  DEPENDS system_lib
+  #DEPENDS system_lib
 )
 message("@@@@@@@@@@@@@@ before add lib @@@@@@@@@@@@@@")
 add_subdirectory(src/HypDespot/)
