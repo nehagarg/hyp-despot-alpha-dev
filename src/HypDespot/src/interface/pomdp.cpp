@@ -165,6 +165,18 @@ void DSPOMDP::PrintParticles(const std::vector<State*> particles, std::ostream& 
 	cerr << "PrintParticles function hasn't been defined yet!" << endl;
 }
 
+void DSPOMDP::ExportState(const State& state, std::ostream& out) const{
+	cerr << __FUNCTION__ << " function hasn't been defined yet!" << endl;
+}
+
+State* DSPOMDP::ImportState(std::istream& in) const{
+	cerr << __FUNCTION__ << " function hasn't been defined yet!" << endl;
+}
+
+void DSPOMDP::ImportStateList(std::vector<State*>& particles, std::istream& in) const{
+	cerr << __FUNCTION__ << " function hasn't been defined yet!" << endl;
+}
+
 
 /* =============================================================================
  * BeliefMDP classs

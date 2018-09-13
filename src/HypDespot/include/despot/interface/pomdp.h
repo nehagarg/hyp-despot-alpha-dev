@@ -267,14 +267,6 @@ public:
 	 * @param out   The destination stream
 	 */
 	virtual void PrintState(const State& state, std::ostream& out = std::cout) const = 0;
-	
-	/**
-	 * [Essential]
-	 * Explort and import a state or a list of states from file.
-	 */
-	virtual void ExportState(const State& state, std::ostream& out = std::cout) const = 0;
-	virtual State* ImportState(std::istream& in) const=0;
-	virtual void ImportStateList(std::vector<State*>& particles, std::istream& in) const=0;
 
 	/**
 	 * [Essential]
@@ -303,10 +295,19 @@ public:
 	virtual void PrintBelief(const Belief& belief,
 		std::ostream& out = std::cout) const = 0;
 
-	 /**
+	/**
+	 * [Optional]
 	 * To print the particles, for testing purpose
 	 */
 	 virtual void PrintParticles(const std::vector<State*> particles, std::ostream& out = std::cout) const;
+
+	/**
+	 * [Optional]
+	 * Explort and import a state or a list of states from file.
+	 */
+	 virtual void ExportState(const State& state, std::ostream& out = std::cout) const;
+	 virtual State* ImportState(std::istream& in) const;
+	 virtual void ImportStateList(std::vector<State*>& particles, std::istream& in) const;
 
 	/* ========================================================================
 	 * Memory management.
