@@ -64,6 +64,39 @@ public:
 	State* Copy(const State* particle) const;
 	void Free(State* particle) const;
 	int NumActiveParticles() const;
+
+	//=================Hyp Despot Functions=============================
+	virtual Dvc_State* AllocGPUParticles(int numParticles, MEMORY_MODE mode,  Dvc_State*** particles_all_a = NULL ) const;
+	virtual void DeleteGPUParticles( MEMORY_MODE mode, Dvc_State** particles_all_a = NULL) const;
+	virtual void CopyGPUParticlesFromParent(Dvc_State* des, Dvc_State* src, int src_offset, int* IDs,
+						int num_particles, bool interleave,
+						Dvc_RandomStreams* streams, int stream_pos,
+						void* CUDAstream = NULL, int shift = 0) const;
+	virtual Dvc_State* CopyParticlesToGPU(Dvc_State* dvc_particles, const std::vector<State*>& particles , bool deep_copy) const;
+	virtual void CopyParticleIDsToGPU(int* dvc_IDs, const std::vector<int>& particleIDs, void* CUDAstream = NULL) const;
+
+	virtual void ReadParticlesBackToCPU(std::vector<State*>& particles , const Dvc_State* parent_particles,
+					    bool deepcopy) const {
+	  std::cout << "Caution! Function " << __FUNCTION__ << " haven't been implemented" << std::endl;
+	}
+
+	virtual void InitGPUModel();
+
+	virtual void InitGPUUpperBound(std::string name,std::string particle_bound_name) const ;
+
+	virtual void InitGPULowerBound(std::string name,std::string particle_bound_name) const ;
+
+	virtual void DeleteGPUModel();
+
+	virtual void DeleteGPUUpperBound(std::string name, std::string particle_bound_name) ;
+
+	virtual void DeleteGPULowerBound(std::string name, std::string particle_bound_name) ;
+
+	virtual void CreateMemoryPool() const ;
+	virtual void DestroyMemoryPool(MEMORY_MODE mode) const ;
+
+	virtual int ParallelismInStep() const ;
+	  
 };
 
 } // namespace despot
