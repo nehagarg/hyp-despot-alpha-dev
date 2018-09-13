@@ -77,7 +77,7 @@ catkin_package(
 message("@@@@@@@@@@@@@@ before add lib @@@@@@@@@@@@@@")
 add_subdirectory(src/HypDespot/)
 
-
+add_subdirectory(src/HyP_examples/tiger)
 add_subdirectory(src/HyP_examples/CarDriving)
 add_subdirectory(src/HyP_examples/ma_rock_sample)
 add_subdirectory(src/HyP_examples/unkown_navigation)

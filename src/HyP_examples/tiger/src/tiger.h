@@ -1,7 +1,7 @@
 #ifndef TIGER_H
 #define TIGER_H
 
-#include <despot/core/pomdp.h>
+#include <despot/interface/pomdp.h>
 
 namespace despot {
 
@@ -39,6 +39,7 @@ public:
 		OBS_TYPE& obs) const;
 	int NumStates() const;
 	virtual int NumActions() const;
+	int NumObservations() const;
 	virtual double ObsProb(OBS_TYPE obs, const State& s, int a) const;
 
 	State* CreateStartState(std::string type) const;
@@ -48,7 +49,7 @@ public:
 		return 10;
 	}
 
-	inline ValuedAction GetMinRewardAction() const {
+	inline ValuedAction GetBestAction() const {
 		return ValuedAction(LISTEN, -1);
 	}
 	ScenarioLowerBound* CreateScenarioLowerBound(std::string name = "DEFAULT",

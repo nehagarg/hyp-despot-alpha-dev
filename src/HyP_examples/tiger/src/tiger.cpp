@@ -1,4 +1,7 @@
 #include "tiger.h"
+#include <despot/core/particle_belief.h>
+#include <despot/core/builtin_lower_bounds.h>
+#include <despot/core/builtin_policy.h>
 
 using namespace std;
 
@@ -29,11 +32,11 @@ string TigerState::text() const {
  * OptimalTigerPolicy class
  * =============================================================================*/
 
-class OptimalTigerPolicy: public Policy {
+class OptimalTigerPolicy: public DefaultPolicy {
 public:
 	OptimalTigerPolicy(const DSPOMDP* model,
 		ParticleLowerBound* bound) :
-		Policy(model, bound) {
+		DefaultPolicy(model, bound) {
 	}
 
 	// NOTE: optimal for noise = 0.15
@@ -96,6 +99,12 @@ int Tiger::NumActions() const {
 	return 3;
 }
 
+int Tiger::NumObservations() const {
+  return 2;
+    //cout<<__FUNCTION__<<": Obs space too large! INF used instead"<<endl;
+    return std::numeric_limits<int>::max();
+}
+  
 double Tiger::ObsProb(OBS_TYPE obs, const State& s, int a) const {
 	const TigerState& state = static_cast<const TigerState&>(s);
 

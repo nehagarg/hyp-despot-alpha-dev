@@ -26,6 +26,7 @@ public:
     bool Step(State& s, double random_num, int action, double& reward,
 		OBS_TYPE& obs) const;
     int NumActions() const;
+    int NumObservations() const;
     double ObsProb(OBS_TYPE obs, const State& s, int a) const;
     
     void PrintObs(const State& state, OBS_TYPE obs, std::ostream& out = std::cout) const;

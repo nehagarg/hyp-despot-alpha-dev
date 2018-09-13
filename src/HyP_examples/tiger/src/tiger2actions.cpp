@@ -19,6 +19,10 @@ int Tiger2actions::NumActions() const {
     return 4;
 }
 
+  int Tiger2actions::NumObservations() const {
+    //cout<<__FUNCTION__<<": Obs space too large! INF used instead"<<endl;
+    return std::numeric_limits<int>::max();
+  }
 bool Tiger2actions::Step(State& s, double random_num, int action, double& reward, OBS_TYPE& obs) const {
         TigerState& state = static_cast<TigerState&>(s);
 	bool terminal = false;
