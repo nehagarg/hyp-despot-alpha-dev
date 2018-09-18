@@ -34,7 +34,8 @@ extern const double NEG_INFTY;
 extern const double POS_INFTY;
 extern const double INF;
 extern const double TINY;
-
+ extern const uint64_t RESIDUAL_OBS;
+ 
 extern Config config;
 extern ExecTracker tracker;
 

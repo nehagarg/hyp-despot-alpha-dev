@@ -208,7 +208,7 @@ QNode* VNode::common_parent() {
      int common_children_size = common_parent_->common_children_.size();
     if(common_children_size==action)
     {
-        QNode* common_qnode = Child(action);
+        QNode* common_qnode = children_[action];
         common_parent_->common_children_.push_back(common_qnode);
     }
     else
@@ -223,7 +223,7 @@ QNode* VNode::common_parent() {
      int common_children_size = common_parent_->common_children_.size();
     if(common_children_size==action)
     {
-        QNode* common_qnode = Child(action);
+        QNode* common_qnode = children_[action];
         common_parent_->common_children_.push_back(common_qnode);
     }
     else

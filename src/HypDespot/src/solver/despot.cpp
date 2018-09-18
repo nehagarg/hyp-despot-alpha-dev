@@ -732,7 +732,7 @@ void DESPOT::InitUpperBound(VNode* vnode, ScenarioUpperBound* upper_bound,
         else
         {
             upper = upper_bound->Value(vnode->particles(), streams, history);
-            vnode->utility_upper_bound = upper * Globals::Discount(vnode->depth());
+            vnode->utility_upper_bound(upper * Globals::Discount(vnode->depth()));
             upper = upper * Globals::Discount(vnode->depth()) - Globals::config.pruning_constant;
             
         }

@@ -122,7 +122,7 @@ ValuedAction DefaultPolicy::RecursiveValue(const vector<State*>& particles,
 			OBS_TYPE obs = it->first;
 			history.Add(action, obs);
 			streams.Advance();
-			ValuedAction va = RecursiveValue(it->second, streams, history);
+			ValuedAction va = RecursiveValue(it->second, streams, history, alpha_vector_lower_bound, compute_alpha_vector);
 			value += Globals::Discount() * va.value;
 			streams.Back();
 			history.RemoveLast();

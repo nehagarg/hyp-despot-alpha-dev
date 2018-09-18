@@ -134,7 +134,7 @@ public:
 	//BeliefUpperBound* CreateBeliefUpperBound(std::string name = "DEFAULT") const;
 
 	inline ValuedAction GetBestAction() const {
-		return ValuedAction(E_SAMPLE+1, 0);
+		return ValuedAction(E_SAMPLE+1, 0.0);
 	}
 	ScenarioLowerBound* CreateScenarioLowerBound(std::string name = "DEFAULT",
 		std::string particle_bound_name = "DEFAULT") const;
