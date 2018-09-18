@@ -28,6 +28,9 @@ public:
 
 	ValuedAction Value(const std::vector<State*>& particles, RandomStreams& streams,
 		History& history) const;
+
+        ValuedAction Value(const std::vector<State*>& particles, RandomStreams& streams, History& history, std::vector<double>& alpha_vector_lower_bound) const;
+
 };
 
 /* =============================================================================
@@ -40,6 +43,11 @@ public:
 
 public:
 	virtual ValuedAction Value(const std::vector<State*>& particles) const;
+        
+
+        virtual ValuedAction Value(const std::vector<State*>& particles, std::vector<double>& alpha_vector_lower_bound) const;
+
+        
 };
 
 /* =============================================================================

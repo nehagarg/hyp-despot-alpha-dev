@@ -42,6 +42,20 @@ public:
 	 */
 	virtual double Value(const std::vector<State*>& particles,
 		RandomStreams& streams, History& history) const = 0;
+        
+        /**
+	 * Returns a upper bound vector for the maximum total discounted reward
+	 * on a set of weighted scenarios. The horizon is infinite.
+	 *
+	 * @param particles States in the head of scenarios.
+	 * @param streams Random numbers attached to the scenarios.
+	 * @param history Current action-observation history.
+         * @param alpha_vector_upper_bound Upper bound value for each state
+	 */
+	virtual void Value(const std::vector<State*>& particles,
+		RandomStreams& streams, History& history, std::vector<double>& alpha_vector_upper_bound) const = 0;
+        
+        
 };
 
 /* =============================================================================
@@ -77,6 +91,10 @@ public:
 	 */
 	virtual double Value(const std::vector<State*>& particles,
 		RandomStreams& streams, History& history) const;
+        
+
+        void Value(const std::vector<State*>& particles, RandomStreams& streams, History& history, std::vector<double>& alpha_vector_upper_bound) const;
+
 };
 
 

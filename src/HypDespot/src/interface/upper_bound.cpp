@@ -37,7 +37,15 @@ double ParticleUpperBound::Value(const vector<State*>& particles,
 		value += particle->weight * Value(*particle);
 	}
 	return value;
-}
+    }
+
+    void ParticleUpperBound::Value(const std::vector<State*>& particles, RandomStreams& streams, History& history, std::vector<double>& alpha_vector_upper_bound) const {
+        for (int i = 0; i < particles.size(); i++) {
+		State* particle = particles[i];
+		alpha_vector_upper_bound[particle->scenario_id] = Value(*particle);
+	}
+    }
+
 
 /* =============================================================================
  * BeliefUpperBound

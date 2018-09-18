@@ -81,6 +81,7 @@ add_library(
   src/plannerbase.cpp
   src/solver/aems.cpp
   src/solver/despot.cpp
+  src/solver/DespotWithAlphaFunctionUpdate.cpp
   src/solver/pomcp.cpp
   src/solver/baseline_solver.cpp
   src/util/coord.cpp

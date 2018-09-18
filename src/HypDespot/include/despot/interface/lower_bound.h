@@ -51,6 +51,22 @@ public:
 	 */
 	virtual ValuedAction Value(const std::vector<State*>& particles,
 		RandomStreams& streams, History& history) const = 0;
+        
+        /**
+	 * Returns a lower bound vector for the maximum total discounted reward obtainable
+	 * by a policy on a set of weighted scenarios. The horizon is infinite. The
+	 * first action that need to be followed to obtain the bound is also
+	 * returned.
+	 *
+	 * @param particles States in the head of scenarios.
+	 * @param streams Random numbers attached to the scenarios.
+	 * @param history Current action-observation history.
+         * @param alpha_vector_lower_bound Lower bound value for each state
+	 * @return (a, v), where v is the dummy lower bound and a is the first action needed
+	 * to obtain the lower bound.
+	 */
+	virtual ValuedAction Value(const std::vector<State*>& particles,
+		RandomStreams& streams, History& history, std::vector<double>& alpha_vector_lower_bound) const = 0;
 };
 
 /* =============================================================================
@@ -76,9 +92,15 @@ public:
 	 * @param particles States in the head of scenarios.
 	 */
 	virtual ValuedAction Value(const std::vector<State*>& particles) const = 0;
+        
+        virtual ValuedAction Value(const std::vector<State*>& particles, std::vector<double>& alpha_vector_lower_bound) const = 0;
 
 	ValuedAction Value(const std::vector<State*>& particles,
 		RandomStreams& streams, History& history) const;
+        
+
+        ValuedAction Value(const std::vector<State*>& particles, RandomStreams& streams, History& history, std::vector<double>& alpha_vector_lower_bound) const;
+
 };
 
 /* =============================================================================

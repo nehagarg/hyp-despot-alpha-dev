@@ -13,16 +13,37 @@ namespace despot {
 
 ValuedAction::ValuedAction() :
 	action(-1),
-	value(0) {
+	value(0),
+        value_array(NULL){
 }
 
 ValuedAction::ValuedAction(ACT_TYPE _action, double _value) :
 	action(_action),
-	value(_value) {
+	value(_value),
+        value_array(NULL) {
 }
 
+ValuedAction::ValuedAction(int _action, std::vector<double>* _value_array):
+action(_action),
+	value_array(_value_array),
+        value(0)
+{
+    
+}
 ostream& operator<<(ostream& os, const ValuedAction& va) {
-	os << "(" << va.action << ", " << va.value << ")";
+	//os << "(" << va.action << ", " << va.value << ")";
+	//return os;
+        
+        os << "(" << va.action << ", " << va.value << ", [";
+        if(va.value_array!=NULL)
+        {
+            for (int i = 0; i < va.value_array->size(); i++)
+            {
+                os << (*va.value_array)[i] << ", " ;
+            }
+        
+        }
+        os << "])" ;
 	return os;
 }
 
@@ -54,7 +75,12 @@ ParticleLowerBound::ParticleLowerBound(const DSPOMDP* model) :
 ValuedAction ParticleLowerBound::Value(const vector<State*>& particles,
 	RandomStreams& streams, History& history) const {
 	return Value(particles);
-}
+    }
+
+    ValuedAction ParticleLowerBound::Value(const std::vector<State*>& particles, RandomStreams& streams, History& history, std::vector<double>& alpha_vector_lower_bound) const {
+       return Value(particles, alpha_vector_lower_bound);     
+    }
+
 
 /* =============================================================================
  * BeliefLowerBound class

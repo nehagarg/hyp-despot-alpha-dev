@@ -181,7 +181,8 @@ Solver *PlannerBase::InitializeSolver(DSPOMDP *model, Belief* belief,
 		string solver_type, option::Option *options) {
 	Solver *solver = NULL;
 	// DESPOT or its default policy
-	if (solver_type == "DESPOT" || solver_type == "PLB") // PLB: particle lower bound
+	if (solver_type == "DESPOT" || solver_type == "PLB" ||
+      solver_type == "BTDESPOTALPHA" ) // PLB: particle lower bound
 			{
 		string blbtype =
 				options[E_BLBTYPE] ? options[E_BLBTYPE].arg : "DEFAULT";
@@ -191,7 +192,8 @@ Solver *PlannerBase::InitializeSolver(DSPOMDP *model, Belief* belief,
 
 		logi << "Created lower bound " << typeid(*lower_bound).name() << endl;
 
-		if (solver_type == "DESPOT") {
+		if (solver_type == "DESPOT" || 
+            solver_type == "BTDESPOTALPHA") {
 			string bubtype =
 					options[E_BUBTYPE] ? options[E_BUBTYPE].arg : "DEFAULT";
 			string ubtype =
@@ -202,7 +204,18 @@ Solver *PlannerBase::InitializeSolver(DSPOMDP *model, Belief* belief,
 			logi << "Created upper bound " << typeid(*upper_bound).name()
 					<< endl;
 
-			solver = new DESPOT(model, lower_bound, upper_bound);
+			//solver = new DESPOT(model, lower_bound, upper_bound);
+                        if (solver_type == "DESPOT")
+                        {
+                          solver = new DESPOT(model, lower_bound, upper_bound);
+                        }
+                        if (solver_type == "BTDESPOTALPHA"  )
+                        {
+                            Globals::config.track_alpha_vector = true;
+                          solver = new DESPOT(model, lower_bound, upper_bound);
+                          
+                          
+                        }
 		} else
 			solver = new ScenarioBaselineSolver(lower_bound);
 	} // AEMS or its default policy

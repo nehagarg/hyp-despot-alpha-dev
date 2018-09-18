@@ -20,6 +20,10 @@ public:
 
 	virtual double Value(const std::vector<State*>& particles,
 		RandomStreams& streams, History& history) const;
+        
+
+        virtual void Value(const std::vector<State*>& particles, RandomStreams& streams, History& history, std::vector<double>& alpha_vector_upper_bound) const;
+
 };
 
 /* =============================================================================
@@ -41,6 +45,9 @@ public:
 
 	double Value(const std::vector<State*>& particles,
 		RandomStreams& streams, History& history) const;
+
+        virtual void Value(const std::vector<State*>& particles, RandomStreams& streams, History& history, std::vector<double>& alpha_vector_upper_bound) const;
+
 };
 
 /* =============================================================================

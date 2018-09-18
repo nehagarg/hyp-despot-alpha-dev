@@ -40,11 +40,19 @@ void PolicyGraph::Reset() {
 
 ParticleLowerBound* PolicyGraph::particle_lower_bound() const {
 	return particle_lower_bound_;
-}
+    }
 
+    ValuedAction PolicyGraph::Value(const std::vector<State*>& particles, RandomStreams& streams, History& history, std::vector<double>& alpha_vector_lower_bound) const {
+        return Value(particles,streams,history, alpha_vector_lower_bound, true);
+    }
 
 ValuedAction PolicyGraph::Value(const vector<State*>& particles,
 	RandomStreams& streams, History& history) const {
+    std::vector<double> dummy;
+        return Value(particles,streams,history, dummy, false);
+    }
+
+ValuedAction PolicyGraph::Value(const std::vector<State*>& particles, RandomStreams& streams, History& history, std::vector<double>& alpha_vector_lower_bound, bool compute_alpha_vector) const {
 	vector<State*> copy;
 	for (int i = 0; i < particles.size(); i++)
 		copy.push_back(model_->Copy(particles[i]));
@@ -81,7 +89,15 @@ ValuedAction PolicyGraph::Value(const vector<State*>& particles,
 			terminal = model_->Step(*particle,
 				streams.Entry(particle->scenario_id), action, reward, obs);
 
-			value += reward * particle->weight * Globals::Discount(depth-initial_depth_);
+                        if(compute_alpha_vector)
+                        {
+                            alpha_vector_lower_bound[particle->scenario_id] += reward*Globals::Discount(depth-initial_depth_);
+                        }
+                        else
+                        {
+                           value += reward * particle->weight * Globals::Discount(depth-initial_depth_); 
+                        }
+			
 
 			streams.Advance();
 
@@ -98,7 +114,15 @@ ValuedAction PolicyGraph::Value(const vector<State*>& particles,
 
 		if(!terminal)
 		{
+                    if(compute_alpha_vector)
+                        {
+                        
+                        alpha_vector_lower_bound[particle->scenario_id] += Globals::Discount(depth-initial_depth_)*particle_lower_bound_->Value(local_particles).value; //local particle has only one particle
+                        }
+                        else
+                        {
 			value += Globals::Discount(depth-initial_depth_/*+1*/) * particle_lower_bound_->Value(local_particles).value;
+                        }
 		}
 		//cout.precision(3);
 		//cout<< value<<" ";
@@ -108,7 +132,14 @@ ValuedAction PolicyGraph::Value(const vector<State*>& particles,
 	for (int i = 0; i < copy.size(); i++)
 		model_->Free(copy[i]);
 
-	return ValuedAction(Action_decision, TotalValue);
+        if(compute_alpha_vector)
+        {
+            return ValuedAction(Action_decision, &alpha_vector_lower_bound);
+        }
+        else
+        {
+            return ValuedAction(Action_decision, TotalValue);
+        }
 }
 
 void PolicyGraph::ClearGraph()

@@ -13,6 +13,6 @@ const double POS_INFTY = std::numeric_limits<double>::is_iec559 ?
 	numeric_limits<double>::infinity() :
 	numeric_limits<double>::max();
 const double NEG_INFTY = -POS_INFTY;
-
+const uint64_t RESIDUAL_OBS = numeric_limits<uint64_t>::max();
 } // namespace Globals
 } // namespace despot

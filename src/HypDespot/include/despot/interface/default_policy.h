@@ -30,10 +30,12 @@ class MMAPInferencer;
 struct ValuedAction {
 	ACT_TYPE action;
 	double value;
-
+        std::vector<double> * value_array;
+         
 	ValuedAction();
 	ValuedAction(ACT_TYPE _action, double _value);
-
+        ValuedAction(int _action,  std::vector<double> * _value_array);
+        
 	friend std::ostream& operator<<(std::ostream& os, const ValuedAction& va);
 };
 
@@ -50,7 +52,8 @@ private:
 	ParticleLowerBound* particle_lower_bound_;
 
 	ValuedAction RecursiveValue(const std::vector<State*>& particles,
-		RandomStreams& streams, History& history) const;
+		RandomStreams& streams, History& history, std::vector<double>& alpha_vector_lower_bound, bool compute_alpha_vector) const;
+        ValuedAction Value(const std::vector<State*>& particles, RandomStreams& streams, History& history, std::vector<double>& alpha_vector_lower_bound, bool compute_alpha_vector) const;
 
 public:
 	DefaultPolicy(const DSPOMDP* model, ParticleLowerBound* particle_lower_bound);
@@ -72,6 +75,10 @@ public:
 
 	ValuedAction Value(const std::vector<State*>& particles, RandomStreams& streams,
 		History& history) const;
+        
+
+        ValuedAction Value(const std::vector<State*>& particles, RandomStreams& streams, History& history, std::vector<double>& alpha_vector_lower_bound) const;
+
 };
 
 } // namespace despot

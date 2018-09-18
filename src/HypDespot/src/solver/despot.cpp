@@ -2,6 +2,7 @@
 #include <despot/solver/pomcp.h>
 #include <iomanip>      // std::setprecision
 #include <despot/core/builtin_upper_bounds.h>
+#include <despot/solver/DespotWithAlphaFunctionUpdate.h>
 
 using namespace std;
 static double HitCount = 0;
@@ -89,7 +90,11 @@ VNode* DESPOT::Trial(VNode* root, RandomStreams& streams,
 		}
 
 		double start1 = clock();
-		ExploitBlockers(cur);
+                if(!Globals::config.track_alpha_vector)
+                {
+                    ExploitBlockers(cur);
+                }
+		//ExploitBlockers(cur);
 		BlockerCheckTime += double(clock() - start1) / CLOCKS_PER_SEC;
 
 		if (Gap(cur) == 0) {
@@ -664,22 +669,77 @@ void DESPOT::InitLowerBound(VNode* vnode, ScenarioLowerBound* lower_bound,
 	streams.position(vnode->depth());
 	/*if(vnode->depth()==89)
 		cout<<"Reach depth 89!"<<endl;*/
-	ValuedAction move = lower_bound->Value(vnode->particles(), streams,
-	                                       history);
-	move.value *= Globals::Discount(vnode->depth());
-	vnode->default_move(move);
+        if(Globals::config.track_alpha_vector)
+        {
+            QNode* common_parent = vnode->common_parent();
+                if(common_parent->default_move.value_array == NULL)
+                {
+                    common_parent->default_move = lower_bound->Value(vnode->particles(), streams, history, common_parent->default_lower_bound_alpha_vector);
+                    for(int i = 0; i < Globals::config.num_scenarios; i++)
+                    {
+                        (*(common_parent->default_move.value_array))[i] = (*(common_parent->default_move.value_array))[i] * Globals::Discount(vnode->depth());
+                    }
+                   
+                   // vnode->default_move(vnode->lower_bound_alpha_vector);
+                }
+                vnode->lower_bound_alpha_vector = common_parent->default_move;
+                        
+            vnode->lower_bound_alpha_vector.value = vnode->calculate_lower_bound();
+        }
+        else
+        {
+             vnode->lower_bound_alpha_vector = lower_bound->Value(vnode->particles(), streams, history);
+            vnode->lower_bound_alpha_vector.value *= Globals::Discount(vnode->depth());
+            
+	}
+        vnode->default_move(vnode->lower_bound_alpha_vector);
+	vnode->lower_bound(vnode->lower_bound_alpha_vector.value);
+	
+        //ValuedAction move = lower_bound->Value(vnode->particles(), streams,
+	//                                       history);
+	//move.value *= Globals::Discount(vnode->depth());
+	//vnode->default_move(move);
 	//cout<<"vnode at depth "<<vnode->depth()<<", default move value="<< move.value
 	//	<<" weight="<< vnode->Weight()<< endl;//Debug
-	vnode->lower_bound(move.value);
+	//vnode->lower_bound(move.value);
 }
 
 void DESPOT::InitUpperBound(VNode* vnode, ScenarioUpperBound* upper_bound,
                             RandomStreams& streams, History& history) {
 	streams.position(vnode->depth());
-	double upper = upper_bound->Value(vnode->particles(), streams, history);
-	vnode->utility_upper_bound(upper * Globals::Discount(vnode->depth()));
-	upper = upper * Globals::Discount(vnode->depth())
-	        - Globals::config.pruning_constant;
+        double upper;
+        if(Globals::config.track_alpha_vector)
+        {
+            QNode* common_parent = vnode->common_parent();
+                if(common_parent->default_upper_bound_alpha_vector.size() == 0)
+                {
+                   common_parent->default_upper_bound_alpha_vector.resize(Globals::config.num_scenarios, 0);   
+            upper_bound->Value(vnode->particles(), streams, history, common_parent->default_upper_bound_alpha_vector); 
+             for(int i = 0; i < Globals::config.num_scenarios; i++)
+                {
+                    common_parent->default_upper_bound_alpha_vector[i] = common_parent->default_upper_bound_alpha_vector[i] * Globals::Discount(vnode->depth());
+                }
+                }
+                vnode->upper_bound_alpha_vector.value_array = (&(common_parent->default_upper_bound_alpha_vector));
+            
+            
+            upper = vnode->calculate_upper_bound();
+            
+            vnode->upper_bound_alpha_vector.value = upper;
+            
+            
+        }
+        else
+        {
+            upper = upper_bound->Value(vnode->particles(), streams, history);
+            vnode->utility_upper_bound = upper * Globals::Discount(vnode->depth());
+            upper = upper * Globals::Discount(vnode->depth()) - Globals::config.pruning_constant;
+            
+        }
+	//double upper = upper_bound->Value(vnode->particles(), streams, history);
+	//vnode->utility_upper_bound(upper * Globals::Discount(vnode->depth()));
+	//upper = upper * Globals::Discount(vnode->depth())
+	//        - Globals::config.pruning_constant;
 	vnode->upper_bound(upper);
 }
 
@@ -694,6 +754,7 @@ void DESPOT::InitBounds(VNode* vnode, ScenarioLowerBound* lower_bound,
 	        // close gap because no more search can be done on leaf node
 	        || vnode->depth() == Globals::config.search_depth - 1) {
 		vnode->upper_bound(vnode->lower_bound());
+                vnode->upper_bound_alpha_vector = vnode->lower_bound_alpha_vector;
 	}
 }
 
@@ -1537,7 +1598,15 @@ void DESPOT::Backup(VNode* vnode, bool real) {
 				   msg.c_str());
 		} else
 		{
-			Update(vnode, real);
+			//Update(vnode, real);
+                    if(Globals::config.track_alpha_vector)
+                    {
+                        DespotWithAlphaFunctionUpdate::Update(vnode);
+                    }
+                    else
+                    {
+                        DESPOT::Update(vnode,real);
+                    }
 			if(FIX_SCENARIO==1){
 				cout.precision(4);
 				cout<<"thread "<<0<<" "<<msg<<" get old node "<<vnode
@@ -1574,7 +1643,27 @@ void DESPOT::Backup(VNode* vnode, bool real) {
 				                                msg.c_str());
 		} else
 		{
-			Update(parentq, real);
+                    
+                        if(Globals::config.track_alpha_vector)
+                        {
+                            //UPDATE siblings
+                            map<OBS_TYPE, VNode*>& children = parentq->children();
+                            for (map<OBS_TYPE, VNode*>::iterator it = children.begin();
+                        it != children.end(); it++) {
+                                //std::cout << "Observation " << "Sibling " << it->first << " Own " << vnode->edge() << std::endl;
+                                if(it->first != vnode->edge())
+                                {
+                                    //std::cout << "Updating sibling" << std::endl;
+                                    DespotWithAlphaFunctionUpdate::UpdateSibling(vnode, it->second);
+                                }
+                            }
+                            DespotWithAlphaFunctionUpdate::Update(parentq);
+                        }
+                        else
+                        {
+                            DESPOT::Update(parentq,real); 
+                        }
+			//Update(parentq, real);
 			if(FIX_SCENARIO==1)
 			{
 				cout.precision(4);
@@ -1663,7 +1752,14 @@ void DESPOT::Expand(VNode* vnode, ScenarioLowerBound* lower_bound,
 		{
 			if (Globals::config.use_multi_thread_ && Globals::config.exploration_mode == UCT)
 				static_cast<Shared_QNode*>(qnode)->visit_count_ = 1.1;
-			Expand(qnode, lower_bound, upper_bound, model, streams, history);
+                        if(Globals::config.track_alpha_vector)
+                        {
+                            DespotWithAlphaFunctionUpdate::Expand(qnode,lower_bound,upper_bound,model,streams,history);
+                        }
+                        else
+                        {
+                            Expand(qnode, lower_bound, upper_bound, model, streams, history);
+                        }
 		}
 
 	}

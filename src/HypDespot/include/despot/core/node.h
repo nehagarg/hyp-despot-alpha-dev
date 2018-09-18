@@ -44,9 +44,28 @@ public:
 
 	double weight_;
   	int num_GPU_particles_;  // Used in GPUDESPOT
+        
+        //=============Used for despot with alpha function update========================
+        std::vector<double> particle_weights; //used in despot with alpha function update
+        std::vector<double> obs_probs; //used in despot with alpha function update
+        std::vector<double> lower_bound_alpha_vector_; //used in despot with alpha function to store best sibling lower bound vector
+        ValuedAction lower_bound_alpha_vector; //used in despot with alpha function update
+        ValuedAction upper_bound_alpha_vector; //used in despot with alpha function update
+        //std::vector<double> default_upper_bound_alpha_vector;
+        //std::vector<double> default_lower_bound_alpha_vector;
+        //ValuedAction estimated_upper_bound_alpha_vector; //used in despot with alpha function update
+        bool extra_node; //used in despot with alpha function update
+        VNode* obs_probs_holder;  //Used in despot with alpha function update Vnode holding obs probs
+        QNode* common_parent_; //Used in despot with alpha function update Vnode holding particles
+        //=================================================================================
+        
 	VNode(){;}
 	VNode(std::vector<State*>& particles, std::vector<int> particleIDs, int depth = 0, QNode* parent = NULL,
 		OBS_TYPE edge = (OBS_TYPE)-1);
+        VNode(int depth , QNode* parent ,
+		OBS_TYPE edge ); //Used by DespotWith Alpha Vector Update
+        VNode(int depth , QNode* parent , QNode* common_parent,
+		OBS_TYPE edge ); //Used by Despot With Alpha Vector Update
 	VNode(Belief* belief, int depth = 0, QNode* parent = NULL, OBS_TYPE edge =
 			(OBS_TYPE)-1);
 	VNode(int count, double value, int depth = 0, QNode* parent = NULL,
@@ -62,6 +81,7 @@ public:
 	int depth() const;
 	void parent(QNode* parent);
 	QNode* parent();
+        QNode* common_parent();
 	OBS_TYPE edge();
 
 	double Weight();
@@ -73,6 +93,8 @@ public:
 	int Size() const;
 	int PolicyTreeSize() const;
 
+        const QNode* CommonChild(int action) const;
+	QNode* CommonChild(int action);
 	void default_move(ValuedAction move);
 	ValuedAction default_move() const;
 	void lower_bound(double value);
@@ -81,6 +103,8 @@ public:
 	double upper_bound() const;
 	void utility_upper_bound(double value);
 	double utility_upper_bound() const;
+        double calculate_upper_bound() const;
+        double calculate_lower_bound() const;
 
 	bool IsLeaf();
 
@@ -129,10 +153,25 @@ public:
 	double step_reward;
 	double likelihood;
 	VNode* vstar;
-
+        //==========================Used in despot with alpha vector update
+        std::vector<double> step_reward_vector;
+        std::vector<QNode*> common_children_; //used in despot with alpha function update
+        std::vector<State*> particles_; //Used for alpha function update algorithm
+        std::vector<double> upper_bound_alpha_vector; //used in despot with alpha function update
+        //std::vector<double> estimated_upper_bound_alpha_vector; //used in despot with alpha function update
+        std::vector<double> lower_bound_alpha_vector; //used in despot with alpha function update
+        std::vector<double> default_upper_bound_alpha_vector;
+        std::vector<double> default_lower_bound_alpha_vector;
+        ValuedAction default_move;
+        //double estimated_upper_bound_;
+        //bool has_estimated_upper_bound_value;
+        //VNode* common_child;
+        //===========================================================================
+        
 	double weight_;
 	QNode();//{;}
 	QNode(VNode* parent, int edge);
+        QNode(std::vector<State*>& particles);
 	QNode(int count, double value);
 	~QNode();
 

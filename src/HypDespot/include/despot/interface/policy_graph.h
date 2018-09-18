@@ -29,6 +29,8 @@ namespace despot {
 
 
 class PolicyGraph: public ScenarioLowerBound {
+private:
+    virtual ValuedAction Value(const std::vector<State*>& particles, RandomStreams& streams, History& history, std::vector<double>& alpha_vector_lower_bound, bool compute_alpha_vector) const;
 protected:
 
 	mutable int initial_depth_;
@@ -61,6 +63,9 @@ public:
 
 	virtual ValuedAction Value(const std::vector<State*>& particles, RandomStreams& streams,
 		History& history) const;
+
+
+        virtual ValuedAction Value(const std::vector<State*>& particles, RandomStreams& streams, History& history, std::vector<double>& alpha_vector_lower_bound) const;
 
 	virtual void ExportGraph(std::ostream& fout);
 	virtual void ImportGraph(std::ifstream& fin, int size, int branch);

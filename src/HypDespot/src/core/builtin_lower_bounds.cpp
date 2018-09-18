@@ -36,7 +36,11 @@ ValuedAction POMCPScenarioLowerBound::Value(const vector<State*>& particles,
 	va.value *= State::Weight(particles);
 	delete root;
 	return va;
-}
+    }
+
+    ValuedAction POMCPScenarioLowerBound::Value(const std::vector<State*>& particles, RandomStreams& streams, History& history, std::vector<double>& alpha_vector_lower_bound) const {
+        cerr << __FUNCTION__ << " function hasn't been defined yet!" << endl;
+    }
 
 /* =============================================================================
  * TrivialParticleLowerBound class
@@ -51,7 +55,20 @@ ValuedAction TrivialParticleLowerBound::Value(
 	ValuedAction va = model_->GetBestAction();
 	va.value *= State::Weight(particles) / (1 - Globals::Discount());
 	return va;
-}
+    }
+
+    ValuedAction TrivialParticleLowerBound::Value(const std::vector<State*>& particles, std::vector<double>& alpha_vector_lower_bound) const {
+        ValuedAction va = model_->GetBestAction();
+        for(int i = 0; i < Globals::config.num_scenarios; i++)
+        {
+            alpha_vector_lower_bound[i] = va.value/(1 - Globals::Discount());
+        }
+        va.value_array = &alpha_vector_lower_bound;
+        
+        return va;
+        
+    }
+
 
 /* =============================================================================
  * TrivialBeliefLowerBound class

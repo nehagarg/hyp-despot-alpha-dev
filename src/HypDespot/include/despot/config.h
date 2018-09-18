@@ -26,6 +26,8 @@ struct Config {
 	int exploration_mode;
 	double exploration_constant;
 	double exploration_constant_o;
+        bool track_alpha_vector;
+        bool use_sawtooth_upper_bound;
 
 	Config() :
 		search_depth(90),
@@ -47,7 +49,9 @@ struct Config {
 	    NUM_THREADS(0),
 	    exploration_mode(0),
 	    exploration_constant(0.3),
-	    exploration_constant_o(0.3)
+	    exploration_constant_o(0.3),
+            track_alpha_vector(false),
+            use_sawtooth_upper_bound(false)
 	{
 		rollout_type = "INDEPENDENT";
 	}
