@@ -818,6 +818,13 @@ public:
 		}*/
 		return ValuedAction(Compass::EAST*rs_model_->RobNumAction()+Compass::EAST,value);
 	}
+        
+
+        ValuedAction Value(const std::vector<State*>& particles, RandomStreams& streams, History& history, std::vector<double>& alpha_vector_lower_bound) const
+        {
+            cerr << __FUNCTION__ << " function hasn't been defined yet!" << endl;
+        }
+
 };
 
 

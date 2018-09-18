@@ -492,6 +492,11 @@ QNode::QNode(int count, double value) :
 	count_(count),
 	value_(value) {
 	weight_=0;
+    }
+
+QNode::QNode(std::vector<State*>& particles):
+particles_(particles), parent_(NULL){
+    weight_ = 0;
 }
 
 QNode::~QNode() {

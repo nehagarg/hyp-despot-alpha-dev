@@ -674,14 +674,17 @@ void DESPOT::InitLowerBound(VNode* vnode, ScenarioLowerBound* lower_bound,
             QNode* common_parent = vnode->common_parent();
                 if(common_parent->default_move.value_array == NULL)
                 {
+                    common_parent->default_lower_bound_alpha_vector.resize(Globals::config.num_scenarios, 0); 
                     common_parent->default_move = lower_bound->Value(vnode->particles(), streams, history, common_parent->default_lower_bound_alpha_vector);
                     for(int i = 0; i < Globals::config.num_scenarios; i++)
                     {
                         (*(common_parent->default_move.value_array))[i] = (*(common_parent->default_move.value_array))[i] * Globals::Discount(vnode->depth());
                     }
+                    common_parent->default_move.value_array = (&(common_parent->default_lower_bound_alpha_vector));
                    
                    // vnode->default_move(vnode->lower_bound_alpha_vector);
                 }
+            
                 vnode->lower_bound_alpha_vector = common_parent->default_move;
                         
             vnode->lower_bound_alpha_vector.value = vnode->calculate_lower_bound();

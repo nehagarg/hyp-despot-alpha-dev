@@ -65,6 +65,22 @@ public:
 					,min_step,state->num, move_penalty,value);
 		return ValuedAction(ped_pomdp_->ACT_CUR, State::Weight(particles) * value);
 	}
+        
+       ValuedAction Value(const std::vector<State*>& particles, std::vector<double>& alpha_vector_lower_bound) const
+       {
+           //TODO: Check if it is correct
+           ValuedAction ans = Value(particles);
+           if(ans.value > 0)
+           {
+            ans.value = ans.value/State::Weight(particles);
+           }
+           for(int i = 0; i < alpha_vector_lower_bound.size(); i++)
+           {
+               alpha_vector_lower_bound[i] = ans.value;
+           }
+           ans.value_array = &(alpha_vector_lower_bound);
+           return ans;
+       }
 };
 
 PedPomdp::PedPomdp(WorldModel &model_) :
