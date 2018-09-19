@@ -104,7 +104,7 @@ VNode* DESPOT::Trial(VNode* root, RandomStreams& streams,
 		if (cur->IsLeaf()) {
 			double start = clock();
 			Expand(cur, lower_bound, upper_bound, model, streams, history);
-
+			//root->PrintTree();
 			if (statistics != NULL) {
 				statistics->time_node_expansion += (double) (clock() - start)
 				                                   / CLOCKS_PER_SEC;
@@ -586,12 +586,16 @@ VNode* DESPOT::ConstructTree(vector<State*>& particles, RandomStreams& streams,
 		do {
 			if (statistics->num_expanded_nodes > 10000)
 				break;
+			//std::cout << "Starting trial ####################################" << num_trials << std::endl;
+			//root->PrintTree();
 			double start = clock();
 			VNode* cur = Trial(root, streams, lower_bound, upper_bound, model,
 			                   history, statistics);
 			used_time += double(clock() - start) / CLOCKS_PER_SEC;
 			explore_time += double(clock() - start) / CLOCKS_PER_SEC;
 			//model->Debug();
+			//root->PrintTree();
+			//std::cout << "Backing up" << std::endl;
 			start = clock();
 			Backup(cur, true);
 			if (statistics != NULL) {
@@ -601,6 +605,7 @@ VNode* DESPOT::ConstructTree(vector<State*>& particles, RandomStreams& streams,
 			used_time += double(clock() - start) / CLOCKS_PER_SEC;
 			backup_time += double(clock() - start) / CLOCKS_PER_SEC;
 			//model->Debug();
+			//root->PrintTree();
 			num_trials++;
 			Globals::AddSerialTime(used_time);
 
@@ -1716,7 +1721,7 @@ void DESPOT::Expand(VNode* vnode, ScenarioLowerBound* lower_bound,
                     ScenarioUpperBound* upper_bound, const DSPOMDP* model,
                     RandomStreams& streams, History& history) {
 	vector<QNode*>& children = vnode->children();
-	logd << "- Expanding vnode " << vnode << endl;
+	logd << "- Expanding vnode " << vnode << "with obs " << vnode->edge() << endl;
 
 	if (use_GPU_ && !vnode->PassGPUThreshold())
 	{

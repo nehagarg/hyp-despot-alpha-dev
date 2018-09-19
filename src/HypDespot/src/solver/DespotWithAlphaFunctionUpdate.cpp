@@ -25,7 +25,7 @@ namespace despot {
 //        SearchStatistics* statistics, 
 //        DespotStaticFunctionOverrideHelper* o_helper)
     {
-        //std::cout << "Expanding in Despot With Alpha function update" << std::endl;
+        logd << "Expanding in Despot With Alpha function update" << std::endl;
         VNode* parent = qnode->parent();
         QNode* common_qnode = parent->CommonChild(qnode->edge());
         QNode* populated_qnode = NULL;
