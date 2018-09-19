@@ -61,6 +61,7 @@ VNode::VNode(int depth, QNode* parent, OBS_TYPE edge):
             //obs_probs.resize(Globals::config.num_scenarios, 0);
             //observation_particle_size = -1;
         }
+	weight_=0; 
     }
     VNode::VNode(int depth, QNode* parent, QNode* common_parent, OBS_TYPE edge):
     VNode(depth, parent, edge){
@@ -174,7 +175,10 @@ OBS_TYPE VNode::edge() {
 double VNode::Weight() {
 	if(Globals::config.useGPU==false ||!PassGPUThreshold())
 		if(GPUWeight()>0)
+		  {
+		    //std::cout << "Returning GPU Weight " << std::endl;
 			return GPUWeight();
+		  }
 		else
                 {
                     if(Globals::config.track_alpha_vector)
