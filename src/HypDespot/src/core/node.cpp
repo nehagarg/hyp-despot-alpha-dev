@@ -176,7 +176,24 @@ double VNode::Weight() {
 		if(GPUWeight()>0)
 			return GPUWeight();
 		else
-			return State::Weight(particles_);
+                {
+                    if(Globals::config.track_alpha_vector)
+                    {
+                        //Can simply return 1 as weight sums up to 1
+                        return 1.0;
+                        //double w = 0;
+                        //for(int i = 0 ; i < particle_weights.size(); i++)
+                        //{
+                        //    w = w + particle_weights[i];
+                        //}
+                        //return w;
+                    }
+                    else
+                    {
+                        return State::Weight(particles_);
+                    }
+			//return State::Weight(particles_);
+                }
 	else/* if(num_GPU_particles_>0)*/
 		return GPUWeight();
 }
