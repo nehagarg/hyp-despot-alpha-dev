@@ -43,9 +43,11 @@ VNode::VNode(vector<State*>& particles,std::vector<int> particleIDs, int depth, 
             //common_data_holder_ = this;
             common_parent_ = new QNode(particles);
             particle_weights.resize(Globals::config.num_scenarios, 0);
-            for (int i = 0; i < particles_.size(); i++) {
+            for (int i = 0; i < common_parent_->particles_.size(); i++) {
 		particle_weights[particles_[i]->scenario_id] = particles_[i]->weight;
-	}
+                particles_[i] = NULL;
+            }
+            particles_.clear();
             
            //upper_bound_alpha_vector_.resize(Globals::config.num_scenarios, 0);
            //lower_bound_alpha_vector.resize(Globals::config.num_scenarios, 0); 
