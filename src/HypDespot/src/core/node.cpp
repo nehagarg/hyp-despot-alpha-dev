@@ -28,7 +28,14 @@ VNode::VNode(vector<State*>& particles,std::vector<int> particleIDs, int depth, 
 	logd << "Constructed vnode with " << particles_.size() << " particles"
 		<< endl;
 	for (int i = 0; i < particles_.size(); i++) {
+	  if(particleIDs_.size() > i)
+	    {
 		logd << " " << i << " = " <<"("<< particleIDs_[i]<<")"<< *particles_[i] << endl;
+	    }
+	  else
+	    {
+	      logd << " " << i << " = " << *particles_[i] << endl;
+	    }
 	}
 	weight_=0;
         if(Globals::config.track_alpha_vector)
@@ -46,7 +53,9 @@ VNode::VNode(vector<State*>& particles,std::vector<int> particleIDs, int depth, 
 }
 
 VNode::VNode(int depth, QNode* parent, OBS_TYPE edge):
-    belief_(NULL),
+  GPU_particles_(NULL),
+  num_GPU_particles_(0),
+  belief_(NULL),
 	depth_(depth),
 	parent_(parent),
 	edge_(edge),
@@ -66,6 +75,7 @@ VNode::VNode(int depth, QNode* parent, OBS_TYPE edge):
     VNode::VNode(int depth, QNode* parent, QNode* common_parent, OBS_TYPE edge):
     VNode(depth, parent, edge){
         common_parent_ = common_parent;
+	
     }
 
 
@@ -227,6 +237,7 @@ QNode* VNode::common_parent() {
 
  const QNode* VNode::CommonChild(int action) const {
      int common_children_size = common_parent_->common_children_.size();
+     //logd << "Action " << action << " common_children size " << common_children_size << std::endl;
     if(common_children_size==action)
     {
         QNode* common_qnode = children_[action];
@@ -242,7 +253,8 @@ QNode* VNode::common_parent() {
 
     QNode* VNode::CommonChild(int action) {
      int common_children_size = common_parent_->common_children_.size();
-    if(common_children_size==action)
+     //logd << "Action " << action << " common_children size " << common_children_size << std::endl;
+     if(common_children_size==action)
     {
         QNode* common_qnode = children_[action];
         common_parent_->common_children_.push_back(common_qnode);
@@ -344,12 +356,15 @@ double VNode::calculate_lower_bound() const {
         //const std::vector<State*>& particles = this->particles();
         //std::cout << "Lower bound alpha vector" << lower_bound_alpha_vector << std::endl;
         //std::cout << "particle_weight_size" << particle_weights.size() << std::endl;
-        for(int i = 0; i < Globals::config.num_scenarios; i++)
+	//double weight_sum = 0;
+	for(int i = 0; i < Globals::config.num_scenarios; i++)
         {
-          //  std::cout << "Particle_weight " << particle_weights[i];
+          //std::cout << "Particle_weight " << particle_weights[i];
+	  //weight_sum += particle_weights[i];
             //int particle_index = particles[i]->scenario_id;
             lower_bound += particle_weights[i]*((*(lower_bound_alpha_vector.value_array))[i]);
         }
+	//std::cout << "Particle weight is " << weight_sum << " for " << this->particles().size() << " partciles" << std::endl;
         //std::cout << "Lower bound is " << lower_bound << std::endl;
         return lower_bound;
     }
@@ -390,12 +405,19 @@ double VNode::value() const {
 
 void VNode::Free(const DSPOMDP& model) {
 	for (int i = 0; i < particles_.size(); i++) {
-		if(particles_[i])model.Free(particles_[i]);
+		if(particles_[i])
+		  { model.Free(particles_[i]);
+		    particles_[i] = NULL;
+		  }
 	}
         if(Globals::config.track_alpha_vector)
         {
             for (int i = 0; i < common_parent_->particles_.size(); i++) {
-		if(common_parent_->particles_[i])model.Free(common_parent_->particles_[i]);
+		if(common_parent_->particles_[i])
+		  {
+		    model.Free(common_parent_->particles_[i]);
+		    common_parent_->particles_[i] = NULL;
+		  }
             }
         }
 

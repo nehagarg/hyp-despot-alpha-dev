@@ -16,7 +16,7 @@ namespace despot {
  * =============================================================================*/
 
 ostream& operator<<(ostream& os, const State& state) {
-	os << "(state_id = " << state.state_id << ", weight = " << state.weight
+  os << "scenario_id = " << state.scenario_id << ",(state_id = " << state.state_id << ", weight = " << state.weight
 			<< ", text = " << (&state)->text() << ")";
 	return os;
 }
