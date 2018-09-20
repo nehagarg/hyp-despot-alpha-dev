@@ -40,7 +40,7 @@ public:
     
 
 
-        inline ValuedAction GetMinRewardAction() const
+        inline ValuedAction GetBestAction() const
         {
             return ValuedAction(0,DANGER_PENALTY);
         }

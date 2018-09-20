@@ -144,9 +144,13 @@ public:
 		std::string particle_bound_name = "DEFAULT") const;
 	BeliefUpperBound* CreateBeliefUpperBound(std::string name = "DEFAULT") const;
 
-	virtual inline ValuedAction GetMinRewardAction() const {
+	virtual inline ValuedAction GetBestAction() const {
 		return ValuedAction(0, -1);
 	}
+        int NumObservations() const {
+            //Not being used so returning inf
+            return std::numeric_limits<int>::max();
+        }
 	ScenarioLowerBound* CreateScenarioLowerBound(std::string name = "DEFAULT",
 		std::string particle_bound_name = "DEFAULT") const;
 	BeliefLowerBound* CreateBeliefLowerBound(std::string name = "DEFAULT") const;

@@ -91,9 +91,13 @@ public:
 	ScenarioUpperBound* CreateScenarioUpperBound(std::string name = "DEFAULT",
 		std::string particle_bound_name = "DEFAULT") const;
 
-	inline ValuedAction GetMinRewardAction() const {
+	inline ValuedAction GetBestAction() const {
 		return ValuedAction(0, 0.0);
 	}
+        int NumObservations() const {
+            //Not being used so returning inf
+            return std::numeric_limits<int>::max();
+        }
 	ScenarioLowerBound* CreateScenarioLowerBound(std::string name = "DEFAULT",
 		std::string particle_bound_name = "DEFAULT") const;
 

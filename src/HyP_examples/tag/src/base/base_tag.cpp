@@ -5,6 +5,9 @@
 #include <despot/util/coord.h>
 #include <despot/util/floor.h>
 #include <despot/solver/pomcp.h>
+#include <despot/core/particle_belief.h>
+#include <despot/core/builtin_lower_bounds.h>
+#include <despot/core/builtin_upper_bounds.h>
 
 using namespace std;
 
