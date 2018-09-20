@@ -8,6 +8,7 @@
 #include <despot/core/particle_belief.h>
 #include <despot/core/builtin_lower_bounds.h>
 #include <despot/core/builtin_upper_bounds.h>
+#include <despot/core/builtin_policy.h>
 
 using namespace std;
 
@@ -167,7 +168,8 @@ class TagHistoryModePolicy: public DefaultPolicy {
 private:
 	const BaseTag* tag_model_;
 	Floor floor_;
-
+        Belief* belief_;
+  
 	int first_action_;
 	mutable vector<map<OBS_TYPE, vector<int> > > paths_;
 	mutable vector<double> state_probs_;
@@ -374,7 +376,7 @@ public:
 	}
 
 	using BeliefUpperBound::Value;
-	double Value(const Belief* belief, int obs_particle_size = -1) const {
+	double Value(const Belief* belief) const {
 		const vector<State*>& particles =
 			static_cast<const ParticleBelief*>(belief)->particles();
 
@@ -462,8 +464,8 @@ private:
 	const BaseTag* tag_model_;
 
 public:
-	TagBlindBeliefPolicy(const BaseTag* model, Belief* belief = NULL) :
-		BeliefLowerBound(model, belief),
+	TagBlindBeliefPolicy(const BaseTag* model) :
+		BeliefLowerBound(model),
 		tag_model_(model) {
 		const_cast<BaseTag*>(tag_model_)->ComputeBlindAlpha();
 	}

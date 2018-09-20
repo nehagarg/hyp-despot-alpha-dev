@@ -2,6 +2,10 @@
 
 #include "adventurer.h"
 #include <despot/util/coord.h>
+#include <despot/core/particle_belief.h>
+#include <despot/core/builtin_lower_bounds.h>
+#include <despot/core/builtin_upper_bounds.h>
+#include <despot/core/builtin_policy.h>
 
 using namespace std;
 
@@ -300,10 +304,7 @@ public:
 		State* particle = particles[i];
 		value += particle->weight * Value(*particle, streams, history);
             }
-            if(observation_particle_size > 0)
-            {
-                value = value*observation_particle_size*1.0/Globals::config.num_scenarios;
-            }
+            
             return value;
             
             

@@ -5,6 +5,7 @@
 #include <despot/core/mdp.h>
 #include <despot/util/coord.h>
 #include <despot/util/floor.h>
+#include <despot/core/particle_belief.h>
 
 namespace despot {
 
