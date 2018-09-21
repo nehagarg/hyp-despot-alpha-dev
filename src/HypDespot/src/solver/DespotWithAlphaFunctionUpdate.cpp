@@ -402,7 +402,7 @@ void DespotWithAlphaFunctionUpdate::Update(VNode* vnode) {
 	}
         if(Globals::config.use_sawtooth_upper_bound)
         {
-            QNode* common_parent = vnode->parent();
+            QNode* common_parent = vnode->common_parent();
             std::vector<double> vnode_upper_bound_per_particle;
             vnode_upper_bound_per_particle = common_parent->default_lower_bound_alpha_vector;
             for (int action = 0; action < vnode->children().size(); action++) { 
