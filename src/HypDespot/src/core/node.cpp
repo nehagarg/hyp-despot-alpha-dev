@@ -378,7 +378,7 @@ double VNode::calculate_lower_bound() const {
         {
           //  std::cout << "Particle_weight " << particle_weights[i];
             //int particle_index = particles[i]->scenario_id;            
-            upper_bound += particle_weights[i]* ((*(upper_bound_alpha_vector.value_array))[i]);
+            upper_bound += particle_weights[i]* (common_parent_->default_upper_bound_alpha_vector[i]);
         }
         //std::cout << "Calculating upper bound " << upper_bound << upper_bound_alpha_vector << std::endl;
         return upper_bound;

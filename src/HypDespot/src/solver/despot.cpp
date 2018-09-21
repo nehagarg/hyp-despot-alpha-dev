@@ -727,13 +727,24 @@ void DESPOT::InitUpperBound(VNode* vnode, ScenarioUpperBound* upper_bound,
                 {
                     common_parent->default_upper_bound_alpha_vector[i] = common_parent->default_upper_bound_alpha_vector[i] * Globals::Discount(vnode->depth());
                 }
+                if(Globals::config.use_sawtooth_upper_bound)
+                {
+                    common_parent->vnode_upper_bound_per_particle = common_parent->default_upper_bound_alpha_vector;
+                    //common_parent->qnode_upper_bound_per_particle = common_parent->default_upper_bound_alpha_vector;
                 }
-                vnode->upper_bound_alpha_vector.value_array = (&(common_parent->default_upper_bound_alpha_vector));
+                //vnode->upper_bound_alpha_vector.value_array = (&(common_parent->default_upper_bound_alpha_vector));
+                
+                }
+                //vnode->upper_bound_alpha_vector.value_array = (&(common_parent->default_upper_bound_alpha_vector));
             
             
             upper = vnode->calculate_upper_bound();
             
-            vnode->upper_bound_alpha_vector.value = upper;
+            //vnode->upper_bound_alpha_vector.value = upper;
+            if(Globals::config.use_sawtooth_upper_bound)
+            {
+                vnode->belief_mult_es = upper;
+            }
             
             
         }
@@ -762,7 +773,7 @@ void DESPOT::InitBounds(VNode* vnode, ScenarioLowerBound* lower_bound,
 	        // close gap because no more search can be done on leaf node
 	        || vnode->depth() == Globals::config.search_depth - 1) {
 		vnode->upper_bound(vnode->lower_bound());
-                vnode->upper_bound_alpha_vector = vnode->lower_bound_alpha_vector;
+                //vnode->upper_bound_alpha_vector = vnode->lower_bound_alpha_vector;
 	}
 }
 

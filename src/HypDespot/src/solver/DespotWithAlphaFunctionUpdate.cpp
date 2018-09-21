@@ -50,6 +50,10 @@ namespace despot {
         if(common_qnode->step_reward_vector.size() == 0)
         {
             common_qnode->step_reward_vector.resize(Globals::config.num_scenarios,0);
+            if(Globals::config.use_sawtooth_upper_bound)
+            {
+                common_qnode->vnode_upper_bound_per_particle.resize(Globals::config.num_scenarios, 0);
+            }
             double node_factor = 1.0; //observation_particle_size/Globals::config.num_scenarios; 
             
 
@@ -240,7 +244,7 @@ namespace despot {
 		history.RemoveLast();
                 
 		logd << " New node's bounds: (" << residual_vnode->lower_bound() << residual_vnode->lower_bound_alpha_vector<< ", "
-			<< residual_vnode->upper_bound() << residual_vnode->upper_bound_alpha_vector << ")" << std::endl;
+			<< residual_vnode->upper_bound() << residual_vnode->common_parent()->default_upper_bound_alpha_vector << ")" << std::endl;
                 //lower_bound += vnode->lower_bound();
 
         }
@@ -299,7 +303,7 @@ namespace despot {
 		history.RemoveLast();
                 
 		logd << " New node's bounds: (" << vnode->lower_bound() << vnode->lower_bound_alpha_vector<< ", "
-			<< vnode->upper_bound() << vnode->upper_bound_alpha_vector << ")" << std::endl;
+			<< vnode->upper_bound() << vnode->common_parent()->default_upper_bound_alpha_vector << ")" << std::endl;
  
                 
             }
@@ -310,9 +314,16 @@ namespace despot {
         
         //std::cout << "Upper bound = " << upper_bound - step_reward<< " Num particles pushed " << num_particles_pushed << std::endl;
         qnode->lower_bound_alpha_vector.resize(Globals::config.num_scenarios,0);
-        qnode->upper_bound_alpha_vector.resize(Globals::config.num_scenarios,0);
+        //qnode->upper_bound_alpha_vector.resize(Globals::config.num_scenarios,0);
         qnode->lower_bound(Globals::NEG_INFTY);
         qnode->upper_bound(Globals::POS_INFTY);
+        if(Globals::config.use_sawtooth_upper_bound)
+        {
+          if(common_qnode->qnode_upper_bound_per_particle.size()==0)
+          {
+              common_qnode->qnode_upper_bound_per_particle.resize(Globals::config.num_scenarios, Globals::POS_INFTY);
+          }
+        }
         DespotWithAlphaFunctionUpdate::Update(qnode);
 	//qnode->step_reward = step_reward;
 	//qnode->lower_bound(lower_bound);
@@ -345,8 +356,8 @@ void DespotWithAlphaFunctionUpdate::Update(VNode* vnode) {
 
 	double lower = vnode->default_move().value;
 	double upper = vnode->default_move().value;
-	
-
+        
+        
         
         ValuedAction max_lower_action = vnode->default_move();
         ValuedAction max_upper_action = vnode->default_move();
@@ -354,7 +365,7 @@ void DespotWithAlphaFunctionUpdate::Update(VNode* vnode) {
         ValuedAction max_estimated_upper_bound;
 	for (int action = 0; action < vnode->children().size(); action++) {
 		QNode* qnode = vnode->Child(action);
-
+                
 		
                 double qnode_lower_bound = 0;
                 double qnode_upper_bound = 0;
@@ -382,13 +393,34 @@ void DespotWithAlphaFunctionUpdate::Update(VNode* vnode) {
                         upper = qnode_upper_bound;
                         max_upper_action.action = action;
                         max_upper_action.value = upper;
-                        max_upper_action.value_array = &(qnode->upper_bound_alpha_vector);
+                        //max_upper_action.value_array = &(qnode->upper_bound_alpha_vector);
                         
                     }
                     
                 }
                 
 	}
+        if(Globals::config.use_sawtooth_upper_bound)
+        {
+            QNode* common_parent = vnode->parent();
+            std::vector<double> vnode_upper_bound_per_particle;
+            vnode_upper_bound_per_particle = common_parent->default_lower_bound_alpha_vector;
+            for (int action = 0; action < vnode->children().size(); action++) { 
+                QNode* common_qnode = vnode->CommonChild(action);
+                for (int i = 0; i < Globals::config.num_scenarios; i++)
+                {
+                    vnode_upper_bound_per_particle[i] = max(vnode_upper_bound_per_particle[i], common_qnode->qnode_upper_bound_per_particle[i]);
+                }
+            }
+            vnode->belief_mult_es = 0;
+            for (int i = 0; i < Globals::config.num_scenarios; i++){
+                if(vnode_upper_bound_per_particle[i] < common_parent->vnode_upper_bound_per_particle[i])
+                {
+                    common_parent->vnode_upper_bound_per_particle[i] = vnode_upper_bound_per_particle[i];
+                }
+                vnode->belief_mult_es += vnode->particle_weights[i]*common_parent->vnode_upper_bound_per_particle[i];
+            }
+        }
 
 	if (lower > vnode->lower_bound()) {
 		vnode->lower_bound(lower);
@@ -396,7 +428,7 @@ void DespotWithAlphaFunctionUpdate::Update(VNode* vnode) {
 	}
 	if (upper < vnode->upper_bound()) {
 		vnode->upper_bound(upper);
-                vnode->upper_bound_alpha_vector = max_upper_action;
+                //vnode->upper_bound_alpha_vector = max_upper_action;
                 
 	}
         //std::cout << "Update Estimated value " <<  vnode->has_estimated_upper_bound_value << " array size " << vnode->estimated_upper_bound_alpha_vector.value_array->size() << std::endl;
@@ -415,15 +447,15 @@ void DespotWithAlphaFunctionUpdate::Update(QNode* qnode) {
         
         //std::vector<double> obs_probablity_sum;
 
-        
+     double upper = 0;   
             
         //obs_probablity_sum.resize(Globals::config.num_scenarios,0);
     QNode* common_qnode = qnode->parent()->CommonChild(qnode->edge());
         std::vector<double> lower_bound_vector;
-        std::vector<double> upper_bound_vector;
+        //std::vector<double> upper_bound_vector;
         //std::vector<double> estimated_upper_bound_vector;
         lower_bound_vector.resize(Globals::config.num_scenarios, 0);
-        upper_bound_vector.resize(Globals::config.num_scenarios, 0);
+        //upper_bound_vector.resize(Globals::config.num_scenarios, 0);
         //qnode->has_estimated_upper_bound_value = false;
         
 	std::map<OBS_TYPE, VNode*>& children = qnode->children();
@@ -441,7 +473,8 @@ void DespotWithAlphaFunctionUpdate::Update(QNode* qnode) {
                         //int particle_index = qnode->particles_[i]->scenario_id;
                         lower_bound_vector[i] += vnode->obs_probs_holder->obs_probs[i]*  
                                  (*vnode->lower_bound_alpha_vector.value_array)[i];
-                        upper_bound_vector[i] += vnode->obs_probs_holder->obs_probs[i]*(*vnode->upper_bound_alpha_vector.value_array)[i];
+                        //upper_bound_vector[i] += vnode->obs_probs_holder->obs_probs[i]*(*vnode->upper_bound_alpha_vector.value_array)[i];
+                          upper += vnode->obs_probs_holder->obs_probs[i]*qnode->parent()->particle_weights[i]*vnode->upper_bound();
                         
                         //obs_probablity_sum[i] = obs_probablity_sum[i] + vnode->obs_probs[i];
                         //std::cout << "Scenario " << i << " " << lower_bound_vector[i]  << "," << upper_bound_vector[i] << std::endl;
@@ -454,7 +487,7 @@ void DespotWithAlphaFunctionUpdate::Update(QNode* qnode) {
         
         
         double lower = 0;
-        double upper = 0;
+        
         //double estimated_upper = 0;
         //std::cout << "Qnode weights" << " " << qnode->parent()->particle_weights[0]  << "," << qnode->parent()->particle_weights[1] << std::endl;
             for (int i = 0; i < Globals::config.num_scenarios; i++)
@@ -467,8 +500,17 @@ void DespotWithAlphaFunctionUpdate::Update(QNode* qnode) {
                    // std::cout << i << " " << obs_probablity_sum[i] << std::endl;
                 //int particle_index = qnode->particles_[i]->scenario_id;
                 lower_bound_vector[i] = lower_bound_vector[i] + common_qnode->step_reward_vector[i];
-                upper_bound_vector[i] = upper_bound_vector[i] + common_qnode->step_reward_vector[i];
+                //upper_bound_vector[i] = upper_bound_vector[i] + common_qnode->step_reward_vector[i];
                 
+                if(Globals::config.use_sawtooth_upper_bound)
+                {
+                    double particle_upper = common_qnode->step_reward_vector[i] + common_qnode->vnode_upper_bound_per_particle[i];
+                    if(particle_upper < common_qnode->qnode_upper_bound_per_particle[i])
+                    {
+                        common_qnode->qnode_upper_bound_per_particle[i] = particle_upper;
+                    }
+                }
+                    
                 //}
                 //else
                 //{
@@ -478,7 +520,8 @@ void DespotWithAlphaFunctionUpdate::Update(QNode* qnode) {
                 
                 
                 lower += qnode->parent()->particle_weights[i]*lower_bound_vector[i];
-                upper += qnode->parent()->particle_weights[i]*upper_bound_vector[i];
+                //upper += qnode->parent()->particle_weights[i]*upper_bound_vector[i];
+                upper += qnode->parent()->particle_weights[i]*common_qnode->step_reward_vector[i];
                 
             }
         /*if(upper < -100)
@@ -494,10 +537,10 @@ void DespotWithAlphaFunctionUpdate::Update(QNode* qnode) {
 	}
 	if (upper < qnode->upper_bound()) {
 		qnode->upper_bound(upper);
-                for (int i = 0; i < Globals::config.num_scenarios; i++)
+               /* for (int i = 0; i < Globals::config.num_scenarios; i++)
             {
                     qnode->upper_bound_alpha_vector[i] = upper_bound_vector[i];
-                }
+                }*/
 	}
         
         
@@ -533,6 +576,37 @@ void DespotWithAlphaFunctionUpdate::Update(QNode* qnode) {
 
                
         }
+        if(Globals::config.use_sawtooth_upper_bound)
+        {
+            //Find the minimum ratio weights
+            double min_ratio = Globals::POS_INFTY;
+            for (int i = 0; i < Globals::config.num_scenarios; i++)
+            { 
+                if(vnode->particle_weights[i] != 0)
+                {
+                    double weight_ratio = sibling_node->particle_weights[i]/vnode->particle_weights[i];
+                    if(min_ratio < weight_ratio)
+                    {
+                        min_ratio = weight_ratio;
+                    }
+                    
+                }
+                //Calculate belief multiplication with individual upper bounds for sibling node
+                sibling_node->belief_mult_es = 0;
+                sibling_node->belief_mult_es += sibling_node->particle_weights[i]*vnode->common_parent()->vnode_upper_bound_per_particle[i];
+                
+                //No need to calculate this for vnode as it is calculated while updating it
+                
+
+                
+            }
+            double sawtooth_upper_bound = (min_ratio*(vnode->upper_bound() - vnode->belief_mult_es)) + sibling_node->belief_mult_es;
+            if(sawtooth_upper_bound < sibling_node->upper_bound())
+            {
+                sibling_node->upper_bound(sawtooth_upper_bound);
+            }
+        }
+        
         //std::cout << "Udate sibling Estimated value " <<  sibling_node->has_estimated_upper_bound_value << " array size " << sibling_node->estimated_upper_bound_alpha_vector.value_array->size() << std::endl;
     }
 

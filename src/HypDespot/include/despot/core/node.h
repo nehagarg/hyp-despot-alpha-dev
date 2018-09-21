@@ -50,13 +50,14 @@ public:
         std::vector<double> obs_probs; //used in despot with alpha function update
         std::vector<double> lower_bound_alpha_vector_; //used in despot with alpha function to store best sibling lower bound vector
         ValuedAction lower_bound_alpha_vector; //used in despot with alpha function update
-        ValuedAction upper_bound_alpha_vector; //used in despot with alpha function update
+        //ValuedAction upper_bound_alpha_vector; //used in despot with alpha function update
         //std::vector<double> default_upper_bound_alpha_vector;
         //std::vector<double> default_lower_bound_alpha_vector;
         //ValuedAction estimated_upper_bound_alpha_vector; //used in despot with alpha function update
         bool extra_node; //used in despot with alpha function update
         VNode* obs_probs_holder;  //Used in despot with alpha function update Vnode holding obs probs
         QNode* common_parent_; //Used in despot with alpha function update Vnode holding particles
+        double belief_mult_es; //Used in sawtooth approximation
         //=================================================================================
         
 	VNode(){;}
@@ -157,12 +158,14 @@ public:
         std::vector<double> step_reward_vector;
         std::vector<QNode*> common_children_; //used in despot with alpha function update
         std::vector<State*> particles_; //Used for alpha function update algorithm
-        std::vector<double> upper_bound_alpha_vector; //used in despot with alpha function update
+        //std::vector<double> upper_bound_alpha_vector; //used in despot with alpha function update
         //std::vector<double> estimated_upper_bound_alpha_vector; //used in despot with alpha function update
         std::vector<double> lower_bound_alpha_vector; //used in despot with alpha function update
         std::vector<double> default_upper_bound_alpha_vector;
         std::vector<double> default_lower_bound_alpha_vector;
         ValuedAction default_move;
+        std::vector<double> vnode_upper_bound_per_particle; //used for sawtooth approximation
+        std::vector<double> qnode_upper_bound_per_particle; //used for sawtooth approximation
         //double estimated_upper_bound_;
         //bool has_estimated_upper_bound_value;
         //VNode* common_child;
