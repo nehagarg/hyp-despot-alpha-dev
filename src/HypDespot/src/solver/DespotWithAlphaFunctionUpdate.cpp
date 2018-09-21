@@ -578,21 +578,45 @@ void DespotWithAlphaFunctionUpdate::Update(QNode* qnode) {
         }
         if(Globals::config.use_sawtooth_upper_bound)
         {
+	  /*
+	  std::cout << "Computing sawtooth" <<std::endl;
+	  //print es
+	  std::cout << "Singleton values [" ;
+	  for (int i = 0; i < Globals::config.num_scenarios; i++)
+	    {
+	      std::cout << vnode->common_parent()->vnode_upper_bound_per_particle[i] << ",";
+	    }
+	  std::cout << "]" << std::endl;
+	  std::cout << "b' weights [";
+	  for (int i = 0; i < Globals::config.num_scenarios; i++)
+	    {
+	      std::cout << vnode->particle_weights[i] << ",";
+	    }
+	  std::cout << "]"<< std::endl;
+	  std::cout << "b weights [";
+	  for (int i = 0; i < Globals::config.num_scenarios; i++)
+	    {
+	      std::cout << sibling_node->particle_weights[i] << ",";
+	    }
+	  std::cout << "]"<< std::endl;
+	  std::cout << "b' upper bound " << vnode->upper_bound() << " b upper bound " << sibling_node->upper_bound() << std::endl;
+	  */
             //Find the minimum ratio weights
             double min_ratio = Globals::POS_INFTY;
-            for (int i = 0; i < Globals::config.num_scenarios; i++)
+	    sibling_node->belief_mult_es = 0;
+	    for (int i = 0; i < Globals::config.num_scenarios; i++)
             { 
                 if(vnode->particle_weights[i] != 0)
                 {
                     double weight_ratio = sibling_node->particle_weights[i]/vnode->particle_weights[i];
-                    if(min_ratio < weight_ratio)
+                    if(weight_ratio < min_ratio)
                     {
                         min_ratio = weight_ratio;
                     }
                     
                 }
                 //Calculate belief multiplication with individual upper bounds for sibling node
-                sibling_node->belief_mult_es = 0;
+         
                 sibling_node->belief_mult_es += sibling_node->particle_weights[i]*vnode->common_parent()->vnode_upper_bound_per_particle[i];
                 
                 //No need to calculate this for vnode as it is calculated while updating it
@@ -600,7 +624,9 @@ void DespotWithAlphaFunctionUpdate::Update(QNode* qnode) {
 
                 
             }
+	    //std::cout << "Min ratio is " << min_ratio << " b' belief_multi_es " << vnode->belief_mult_es << " b belief_multi_es " << sibling_node->belief_mult_es << std::endl;
             double sawtooth_upper_bound = (min_ratio*(vnode->upper_bound() - vnode->belief_mult_es)) + sibling_node->belief_mult_es;
+	    //std::cout << "Calculated sawtooth bound " << sawtooth_upper_bound << std::endl;
             if(sawtooth_upper_bound < sibling_node->upper_bound())
             {
                 sibling_node->upper_bound(sawtooth_upper_bound);
