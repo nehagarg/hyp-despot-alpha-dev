@@ -185,7 +185,7 @@ namespace despot {
 		history.RemoveLast();
                 
 		logd << " New node's bounds: (" << vnode->lower_bound() << vnode->lower_bound_alpha_vector<< ", "
-			<< vnode->upper_bound() << vnode->upper_bound_alpha_vector << ")" << std::endl;
+			<< vnode->upper_bound() << vnode->common_parent()->default_upper_bound_alpha_vector << ")" << std::endl;
                 //lower_bound += vnode->lower_bound();
 		//upper_bound += vnode->upper_bound();
 		//lower_bound += vnode->lower_bound()*observation_particle_size_/observation_particle_size;
