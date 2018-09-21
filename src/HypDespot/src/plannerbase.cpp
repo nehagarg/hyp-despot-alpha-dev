@@ -182,7 +182,7 @@ Solver *PlannerBase::InitializeSolver(DSPOMDP *model, Belief* belief,
 	Solver *solver = NULL;
 	// DESPOT or its default policy
 	if (solver_type == "DESPOT" || solver_type == "PLB" ||
-      solver_type == "BTDESPOTALPHA" ) // PLB: particle lower bound
+      solver_type == "BTDESPOTALPHA" || solver_type == "BTDESPOTALPHAST" ) // PLB: particle lower bound
 			{
 		string blbtype =
 				options[E_BLBTYPE] ? options[E_BLBTYPE].arg : "DEFAULT";
@@ -193,7 +193,7 @@ Solver *PlannerBase::InitializeSolver(DSPOMDP *model, Belief* belief,
 		logi << "Created lower bound " << typeid(*lower_bound).name() << endl;
 
 		if (solver_type == "DESPOT" || 
-            solver_type == "BTDESPOTALPHA") {
+            solver_type == "BTDESPOTALPHA" || solver_type == "BTDESPOTALPHAST") {
 			string bubtype =
 					options[E_BUBTYPE] ? options[E_BUBTYPE].arg : "DEFAULT";
 			string ubtype =
@@ -212,6 +212,14 @@ Solver *PlannerBase::InitializeSolver(DSPOMDP *model, Belief* belief,
                         if (solver_type == "BTDESPOTALPHA"  )
                         {
                             Globals::config.track_alpha_vector = true;
+                          solver = new DESPOT(model, lower_bound, upper_bound);
+                          
+                          
+                        }
+                        if (solver_type == "BTDESPOTALPHAST"  )
+                        {
+                            Globals::config.track_alpha_vector = true;
+                            Globals::config.use_sawtooth_upper_bound = true;
                           solver = new DESPOT(model, lower_bound, upper_bound);
                           
                           
