@@ -7,7 +7,7 @@
 #include <despot/util/coord.h>
 #include <despot/util/grid.h>
 
-#define NUM_ROCKS 15
+#define NUM_ROCKS 20
 #define MAX_COORD_BIT 10
 #define COORD_BIT_MASK ((1 << MAX_COORD_BIT)-1)
 #define ROB_TERMINAL_ID COORD_BIT_MASK
