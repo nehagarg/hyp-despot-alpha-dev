@@ -81,21 +81,24 @@ ValuedAction DefaultPolicy::RecursiveValue(const vector<State*>& particles,
                         }
                         
                     }
-                    history.Add(action, obs);
-                    streams.Advance();
-                    std::vector<double> va1_alpha_vector;
-                    va1_alpha_vector.resize(Globals::config.num_scenarios, 0);
-                    ValuedAction va1 = RecursiveValue(new_particles, streams, history, va1_alpha_vector, compute_alpha_vector);
-                    for(int i = 0; i < new_particles.size(); i++)
-                    {
-                        State* particle = new_particles[i];
-                        (*va.value_array)[particle->scenario_id] += Globals::Discount() * (*va1.value_array)[particle->scenario_id];
+		    if(new_particles.size() > 0)
+		      {
+			history.Add(action, obs);
+			streams.Advance();
+			std::vector<double> va1_alpha_vector;
+			va1_alpha_vector.resize(Globals::config.num_scenarios, 0);
+			ValuedAction va1 = RecursiveValue(new_particles, streams, history, va1_alpha_vector, compute_alpha_vector);
+			for(int i = 0; i < new_particles.size(); i++)
+			  {
+			    State* particle = new_particles[i];
+			    (*va.value_array)[particle->scenario_id] += Globals::Discount() * (*va1.value_array)[particle->scenario_id];
                         
-                    }
-                    va1.value_array->clear();
-                    //delete va1.value_array;
-                    streams.Back();
-                    history.RemoveLast();
+			  }
+			va1.value_array->clear();
+			//delete va1.value_array;
+			streams.Back();
+			history.RemoveLast();
+		      }
                     return va;
                 }
 		double value = 0;
