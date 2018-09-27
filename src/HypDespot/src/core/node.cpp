@@ -409,7 +409,7 @@ void VNode::Free(const DSPOMDP& model) {
 	for (int i = 0; i < particles_.size(); i++) {
 		if(particles_[i])
 		  { model.Free(particles_[i]);
-		    particles_[i] = NULL;
+		    //particles_[i] = NULL;
 		  }
 	}
         if(Globals::config.track_alpha_vector)
