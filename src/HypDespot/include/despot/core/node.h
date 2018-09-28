@@ -82,7 +82,7 @@ public:
 	int depth() const;
 	void parent(QNode* parent);
 	QNode* parent();
-        QNode* common_parent();
+    QNode* common_parent(); //Used in despot with alpha function update
 	OBS_TYPE edge();
 
 	double Weight();
@@ -94,8 +94,8 @@ public:
 	int Size() const;
 	int PolicyTreeSize() const;
 
-        const QNode* CommonChild(int action) const;
-	QNode* CommonChild(int action);
+	const QNode* CommonChild(int action) const; //Used in despot with alpha function update
+	QNode* CommonChild(int action); //Used in despot with alpha function update
 	void default_move(ValuedAction move);
 	ValuedAction default_move() const;
 	void lower_bound(double value);
@@ -104,8 +104,8 @@ public:
 	double upper_bound() const;
 	void utility_upper_bound(double value);
 	double utility_upper_bound() const;
-        double calculate_upper_bound() const;
-        double calculate_lower_bound() const;
+        double calculate_upper_bound() const; //Used in despot with alpha function update
+        double calculate_lower_bound() const; //Used in despot with alpha function update
 
 	bool IsLeaf();
 
@@ -121,7 +121,19 @@ public:
 	void Free(const DSPOMDP& model);
 	/*GPU particle functions*/
 	void AssignGPUparticles( Dvc_State* src, int size);
-	Dvc_State* GetGPUparticles(){return GPU_particles_;};
+	Dvc_State* GetGPUparticles(){
+		if(Globals::config.track_alpha_vector)
+		{
+			return common_parent_->GPU_particles_;
+		}
+		else
+		{
+			return GPU_particles_;
+		}
+
+		//return GPU_particles_;
+
+	};
 
 	double GPUWeight();
 	void ResizeParticles(int i);
@@ -169,12 +181,17 @@ public:
         //double estimated_upper_bound_;
         //bool has_estimated_upper_bound_value;
         //VNode* common_child;
+
+        std::vector<int> particleIDs_; //Used in GPUDESPOT
+        Dvc_State* GPU_particles_; // Used in GPUDESPOT
+        int num_GPU_particles_;  // Used in GPUDESPOT
         //===========================================================================
         
 	double weight_;
 	QNode();//{;}
 	QNode(VNode* parent, int edge);
-        QNode(std::vector<State*>& particles);
+    QNode(std::vector<State*>& particles); //used in despot with alpha function update
+    QNode(std::vector<State*>& particles, std::vector<int> particleIDs); //used in despot with alpha function update
 	QNode(int count, double value);
 	~QNode();
 

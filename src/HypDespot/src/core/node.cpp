@@ -41,7 +41,7 @@ VNode::VNode(vector<State*>& particles,std::vector<int> particleIDs, int depth, 
         if(Globals::config.track_alpha_vector)
         {
             //common_data_holder_ = this;
-            common_parent_ = new QNode(particles);
+            common_parent_ = new QNode(particles, particleIDs);
             particle_weights.resize(Globals::config.num_scenarios, 0);
             for (int i = 0; i < common_parent_->particles_.size(); i++) {
 		particle_weights[particles_[i]->scenario_id] = particles_[i]->weight;
@@ -542,6 +542,15 @@ QNode::QNode(int count, double value) :
 QNode::QNode(std::vector<State*>& particles):
 particles_(particles), parent_(NULL){
     weight_ = 0;
+    GPU_particles_=NULL;
+    	num_GPU_particles_=0;
+}
+
+QNode::QNode(std::vector<State*>& particles, std::vector<int> particleIDs):
+particles_(particles), particleIDs_(particleIDs), parent_(NULL){
+    weight_ = 0;
+    GPU_particles_=NULL;
+	num_GPU_particles_=0;
 }
 
 QNode::~QNode() {
