@@ -875,7 +875,7 @@ void DespotWithAlphaFunctionUpdate::UpdateSibling(Shared_VNode* vnode, Shared_VN
 		    //std::cout << "Min ratio is " << min_ratio << " b' belief_multi_es " << vnode->belief_mult_es << " b belief_multi_es " << sibling_node->belief_mult_es << std::endl;
 	            double sawtooth_upper_bound = (min_ratio*(vnode_upper_bound - vnode_belief_mult_es)) + sibling_node->belief_mult_es;
 		    //std::cout << "Calculated sawtooth bound " << sawtooth_upper_bound << std::endl;
-	            if(sawtooth_upper_bound < sibling_node->upper_bound())
+	            if(sawtooth_upper_bound < ((VNode*)sibling_node)->upper_bound())
 	            {
 	                sibling_node->upper_bound(sawtooth_upper_bound);
 	            }

@@ -1659,14 +1659,14 @@ void DESPOT::Backup(VNode* vnode, bool real) {
 		if (Globals::config.use_multi_thread_) {
 			if(Globals::config.track_alpha_vector)
 			{
-			map<OBS_TYPE, Shared_VNode*>& children = (static_cast<Shared_QNode*>(parentq))->children();
-					for (map<OBS_TYPE, Shared_VNode*>::iterator it = children.begin();
+			map<OBS_TYPE, VNode*>& children = parentq->children();
+					for (map<OBS_TYPE, VNode*>::iterator it = children.begin();
 				it != children.end(); it++) {
 						//std::cout << "Observation " << "Sibling " << it->first << " Own " << vnode->edge() << std::endl;
 						if(it->first != vnode->edge())
 						{
 							//std::cout << "Updating sibling" << std::endl;
-							DespotWithAlphaFunctionUpdate::UpdateSibling(vnode, it->second, real);
+						  DespotWithAlphaFunctionUpdate::UpdateSibling(static_cast<Shared_VNode*>(vnode), static_cast<Shared_VNode*>(it->second), real);
 						}
 					}
 				DespotWithAlphaFunctionUpdate::Update(static_cast<Shared_QNode*>(parentq), real);
