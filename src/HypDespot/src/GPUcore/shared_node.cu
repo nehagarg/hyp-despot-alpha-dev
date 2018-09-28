@@ -582,7 +582,7 @@ Shared_QNode::Shared_QNode(std::vector<State*>& particles){
 Shared_QNode::Shared_QNode(std::vector<State*>& particles, std::vector<int> particleIDs){
 	lock_guard<mutex> lck(_mutex);
     particles_ = particles;
-    particleIDs_ = particlesIDs;
+    particleIDs_ = particleIDs;
     parent_ = NULL;
     GPU_particles_=NULL;
 	num_GPU_particles_=0;
