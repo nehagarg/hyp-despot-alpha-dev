@@ -121,19 +121,7 @@ public:
 	void Free(const DSPOMDP& model);
 	/*GPU particle functions*/
 	void AssignGPUparticles( Dvc_State* src, int size);
-	Dvc_State* GetGPUparticles(){
-		if(Globals::config.track_alpha_vector)
-		{
-			return common_parent_->GPU_particles_;
-		}
-		else
-		{
-			return GPU_particles_;
-		}
-
-		//return GPU_particles_;
-
-	};
+	Dvc_State* GetGPUparticles();
 
 	double GPUWeight();
 	void ResizeParticles(int i);

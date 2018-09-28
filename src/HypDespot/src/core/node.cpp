@@ -515,6 +515,19 @@ void VNode::PrintTree(int depth, ostream& os) {
 	}
 }
 
+Dvc_State* GetGPUparticles(){
+		if(Globals::config.track_alpha_vector)
+		{
+			return common_parent_->GPU_particles_;
+		}
+		else
+		{
+			return GPU_particles_;
+		}
+
+		//return GPU_particles_;
+
+	};
 /* =============================================================================
  * QNode class
  * =============================================================================*/
