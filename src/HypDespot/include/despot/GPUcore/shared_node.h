@@ -41,6 +41,10 @@ public:
 	void unlock(){_mutex.unlock();}
 	Shared_VNode(std::vector<State*>& particles, std::vector<int> particleIDs,int depth = 0, Shared_QNode* parent = NULL,
 		OBS_TYPE edge = (OBS_TYPE)-1);
+	Shared_VNode(int depth , Shared_QNode* parent ,
+			OBS_TYPE edge ); //Used by DespotWith Alpha Vector Update
+    Shared_VNode(int depth , Shared_QNode* parent , Shared_QNode* common_parent,
+			OBS_TYPE edge ); //Used by Despot With Alpha Vector Update
 	Shared_VNode(Belief* belief, int depth = 0, Shared_QNode* parent = NULL, OBS_TYPE edge =
 			(OBS_TYPE)-1);
 	Shared_VNode(int count, double value, int depth = 0, Shared_QNode* parent = NULL,
@@ -54,12 +58,15 @@ public:
 	int depth() const;
 	void parent(Shared_QNode* parent);
 	Shared_QNode* parent();
+	Shared_QNode* common_parent(); //Used in despot with alpha function update
 	OBS_TYPE edge();
 
 	double Weight();
 
 	const Shared_QNode* Child(ACT_TYPE action) const;
 	Shared_QNode* Child(ACT_TYPE action);
+	const Shared_QNode* CommonChild(int action) const; //Used in despot with alpha function update
+	Shared_QNode* CommonChild(int action); //Used in despot with alpha function update
 	int Size() const;
 	int PolicyTreeSize() const;
 
@@ -71,6 +78,8 @@ public:
 	double upper_bound(bool use_Vloss) const;
 	void utility_upper_bound(double value);
 	double utility_upper_bound() const;
+	double calculate_upper_bound() const; //Used in despot with alpha function update
+	double calculate_lower_bound() const; //Used in despot with alpha function update
 
 	bool IsLeaf();
 
@@ -110,6 +119,8 @@ public:
 	void lock(){_mutex.lock();}
 	void unlock(){_mutex.unlock();}
 	Shared_QNode(Shared_VNode* parent, ACT_TYPE edge);
+	Shared_QNode(std::vector<State*>& particles); //used in despot with alpha function update
+	Shared_QNode(std::vector<State*>& particles, std::vector<int> particleIDs); //used in despot with alpha function update
 	Shared_QNode(int count, double value);
 	~Shared_QNode();
 

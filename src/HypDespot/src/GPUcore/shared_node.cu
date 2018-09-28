@@ -24,6 +24,9 @@ Shared_VNode::Shared_VNode(vector<State*>& particles,std::vector<int> particleID
 	edge_=edge;
 	vstar=this;
 	likelihood=1;
+	extra_node = false;
+	common_parent_ = NULL;
+	obs_probs_holder = NULL;
 	logd << "Constructed Shared_VNode with " << particles_.size() << " particles"
 		<< endl;
 	/*for (int i = 0; i < particles_.size(); i++) {
@@ -34,8 +37,54 @@ Shared_VNode::Shared_VNode(vector<State*>& particles,std::vector<int> particleID
 	value_=0;
 	is_waiting_=false;
 	visit_count_=0;
-}
+	if(Globals::config.track_alpha_vector)
+	        {
+	            //common_data_holder_ = this;
+	            common_parent_ = new Shared_QNode(particles,particleIDs);
+	            particle_weights.resize(Globals::config.num_scenarios, 0);
+	            for (int i = 0; i < common_parent_->particles_.size(); i++) {
+			particle_weights[particles_[i]->scenario_id] = particles_[i]->weight;
+	                particles_[i] = NULL;
+	            }
+	            particles_.clear();
 
+	           //upper_bound_alpha_vector_.resize(Globals::config.num_scenarios, 0);
+	           //lower_bound_alpha_vector.resize(Globals::config.num_scenarios, 0);
+	        }
+}
+Shared_VNode::Shared_VNode(int depth, Shared_QNode* parent, OBS_TYPE edge)
+      {
+	logd << "[Shared_VNode::Shared_VNode] "<< endl;
+	lock_guard<mutex> lck(_mutex);
+		GPU_particles_ = NULL;
+		  num_GPU_particles_ = 0;
+		  belief_ = NULL;
+			depth_ = depth;
+			parent_ = parent;
+			edge_ = edge;
+			vstar = this ;
+			likelihood = 1;
+		            extra_node = false;
+		            obs_probs_holder = NULL;
+        if(Globals::config.track_alpha_vector)
+        {
+            particle_weights.resize(Globals::config.num_scenarios, 0);
+            //upper_bound_alpha_vector_.resize(Globals::config.num_scenarios, 0);
+            //obs_probs.resize(Globals::config.num_scenarios, 0);
+            //observation_particle_size = -1;
+        }
+	weight_=0;
+	exploration_bonus=0;
+		value_=0;
+		is_waiting_=false;
+		visit_count_=0;
+    }
+
+    Shared_VNode::Shared_VNode(int depth, Shared_QNode* parent, Shared_QNode* common_parent, OBS_TYPE edge):
+    Shared_VNode(depth, parent, edge){
+        common_parent_ = common_parent;
+
+    }
 Shared_VNode::Shared_VNode(Belief* belief, int depth, Shared_QNode* parent, OBS_TYPE edge){
 	lock_guard<mutex> lck(_mutex);
 	GPU_particles_=NULL;
@@ -87,11 +136,31 @@ Belief* Shared_VNode::belief() const {
 }
 
 const vector<State*>& Shared_VNode::particles() const {
-	return particles_;
+	if(Globals::config.track_alpha_vector)
+	    {
+
+	            return common_parent_->particles_;
+
+	    }
+	    else
+	    {
+	        return particles_;
+	    }
+	//return particles_;
 }
 
 const vector<int>& Shared_VNode::particleIDs() const {
-	return particleIDs_;
+	if(Globals::config.track_alpha_vector)
+		    {
+
+		            return common_parent_->particleIDs_;
+
+		    }
+		    else
+		    {
+		        return particleIDs_;
+		    }
+	//return particleIDs_;
 }
 void Shared_VNode::depth(int d) {
 	lock_guard<mutex> lck(_mutex);
@@ -120,9 +189,29 @@ double Shared_VNode::Weight() {
 	lock_guard<mutex> lck(_mutex);
 	if(Globals::config.useGPU==false ||!PassGPUThreshold())
 		if(GPUWeight()>0)
+		{
 			return GPUWeight();
+		}
 		else
-			return State::Weight(particles_);
+		{
+			if(Globals::config.track_alpha_vector)
+					{
+						//Can simply return 1 as weight sums up to 1
+						return 1.0;
+						//double w = 0;
+						//for(int i = 0 ; i < particle_weights.size(); i++)
+						//{
+						//    w = w + particle_weights[i];
+						//}
+						//return w;
+					}
+					else
+					{
+						return State::Weight(particles_);
+					}
+				//return State::Weight(particles_);
+
+		}
 	else
 		return GPUWeight();
 }
@@ -176,6 +265,47 @@ Shared_QNode* Shared_VNode::Child(ACT_TYPE action) {
 	lock_guard<mutex> lck(_mutex);
 	return static_cast<Shared_QNode*>(children_[action]);
 }
+Shared_QNode* Shared_VNode::common_parent() {
+        return static_cast<Shared_QNode*>(common_parent_);
+    }
+
+
+ const Shared_QNode* Shared_VNode::CommonChild(int action) const {
+
+	 ((Shared_QNode*)common_parent_)->lock();
+	 lock_guard<mutex> lck(_mutex);
+     int common_children_size = common_parent_->common_children_.size();
+     //logd << "Action " << action << " common_children size " << common_children_size << std::endl;
+     while (common_children_size <= action)
+     {
+    	 common_parent_->common_children_.push_back(NULL);
+    	 common_children_size = common_parent_->common_children_.size();
+     }
+    if(common_parent_->common_children_[action] == NULL)
+    {
+        common_parent_->common_children_[action] = static_cast<Shared_QNode*>(children_[action]);
+    }
+    ((Shared_QNode*)common_parent_)->unlock();
+     return static_cast<Shared_QNode*>(common_parent_->common_children_[action]);
+    }
+
+    Shared_QNode* Shared_VNode::CommonChild(int action) {
+    	((Shared_QNode*)common_parent_)->lock();
+    		 lock_guard<mutex> lck(_mutex);
+    	     int common_children_size = common_parent_->common_children_.size();
+    	     //logd << "Action " << action << " common_children size " << common_children_size << std::endl;
+    	     while (common_children_size <= action)
+    	     {
+    	    	 common_parent_->common_children_.push_back(NULL);
+    	    	 common_children_size = common_parent_->common_children_.size();
+    	     }
+    	    if(common_parent_->common_children_[action] == NULL)
+    	    {
+    	        common_parent_->common_children_[action] = static_cast<Shared_QNode*>(children_[action]);
+    	    }
+    	    ((Shared_QNode*)common_parent_)->unlock();
+    	     return static_cast<Shared_QNode*>(common_parent_->common_children_[action]);
+    }
 
 int Shared_VNode::Size() const {
 	lock_guard<mutex> lck(_mutex);
@@ -202,11 +332,38 @@ int Shared_VNode::PolicyTreeSize() const {
 
 void Shared_VNode::default_move(ValuedAction move) {
 	lock_guard<mutex> lck(_mutex);
-	default_move_ = move;
+	if(Globals::config.track_alpha_vector)
+	    {
+
+
+		((Shared_QNode*)common_parent_)->lock();
+	            common_parent_->default_move = move;
+		((Shared_QNode*)common_parent_)->unlock();
+
+
+
+	    }
+	    else
+	    {
+		default_move_ = move;
+	    }
+	//default_move_ = move;
 }
 
 ValuedAction Shared_VNode::default_move() const {
-	return default_move_;
+	if(Globals::config.track_alpha_vector)
+	    {
+
+			return common_parent_->default_move;
+
+
+	    }
+	    else
+	    {
+		return default_move_;
+	    }
+
+	//return default_move_;
 }
 
 void Shared_VNode::lower_bound(double value) {
@@ -237,7 +394,39 @@ void Shared_VNode::utility_upper_bound(double value){
 double Shared_VNode::utility_upper_bound() const {
 	return utility_upper_bound_;
 }
+double Shared_VNode::calculate_lower_bound() const {
+	lock_guard<mutex> lck(_mutex);
+        double lower_bound = 0;
+        //const std::vector<State*>& particles = this->particles();
+        //std::cout << "Lower bound alpha vector" << lower_bound_alpha_vector << std::endl;
+        //std::cout << "particle_weight_size" << particle_weights.size() << std::endl;
+	//double weight_sum = 0;
+	for(int i = 0; i < Globals::config.num_scenarios; i++)
+        {
+          //std::cout << "Particle_weight " << particle_weights[i];
+	  //weight_sum += particle_weights[i];
+            //int particle_index = particles[i]->scenario_id;
+            lower_bound += particle_weights[i]*((*(lower_bound_alpha_vector.value_array))[i]);
+        }
+	//std::cout << "Particle weight is " << weight_sum << " for " << this->particles().size() << " partciles" << std::endl;
+        //std::cout << "Lower bound is " << lower_bound << std::endl;
+        return lower_bound;
+    }
 
+    double Shared_VNode::calculate_upper_bound() const {
+    	((Shared_QNode*)common_parent_)->lock();
+        double upper_bound = 0;
+        //const std::vector<State*>& particles = this->particles();
+        for(int i = 0; i < Globals::config.num_scenarios; i++)
+        {
+          //  std::cout << "Particle_weight " << particle_weights[i];
+            //int particle_index = particles[i]->scenario_id;
+            upper_bound += particle_weights[i]* (common_parent_->default_upper_bound_alpha_vector[i]);
+        }
+        ((Shared_QNode*)common_parent_)->unlock();
+        //std::cout << "Calculating upper bound " << upper_bound << upper_bound_alpha_vector << std::endl;
+        return upper_bound;
+    }
 bool Shared_VNode::IsLeaf() {
 	lock_guard<mutex> lck(_mutex);
 	return children_.size() == 0;
@@ -273,6 +462,18 @@ void Shared_VNode::Free(const DSPOMDP& model) {
 		if(particles_[i])model.Free(particles_[i]);
 	}
 
+	if(Globals::config.track_alpha_vector)
+	        {
+		((Shared_QNode*)common_parent_)->lock();
+	            for (int i = 0; i < common_parent_->particles_.size(); i++) {
+			if(common_parent_->particles_[i])
+			  {
+			    model.Free(common_parent_->particles_[i]);
+			    common_parent_->particles_[i] = NULL;
+			  }
+	            }
+	            ((Shared_QNode*)common_parent_)->unlock();
+	        }
 	for (ACT_TYPE a = 0; a < children().size(); a++) {
 		Shared_QNode* Shared_QNode = Child(a);
 		map<OBS_TYPE, VNode*>& children = Shared_QNode->children();
@@ -360,6 +561,34 @@ Shared_QNode::Shared_QNode(int count, double value)
 	count_=count;
 	value_=value;
 	exploration_bonus=0;
+	visit_count_=0;
+	weight_=0;
+}
+
+Shared_QNode::Shared_QNode(std::vector<State*>& particles){
+	lock_guard<mutex> lck(_mutex);
+	particles_ = particles;
+	parent_ = NULL;
+    weight_ = 0;
+    GPU_particles_=NULL;
+	num_GPU_particles_=0;
+
+	exploration_bonus=0;
+	value_=0;
+	visit_count_=0;
+	weight_=0;
+}
+
+Shared_QNode::Shared_QNode(std::vector<State*>& particles, std::vector<int> particleIDs){
+	lock_guard<mutex> lck(_mutex);
+    particles_ = particles;
+    particleIDs_ = particlesIDs;
+    parent_ = NULL;
+    GPU_particles_=NULL;
+	num_GPU_particles_=0;
+
+	exploration_bonus=0;
+	value_=0;
 	visit_count_=0;
 	weight_=0;
 }
