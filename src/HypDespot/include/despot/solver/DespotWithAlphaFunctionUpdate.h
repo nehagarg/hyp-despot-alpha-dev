@@ -49,7 +49,10 @@ public:
     //void CoreSearch(std::vector<State*>& particles, RandomStreams& streams);
     
     static void Update(VNode* vnode);
+    static void Update(Shared_VNode* vnode, bool real)
     static void UpdateSibling(VNode* vnode, VNode* sibling_node);
+    static void UpdateSibling(Shared_VNode* vnode, Shared_VNode* sibling_node, bool real);
+    static void Update(Shared_QNode* qnode, bool real);
     static void Update(QNode* qnode);
     static void Expand(QNode* qnode, ScenarioLowerBound* lower_bound,
 		ScenarioUpperBound* upper_bound, const DSPOMDP* model,

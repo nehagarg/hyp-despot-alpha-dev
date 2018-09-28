@@ -273,7 +273,7 @@ Shared_QNode* Shared_VNode::common_parent() {
  const Shared_QNode* Shared_VNode::CommonChild(int action) const {
 
 	 ((Shared_QNode*)common_parent_)->lock();
-	 lock_guard<mutex> lck(_mutex);
+	 //lock_guard<mutex> lck(_mutex);
      int common_children_size = common_parent_->common_children_.size();
      //logd << "Action " << action << " common_children size " << common_children_size << std::endl;
      while (common_children_size <= action)
@@ -291,7 +291,7 @@ Shared_QNode* Shared_VNode::common_parent() {
 
     Shared_QNode* Shared_VNode::CommonChild(int action) {
     	((Shared_QNode*)common_parent_)->lock();
-    		 lock_guard<mutex> lck(_mutex);
+    		// lock_guard<mutex> lck(_mutex);
     	     int common_children_size = common_parent_->common_children_.size();
     	     //logd << "Action " << action << " common_children size " << common_children_size << std::endl;
     	     while (common_children_size <= action)

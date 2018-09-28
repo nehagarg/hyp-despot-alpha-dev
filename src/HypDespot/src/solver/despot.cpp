@@ -188,7 +188,11 @@ Shared_VNode* DESPOT::Trial(Shared_VNode* root, RandomStreams& streams,
 			statistics->Update_longest_trial_len(cur->depth());
 		}
 		auto start1 = Time::now();
-		ExploitBlockers(cur);
+		if(!Globals::config.track_alpha_vector)
+			{
+				ExploitBlockers(cur);
+			}
+		//ExploitBlockers(cur);
 
 		BlockerCheckTime += Globals::ElapsedTime(start1);
 
@@ -1602,8 +1606,14 @@ void DESPOT::Backup(VNode* vnode, bool real) {
 		string msg = "backup to VNode";
 		msg += real ? "(true)" : "(blocker)";
 		if (Globals::config.use_multi_thread_) {
-			Update(static_cast<Shared_VNode*>(vnode), real);
-
+			if(Globals::config.track_alpha_vector)
+			{
+				DespotWithAlphaFunctionUpdate::Update(static_cast<Shared_VNode*>(vnode), real);
+			}
+			else
+			{
+				DESPOT::Update(static_cast<Shared_VNode*>(vnode), real);
+			}
 			if (real)
 				Globals::Global_print_node(this_thread::get_id(), vnode,
 				   static_cast<Shared_VNode*>(vnode)->depth(), 0,
@@ -1647,7 +1657,24 @@ void DESPOT::Backup(VNode* vnode, bool real) {
 		msg = "backup to QNode";
 		msg += real ? "(true)" : "(blocker)";
 		if (Globals::config.use_multi_thread_) {
-			Update(static_cast<Shared_QNode*>(parentq), real);
+			if(Globals::config.track_alpha_vector)
+			{
+			map<OBS_TYPE, Shared_VNode*>& children = (static_cast<Shared_QNode*>(parentq))->children();
+					for (map<OBS_TYPE, Shared_VNode*>::iterator it = children.begin();
+				it != children.end(); it++) {
+						//std::cout << "Observation " << "Sibling " << it->first << " Own " << vnode->edge() << std::endl;
+						if(it->first != vnode->edge())
+						{
+							//std::cout << "Updating sibling" << std::endl;
+							DespotWithAlphaFunctionUpdate::UpdateSibling(vnode, it->second, real);
+						}
+					}
+				DespotWithAlphaFunctionUpdate::Update(static_cast<Shared_QNode*>(parentq), real);
+			}
+			else
+			{
+				DESPOT::Update(static_cast<Shared_QNode*>(parentq), real);
+			}
 			if (real)
 				Globals::Global_print_node<int>(this_thread::get_id(), parentq,
 				                                static_cast<Shared_VNode*>(vnode)->depth(),
