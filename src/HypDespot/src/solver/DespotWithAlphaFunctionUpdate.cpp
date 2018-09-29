@@ -33,6 +33,7 @@ namespace despot {
         {
 
         	common_qnode = (static_cast<Shared_VNode*>(parent))->CommonChild(qnode->edge());
+		//std::cout << "Before locking Mutex for action " << qnode->edge() << std::endl;
         	(static_cast<Shared_QNode*>(common_qnode))->lock();
         }
         else
@@ -281,11 +282,13 @@ namespace despot {
                 //lower_bound += vnode->lower_bound();
 
         }
-        
+        //std::cout << "Unlocking inside if" << std::endl;
     	(static_cast<Shared_QNode*>(common_qnode))->unlock();
         }
         //Copy from populated qnode
         else{
+	  //std::cout << "Going inside else" << std::endl;
+	  (static_cast<Shared_QNode*>(common_qnode))->unlock();
             populated_qnode = common_qnode->parent()->Child(qnode->edge());
             std::map<OBS_TYPE, VNode*>& populated_children = populated_qnode->children();
             for (std::map<OBS_TYPE, VNode*>::iterator it = populated_children.begin();
