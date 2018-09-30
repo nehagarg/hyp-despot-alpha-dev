@@ -409,6 +409,7 @@ void DespotWithAlphaFunctionUpdate::Update(Shared_VNode* vnode, bool real)
 										* ((VNode*) vnode)->Weight();
 	}
 	if (((VNode*) vnode)->IsLeaf()) {
+	  vnode->unlock();
 			return;
 		}
 	vnode->unlock();
