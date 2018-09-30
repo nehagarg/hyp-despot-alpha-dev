@@ -399,7 +399,8 @@ namespace despot {
 
 void DespotWithAlphaFunctionUpdate::Update(Shared_VNode* vnode, bool real)
 {
-	lock_guard < mutex > lck(vnode->GetMutex());//lock v_node during updation
+	//lock_guard < mutex > lck(vnode->GetMutex());//lock v_node during updation
+	vnode->lock();
 	if (((VNode*) vnode)->depth() > 0 && real) {
 		if ( Globals::config.exploration_mode == VIRTUAL_LOSS) //release virtual loss
 			vnode->exploration_bonus += CalExplorationValue(((VNode*) vnode)->depth());
@@ -410,6 +411,7 @@ void DespotWithAlphaFunctionUpdate::Update(Shared_VNode* vnode, bool real)
 	if (((VNode*) vnode)->IsLeaf()) {
 			return;
 		}
+	vnode->unlock();
 	double lower = ((VNode*) vnode)->default_move().value;
 	double upper = ((VNode*) vnode)->default_move().value;
 
@@ -467,17 +469,18 @@ void DespotWithAlphaFunctionUpdate::Update(Shared_VNode* vnode, bool real)
 						vnode_upper_bound_per_particle[i] = max(vnode_upper_bound_per_particle[i], common_qnode->qnode_upper_bound_per_particle[i]);
 					}
 				}
-				vnode->belief_mult_es = 0;
+				//vnode->belief_mult_es = 0; //Not calculating it here as it is always recalculated at update sibling in multithreaded case
 				lock_guard < mutex > lck1(common_parent->GetMutex());//lock common_parent during updation
 				for (int i = 0; i < Globals::config.num_scenarios; i++){
 					if(vnode_upper_bound_per_particle[i] < common_parent->vnode_upper_bound_per_particle[i])
 					{
 						common_parent->vnode_upper_bound_per_particle[i] = vnode_upper_bound_per_particle[i];
 					}
-					vnode->belief_mult_es += vnode->particle_weights[i]*common_parent->vnode_upper_bound_per_particle[i];
+					//vnode->belief_mult_es += vnode->particle_weights[i]*common_parent->vnode_upper_bound_per_particle[i];
 				}
 			}
 
+		vnode->lock();
 		if (lower > ((VNode*)vnode)->lower_bound()) {
 			((VNode*)vnode)->lower_bound(lower);
 					((VNode*)vnode)->lower_bound_alpha_vector = max_lower_action;
@@ -487,6 +490,7 @@ void DespotWithAlphaFunctionUpdate::Update(Shared_VNode* vnode, bool real)
 					//vnode->upper_bound_alpha_vector = max_upper_action;
 
 		}
+		vnode->unlock();
 		        //std::cout << "Update Estimated value " <<  vnode->has_estimated_upper_bound_value << " array size " << vnode->estimated_upper_bound_alpha_vector.value_array->size() << std::endl;
 			/*if (utility_upper < vnode->utility_upper_bound) {
 				vnode->utility_upper_bound = utility_upper;
@@ -584,7 +588,7 @@ void DespotWithAlphaFunctionUpdate::Update(VNode* vnode) {
 
 void DespotWithAlphaFunctionUpdate::Update(Shared_QNode* qnode, bool real)
 {
-	lock_guard < mutex > lck(qnode->GetMutex());//lock v_node during updation
+	//lock_guard < mutex > lck(qnode->GetMutex());//lock v_node during updation
 	double upper = 0;
 
 	Shared_QNode* common_qnode = qnode->parent()->CommonChild(qnode->edge());
@@ -595,7 +599,7 @@ void DespotWithAlphaFunctionUpdate::Update(Shared_QNode* qnode, bool real)
 	for (map<OBS_TYPE, VNode*>::iterator it = children.begin();
 		        it != children.end(); it++) {
 			Shared_VNode* vnode = static_cast<Shared_VNode*>(it->second);
-			//lock_guard < mutex > lck1(vnode->GetMutex());
+			lock_guard < mutex > lck1(vnode->GetMutex());
 			for (int i = 0; i < Globals::config.num_scenarios; i++)
 			{
 				//int particle_index = qnode->particles_[i]->scenario_id;
@@ -647,6 +651,7 @@ void DespotWithAlphaFunctionUpdate::Update(Shared_QNode* qnode, bool real)
 
 		}
 
+	lock_guard < mutex > lck(qnode->GetMutex());//lock q_node during updation
 	if (Globals::config.exploration_mode == VIRTUAL_LOSS && real)
 		{
 			if (cur_depth >= 0)
