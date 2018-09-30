@@ -282,13 +282,18 @@ namespace despot {
                 //lower_bound += vnode->lower_bound();
 
         }
-        //std::cout << "Unlocking inside if" << std::endl;
-    	(static_cast<Shared_QNode*>(common_qnode))->unlock();
+	if(Globals::config.use_multi_thread_){
+	  //std::cout << "Unlocking inside if" << std::endl;
+
+	  (static_cast<Shared_QNode*>(common_qnode))->unlock();
+	}
         }
         //Copy from populated qnode
         else{
+	  if(Globals::config.use_multi_thread_){
 	  //std::cout << "Going inside else" << std::endl;
 	  (static_cast<Shared_QNode*>(common_qnode))->unlock();
+	  }
             populated_qnode = common_qnode->parent()->Child(qnode->edge());
             std::map<OBS_TYPE, VNode*>& populated_children = populated_qnode->children();
             for (std::map<OBS_TYPE, VNode*>::iterator it = populated_children.begin();
@@ -367,12 +372,30 @@ namespace despot {
         qnode->upper_bound(Globals::POS_INFTY);
         if(Globals::config.use_sawtooth_upper_bound)
         {
+	  if(Globals::config.use_multi_thread_){
+	    //std::cout << "Unlocking inside if" << std::endl;
+
+	    (static_cast<Shared_QNode*>(common_qnode))->lock();
+	  }
+	  
           if(common_qnode->qnode_upper_bound_per_particle.size()==0)
           {
               common_qnode->qnode_upper_bound_per_particle.resize(Globals::config.num_scenarios, Globals::POS_INFTY);
           }
+	  if(Globals::config.use_multi_thread_){
+	    //std::cout << "Unlocking inside if" << std::endl;
+
+	    (static_cast<Shared_QNode*>(common_qnode))->unlock();
+	  }
+	  
         }
-        DespotWithAlphaFunctionUpdate::Update(qnode);
+
+	if(Globals::config.use_multi_thread_){
+	  DespotWithAlphaFunctionUpdate::Update(static_cast<Shared_QNode*>(qnode), false);
+	}
+	else {
+	  DespotWithAlphaFunctionUpdate::Update(qnode);
+	}
 	//qnode->step_reward = step_reward;
 	//qnode->lower_bound(lower_bound);
 	//qnode->upper_bound(upper_bound);
