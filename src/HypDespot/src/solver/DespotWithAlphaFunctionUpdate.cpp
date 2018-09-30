@@ -856,10 +856,10 @@ void DespotWithAlphaFunctionUpdate::UpdateSibling(Shared_VNode* vnode, Shared_VN
 		  std::cout << "b' upper bound " << vnode->upper_bound() << " b upper bound " << sibling_node->upper_bound() << std::endl;
 		  */
 
-		 	 sibling_node->lock();
+
 		 	 //Find the minimum ratio weights
 	            double min_ratio = Globals::POS_INFTY;
-		    sibling_node->belief_mult_es = 0;
+		    double sibling_node_belief_mult_es = 0;
 		    vnode_belief_mult_es = 0; //Calculate this again with same upperbound points for shared update
 		    for (int i = 0; i < Globals::config.num_scenarios; i++)
 	            {
@@ -874,19 +874,20 @@ void DespotWithAlphaFunctionUpdate::UpdateSibling(Shared_VNode* vnode, Shared_VN
 	                }
 	                //Calculate belief multiplication with individual upper bounds for sibling node
 
-	                sibling_node->belief_mult_es += sibling_node->particle_weights[i]*vnode_common_parent_vnode_upper_bound_per_particle[i];
+	                sibling_node_belief_mult_es += sibling_node->particle_weights[i]*vnode_common_parent_vnode_upper_bound_per_particle[i];
 	                vnode_belief_mult_es += vnode->particle_weights[i]*vnode_common_parent_vnode_upper_bound_per_particle[i];
 	                //No need to calculate this for vnode as it is calculated while updating it
 
 
 
 	            }
+		    sibling_node->lock();
 		    //std::cout << "Min ratio is " << min_ratio << " b' belief_multi_es " << vnode->belief_mult_es << " b belief_multi_es " << sibling_node->belief_mult_es << std::endl;
-	            double sawtooth_upper_bound = (min_ratio*(vnode_upper_bound - vnode_belief_mult_es)) + sibling_node->belief_mult_es;
+	            double sawtooth_upper_bound = (min_ratio*(vnode_upper_bound - vnode_belief_mult_es)) + sibling_node_belief_mult_es;
 		    //std::cout << "Calculated sawtooth bound " << sawtooth_upper_bound << std::endl;
 	            if(sawtooth_upper_bound < ((VNode*)sibling_node)->upper_bound())
 	            {
-	                sibling_node->upper_bound(sawtooth_upper_bound);
+	                ((VNode*)sibling_node)->upper_bound(sawtooth_upper_bound);
 	            }
 	            sibling_node->unlock();
 	        }
