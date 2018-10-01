@@ -47,6 +47,7 @@ Shared_VNode::Shared_VNode(vector<State*>& particles,std::vector<int> particleID
 	                particles_[i] = NULL;
 	            }
 	            particles_.clear();
+	            particleIDs.clear();
 
 	           //upper_bound_alpha_vector_.resize(Globals::config.num_scenarios, 0);
 	           //lower_bound_alpha_vector.resize(Globals::config.num_scenarios, 0);

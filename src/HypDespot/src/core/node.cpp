@@ -162,7 +162,17 @@ const std::vector<State*>& VNode::particles() const {
 }
 
 const std::vector<int>& VNode::particleIDs() const {
-	return particleIDs_;
+	if(Globals::config.track_alpha_vector)
+	    {
+
+	            return common_parent_->particleIDs_;
+
+	    }
+	    else
+	    {
+	        return particleIDs_;
+	    }
+	//return particleIDs_;
 }
 void VNode::depth(int d) {
 	depth_ = d;
