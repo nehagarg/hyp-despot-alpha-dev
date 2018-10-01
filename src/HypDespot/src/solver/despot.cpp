@@ -508,10 +508,29 @@ VNode* DESPOT::ConstructTree(vector<State*>& particles, RandomStreams& streams,
 	logd
 	        << "[DESPOT::ConstructTree] START - Initializing lower and upper bounds at the root node.";
 	if (use_GPU_)
-		GPU_InitBounds(root, lower_bound, upper_bound, model, streams, history);
-	else
-		InitBounds(root, lower_bound, upper_bound, streams, history);
+	{
+		if(Globals::config.track_alpha_vector)
+			{
+				QNode* common_parent = root->common_parent();
+				if(common_parent->default_move.value_array == NULL)
+				{
+					//This should always be called as root node's common parent bounds are not updated
+					GPU_InitBounds(root, lower_bound, upper_bound, model, streams, history);
+				}
 
+
+				InitBounds(root, lower_bound, upper_bound, streams, history);
+
+			}
+		else
+		{
+			GPU_InitBounds(root, lower_bound, upper_bound, model, streams, history);
+		}
+	}
+	else
+	{
+		InitBounds(root, lower_bound, upper_bound, streams, history);
+	}
 	Initial_root_gap = Gap(root);
 	logd
 	        << "[DESPOT::ConstructTree] END - Initializing lower and upper bounds at the root node.";
@@ -687,7 +706,7 @@ void DESPOT::InitLowerBound(VNode* vnode, ScenarioLowerBound* lower_bound,
                     common_parent->default_move = lower_bound->Value(vnode->particles(), streams, history, common_parent->default_lower_bound_alpha_vector);
                     for(int i = 0; i < Globals::config.num_scenarios; i++)
                     {
-                        (*(common_parent->default_move.value_array))[i] = (*(common_parent->default_move.value_array))[i] * Globals::Discount(vnode->depth());
+                        common_parent->default_lower_bound_alpha_vector[i] = common_parent->default_lower_bound_alpha_vector[i] * Globals::Discount(vnode->depth());
                     }
                     common_parent->default_move.value_array = (&(common_parent->default_lower_bound_alpha_vector));
                    

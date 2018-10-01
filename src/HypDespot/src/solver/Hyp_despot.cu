@@ -1523,30 +1523,57 @@ void DESPOT::GPU_InitBounds(VNode* vnode, ScenarioLowerBound* lower_bound,
 	double vnode_upper_bound = 0;
 	double vnode_utility_upper = 0;
 
-	for (int i = 0; i < vnode->particleIDs().size(); i++) {
-		int parent_PID = vnode->particleIDs()[i];
+	if(Globals::config.track_alpha_vector)
+	{
+		QNode* common_parent = vnode->common_parent();
+		common_parent->default_lower_bound_alpha_vector.resize(Globals::config.num_scenarios, 0);
+		common_parent->default_upper_bound_alpha_vector.resize(Globals::config.num_scenarios, 0);
 
-		vnode_lower_bound += Hst_lb_all_a_p[ThreadID][0
-				* NumScenarios + parent_PID].value;
-		vnode_upper_bound += Hst_ub_all_a_p[ThreadID][0
-				* NumScenarios + parent_PID];				
-		vnode_utility_upper += Hst_uub_all_a_p[ThreadID][0
-				* NumScenarios + parent_PID];				
+		//This function is only called for root. So assuming particleIds are synchronized with scenarioId
+		for(int i = 0; i < Globals::config.num_scenarios; i++)
+		{
+			common_parent->default_lower_bound_alpha_vector[i] = Hst_lb_all_a_p[ThreadID][0* NumScenarios + i].value;
+			common_parent->default_upper_bound_alpha_vector[i] = Hst_ub_all_a_p[ThreadID][0* NumScenarios + i];
+		}
+		int first_particle = 0 * NumScenarios
+						+ vnode->particleIDs()[0];
+				common_parent->default_move = ValuedAction(
+						Hst_lb_all_a_p[ThreadID][first_particle].action,0.0);
+		common_parent->default_move.value_array = (&(common_parent->default_lower_bound_alpha_vector));
+		if(Globals::config.use_sawtooth_upper_bound)
+		{
+			common_parent->vnode_upper_bound_per_particle = common_parent->default_upper_bound_alpha_vector;
+
+		}
+
 	}
+	else
+	{
+		for (int i = 0; i < vnode->particleIDs().size(); i++) {
+			int parent_PID = vnode->particleIDs()[i];
 
-	vnode->lower_bound(vnode_lower_bound);
-	vnode->upper_bound(vnode_upper_bound-Globals::config.pruning_constant);
-	vnode->utility_upper_bound(vnode_utility_upper);
-	int first_particle = 0 * NumScenarios
-			+ vnode->particleIDs()[0];
-	vnode->default_move(ValuedAction(
-			Hst_lb_all_a_p[ThreadID][first_particle].action,
-			vnode_lower_bound));
+			vnode_lower_bound += Hst_lb_all_a_p[ThreadID][0
+					* NumScenarios + parent_PID].value;
+			vnode_upper_bound += Hst_ub_all_a_p[ThreadID][0
+					* NumScenarios + parent_PID];
+			vnode_utility_upper += Hst_uub_all_a_p[ThreadID][0
+					* NumScenarios + parent_PID];
+		}
 
-	if (vnode->upper_bound() < vnode->lower_bound()
-	// close gap because no more search can be done on leaf node
-			|| vnode->depth() == Globals::config.search_depth - 1) {
-		vnode->upper_bound(vnode->lower_bound());
+		vnode->lower_bound(vnode_lower_bound);
+		vnode->upper_bound(vnode_upper_bound-Globals::config.pruning_constant);
+		vnode->utility_upper_bound(vnode_utility_upper);
+		int first_particle = 0 * NumScenarios
+				+ vnode->particleIDs()[0];
+		vnode->default_move(ValuedAction(
+				Hst_lb_all_a_p[ThreadID][first_particle].action,
+				vnode_lower_bound));
+
+		if (vnode->upper_bound() < vnode->lower_bound()
+		// close gap because no more search can be done on leaf node
+				|| vnode->depth() == Globals::config.search_depth - 1) {
+			vnode->upper_bound(vnode->lower_bound());
+		}
 	}
 }
 
