@@ -18,6 +18,7 @@ __global__ void copy(const Dvc_Config* src)
 	Dvc_config->noise = src->noise;
 	Dvc_config->silence = src->silence;
 	Dvc_config->useGPU = src->useGPU;
+	Dvc_config->track_alpha_vector = src->track_alpha_vector;
 }
 
 __global__ void AllocGlobalConfig() {
@@ -38,6 +39,7 @@ void Dvc_Config::CopyToGPU(const Config* src) {
 	tmp->noise = src->noise;
 	tmp->silence = src->silence;
 	tmp->useGPU = src->useGPU;
+	tmp->track_alpha_vector = src->track_alpha_vector;
 
 	AllocGlobalConfig<<<1, 1, 1>>>();
 	HANDLE_ERROR(cudaDeviceSynchronize());

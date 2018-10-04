@@ -724,7 +724,7 @@ _InitBounds_LongObs(int total_num_scenarios, int num_particles,
 		float* upper_all_a_p, float* utility_upper_all_a_p,
 		Dvc_ValuedAction* default_move_all_a_p, OBS_TYPE* observations_all_a_p,
 		Dvc_RandomStreams* streams, Dvc_History* history, int depth,
-		int hist_size, int mult_weight) {
+		int hist_size) {
 	int action = blockIdx.x;
 	int PID = (blockIdx.y * blockDim.x + threadIdx.x) % num_particles;
 
@@ -762,6 +762,7 @@ _InitBounds_LongObs(int total_num_scenarios, int num_particles,
 	if (threadIdx.y == 0 && (blockIdx.y * blockDim.x + threadIdx.x) < num_particles) {
 		local_upper = DvcUpperBoundValue_(current_particle, 0, local_history);
 		local_upper *= Dvc_Globals::Dvc_Discount(Dvc_config, depth);
+
 	}
 
 	local_streams.position(depth);
@@ -780,7 +781,7 @@ _InitBounds_LongObs(int total_num_scenarios, int num_particles,
 	/*Prepare data for returning to host*/
 	if (threadIdx.y == 0 && (blockIdx.y * blockDim.x + threadIdx.x) < num_particles) {
 		global_list_pos=action * total_num_scenarios + PID;
-		if(mult_weight == 1)
+		if(!Dvc_config->track_alpha_vector)
 		{
 			local_lower.value = local_lower.value * current_particle->weight;
 			local_upper = local_upper * current_particle->weight;
@@ -804,7 +805,7 @@ _InitBounds_IntArrayObs(int total_num_scenarios, int num_particles,
 		float* upper_all_a_p, float* utility_upper_all_a_p,
 		Dvc_ValuedAction* default_move_all_a_p, OBS_TYPE* observations_all_a_p,
 		Dvc_RandomStreams* streams, Dvc_History* history, int depth,
-		int hist_size,int Shared_mem_per_particle, int mult_weight) {
+		int hist_size,int Shared_mem_per_particle) {
 
 	int action = blockIdx.x;
 
@@ -863,7 +864,7 @@ _InitBounds_IntArrayObs(int total_num_scenarios, int num_particles,
 		/*Prepare data for returning to host*/
 		if (threadIdx.y == 0 && (blockIdx.y * blockDim.x + threadIdx.x) < num_particles) {
 			global_list_pos=action * total_num_scenarios + PID;
-			if(mult_weight == 1)
+			if(!Dvc_config->track_alpha_vector)
 			{
 				local_lower.value = local_lower.value * current_particle->weight;
 				local_upper = local_upper * current_particle->weight;
@@ -941,12 +942,6 @@ void DESPOT::MCSimulation(VNode* vnode, int ThreadID,
 	int NumActions = model->NumActions();
 	int NumObs = model->NumObservations();
 	int NumParticles=vnode->num_GPU_particles_;
-	int mult_weight = 1;
-	if(Globals::config.track_alpha_vector)
-	{
-		mult_weight = 0;
-	}
-
 	int ParalllelisminStep = model->ParallelismInStep();
 	int Shared_mem_per_particle=CalSharedMemSize();
 
@@ -1095,7 +1090,7 @@ void DESPOT::MCSimulation(VNode* vnode, int ThreadID,
 						Dvc_uub_all_a_p[ThreadID], Dvc_lb_all_a_p[ThreadID],
 						Dvc_obs_all_a_and_p[ThreadID], Dvc_streams[ThreadID],
 						Dvc_history[ThreadID], vnode->depth() + 1,
-						history.Size() + 1,Shared_mem_per_particle, mult_weight);
+						history.Size() + 1,Shared_mem_per_particle);
 			else
 				_InitBounds_IntArrayObs<<<GridDim, ThreadDim, threadx * Shared_mem_per_particle * sizeof(int)>>>(
 						Globals::config.num_scenarios, NumParticles,
@@ -1104,7 +1099,7 @@ void DESPOT::MCSimulation(VNode* vnode, int ThreadID,
 						Dvc_uub_all_a_p[ThreadID], Dvc_lb_all_a_p[ThreadID],
 						Dvc_obs_all_a_and_p[ThreadID],Dvc_streams[ThreadID],
 						Dvc_history[ThreadID], vnode->depth() + 1,
-						history.Size() + 1,Shared_mem_per_particle, mult_weight);
+						history.Size() + 1,Shared_mem_per_particle);
 		}
 		else
 		{
@@ -1116,7 +1111,7 @@ void DESPOT::MCSimulation(VNode* vnode, int ThreadID,
 						Dvc_uub_all_a_p[ThreadID], Dvc_lb_all_a_p[ThreadID],
 						Dvc_obs_all_a_and_p[ThreadID], Dvc_streams[ThreadID],
 						Dvc_history[ThreadID], vnode->depth() + 1,
-						history.Size() + 1, mult_weight);
+						history.Size() + 1);
 			else
 				_InitBounds_LongObs<<<GridDim, ThreadDim, threadx * Shared_mem_per_particle * sizeof(int)>>>(
 						Globals::config.num_scenarios, NumParticles,
@@ -1125,7 +1120,7 @@ void DESPOT::MCSimulation(VNode* vnode, int ThreadID,
 						Dvc_uub_all_a_p[ThreadID], Dvc_lb_all_a_p[ThreadID],
 						Dvc_obs_all_a_and_p[ThreadID], Dvc_streams[ThreadID],
 						Dvc_history[ThreadID], vnode->depth() + 1,
-						history.Size() + 1, mult_weight);
+						history.Size() + 1);
 		}
 
 
@@ -1446,12 +1441,6 @@ void DESPOT::GPU_InitBounds(VNode* vnode, ScenarioLowerBound* lower_bound,
 	int ParalllelisminStep = model->ParallelismInStep();
 
 	int Shared_mem_per_particle = CalSharedMemSize();
-	int mult_weight = 1;
-	if(Globals::config.track_alpha_vector)
-	{
-		mult_weight = 0;
-	}
-
 	int threadx = 32;
 
 	blocky =(NumParticles % threadx == 0) ?
@@ -1482,7 +1471,7 @@ void DESPOT::GPU_InitBounds(VNode* vnode, ScenarioLowerBound* lower_bound,
 					Dvc_uub_all_a_p[ThreadID], Dvc_lb_all_a_p[ThreadID],
 					Dvc_obs_all_a_and_p[ThreadID], Dvc_streams[ThreadID],
 					Dvc_history[ThreadID], vnode->depth(),
-					history.Size(),Shared_mem_per_particle, mult_weight);
+					history.Size(),Shared_mem_per_particle);
 		else
 			_InitBounds_IntArrayObs<<<GridDim, ThreadDim, threadx * Shared_mem_per_particle * sizeof(int)>>>(
 					Globals::config.num_scenarios, NumParticles,
@@ -1492,7 +1481,7 @@ void DESPOT::GPU_InitBounds(VNode* vnode, ScenarioLowerBound* lower_bound,
 					Dvc_obs_all_a_and_p[ThreadID], Dvc_streams[ThreadID],
 					Dvc_history[ThreadID], 
 					vnode->depth(),
-					history.Size(),Shared_mem_per_particle, mult_weight);
+					history.Size(),Shared_mem_per_particle);
 
 
 	}
@@ -1506,7 +1495,7 @@ void DESPOT::GPU_InitBounds(VNode* vnode, ScenarioLowerBound* lower_bound,
 					Dvc_uub_all_a_p[ThreadID], Dvc_lb_all_a_p[ThreadID],
 					Dvc_obs_all_a_and_p[ThreadID], Dvc_streams[ThreadID],
 					Dvc_history[ThreadID], vnode->depth(),
-					history.Size(), mult_weight);
+					history.Size());
 		else
 			_InitBounds_LongObs<<<GridDim, ThreadDim, threadx * Shared_mem_per_particle * sizeof(int)>>>(
 					Globals::config.num_scenarios, NumParticles,
@@ -1515,7 +1504,7 @@ void DESPOT::GPU_InitBounds(VNode* vnode, ScenarioLowerBound* lower_bound,
 					Dvc_uub_all_a_p[ThreadID], Dvc_lb_all_a_p[ThreadID],
 					Dvc_obs_all_a_and_p[ThreadID], Dvc_streams[ThreadID],
 					Dvc_history[ThreadID], vnode->depth(),
-					history.Size(), mult_weight);
+					history.Size());
 	}
 	ReadBackData(ThreadID);
 

@@ -21,6 +21,7 @@ public:
 	double noise;
 	bool silence;
 	bool useGPU;
+	bool track_alpha_vector;
 
 	DEVICE Dvc_Config() :
 		search_depth(90),
@@ -35,7 +36,8 @@ public:
 		max_policy_sim_len(90),
 		noise(0.1),
 		silence(false),
-		useGPU(false)
+		useGPU(false),
+		track_alpha_vector(false)
 	{
 	}
 
