@@ -1804,15 +1804,22 @@ void DESPOT::Expand(VNode* vnode, ScenarioLowerBound* lower_bound,
 
 		//Create new Q-nodes for each action
 		QNode* qnode;
+		if(children.size() <=action) //children can be precreated in GPU despot with alpha vector update
+		{
+			if (Globals::config.use_multi_thread_)
+				qnode = new Shared_QNode(static_cast<Shared_VNode*>(vnode), action);
+			else
+				qnode = new QNode(vnode, action);
 
-		if (Globals::config.use_multi_thread_)
-			qnode = new Shared_QNode(static_cast<Shared_VNode*>(vnode), action);
-		else
-			qnode = new QNode(vnode, action);
-
-		children.push_back(qnode);
+			children.push_back(qnode);
+		}
 		if (use_GPU_ && vnode->PassGPUThreshold())
-			;
+		{
+			if(Globals::config.track_alpha_vector)
+					{
+						DespotWithAlphaFunctionUpdate::Expand(qnode,lower_bound,upper_bound,model,streams,history);
+					}
+		}
 		else
 		{
 			if (Globals::config.use_multi_thread_ && Globals::config.exploration_mode == UCT)
@@ -1830,8 +1837,13 @@ void DESPOT::Expand(VNode* vnode, ScenarioLowerBound* lower_bound,
 	}
 
 	if (use_GPU_ && vnode->PassGPUThreshold())
-		GPU_Expand_Action(vnode, lower_bound, upper_bound, model, streams,
+	{
+		if(!Globals::config.track_alpha_vector)
+		{
+			GPU_Expand_Action(vnode, lower_bound, upper_bound, model, streams,
 		                  history);
+		}
+	}
 	else {
 
 

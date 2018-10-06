@@ -27,18 +27,39 @@ namespace despot {
     {
         logd << "Expanding in Despot With Alpha function update" << std::endl;
         VNode* parent = qnode->parent();
+        if(Globals::config.useGPU)
+		{
+        	if(Globals::config.use_multi_thread_)
+        	{
+        		(static_cast<Shared_QNode*>(parent->common_parent_))->lock();
+        	}
+			if(parent->common_parent_->common_children_.size()==0)
+			{
+				DESPOT::GPU_Expand_Action(vnode,lb,ub,model,streams,history);
+			}
+			if(Globals::config.use_multi_thread_)
+			{
+				(static_cast<Shared_QNode*>(parent->common_parent_))->unlock();
+			}
+
+		}
 
         QNode* common_qnode;
         if(Globals::config.use_multi_thread_)
         {
 
-        	common_qnode = (static_cast<Shared_VNode*>(parent))->CommonChild(qnode->edge());
+
+
 		//std::cout << "Before locking Mutex for action " << qnode->edge() << std::endl;
-        	(static_cast<Shared_QNode*>(common_qnode))->lock();
+
+			common_qnode = (static_cast<Shared_VNode*>(parent))->CommonChild(qnode->edge());
+			(static_cast<Shared_QNode*>(common_qnode))->lock();
+
         }
         else
         {
-        	common_qnode = parent->CommonChild(qnode->edge());
+        		common_qnode = parent->CommonChild(qnode->edge());
+
         }
         QNode* populated_qnode = NULL;
         
@@ -66,6 +87,7 @@ namespace despot {
             {
                 common_qnode->vnode_upper_bound_per_particle.resize(Globals::config.num_scenarios, 0);
             }
+            common_qnode->populating_node = qnode;
             double node_factor = 1.0; //observation_particle_size/Globals::config.num_scenarios; 
             
 
@@ -290,11 +312,18 @@ namespace despot {
         }
         //Copy from populated qnode
         else{
-	  if(Globals::config.use_multi_thread_){
-	  //std::cout << "Going inside else" << std::endl;
-	  (static_cast<Shared_QNode*>(common_qnode))->unlock();
-	  }
-            populated_qnode = common_qnode->parent()->Child(qnode->edge());
+			  if(Globals::config.use_multi_thread_){
+			  //std::cout << "Going inside else" << std::endl;
+			  (static_cast<Shared_QNode*>(common_qnode))->unlock();
+			  }
+            populated_qnode = common_qnode->populating_node; //common_qnode->parent()->Child(qnode->edge()) can be wrong with multiple threads. So keeping a pointer to poluating node
+            if(populated_qnode == qnode)
+            {
+            	//Can happen while using GPU expansion
+            	;
+            }
+            else
+            {
             std::map<OBS_TYPE, VNode*>& populated_children = populated_qnode->children();
             for (std::map<OBS_TYPE, VNode*>::iterator it = populated_children.begin();
 		it != populated_children.end(); it++)
@@ -360,7 +389,7 @@ namespace despot {
  
                 
             }
-            
+        }
         }
        
                

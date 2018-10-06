@@ -8,8 +8,16 @@ namespace despot {
 
 void VNode::AssignGPUparticles( Dvc_State* src, int size)
 {
-	GPU_particles_=src;
-	num_GPU_particles_=size;
+	if(Globals::config.track_alpha_vector)
+	{
+		common_parent_->GPU_particles_ = src;
+		common_parent_->num_GPU_particles_ = size;
+	}
+	else
+	{
+		GPU_particles_=src;
+		num_GPU_particles_=size;
+	}
 }
 
 __global__ void CalWeight(double* result, Dvc_State* particles, int size)
@@ -24,7 +32,14 @@ __global__ void CalWeight(double* result, Dvc_State* particles, int size)
 
 double VNode::GPUWeight()
 {
-    return weight_;
+	if(Globals::config.track_alpha_vector)
+	{
+		return 1.0;
+	}
+	else
+	{
+		return weight_;
+	}
 }
 
 void VNode::ResizeParticles(int i)
@@ -88,16 +103,34 @@ void VNode::ReconstructCPUParticles(const DSPOMDP* model,
 }
 void VNode::ReadBackCPUParticles(const DSPOMDP* model)
 {
-	for(int i=0;i<particles_.size();i++)
+	if(Globals::config.track_alpha_vector)
 	{
-		particles_[i]=model->Allocate(0,0);//Zeros to be initial values
+		for(int i=0;i<common_parent_->particles_.size();i++)
+			{
+				common_parent_->particles_[i]=model->Allocate(0,0);//Zeros to be initial values
+			}
+
+			model->ReadParticlesBackToCPU(common_parent_->particles_,GetGPUparticles(), true);
+
+			for(int i=0;i< common_parent_->particles_.size();i++)
+			{
+				common_parent_->particleIDs_[i]=particles()[i]->scenario_id;
+			}
+
 	}
-
-	model->ReadParticlesBackToCPU(particles_,GetGPUparticles(), true);
-
-	for(int i=0;i<particles_.size();i++)
+	else
 	{
-		particleIDs_[i]=particles()[i]->scenario_id;
+		for(int i=0;i<particles_.size();i++)
+		{
+			particles_[i]=model->Allocate(0,0);//Zeros to be initial values
+		}
+
+		model->ReadParticlesBackToCPU(particles_,GetGPUparticles(), true);
+
+		for(int i=0;i<particles_.size();i++)
+		{
+			particleIDs_[i]=particles()[i]->scenario_id;
+		}
 	}
 }
 

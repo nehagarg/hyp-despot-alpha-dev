@@ -166,6 +166,7 @@ public:
         ValuedAction default_move;
         std::vector<double> vnode_upper_bound_per_particle; //used for sawtooth approximation
         std::vector<double> qnode_upper_bound_per_particle; //used for sawtooth approximation
+        QNode* populating_node; //pointer to node with child vnodes. Kept by common qnode
         //double estimated_upper_bound_;
         //bool has_estimated_upper_bound_value;
         //VNode* common_child;
