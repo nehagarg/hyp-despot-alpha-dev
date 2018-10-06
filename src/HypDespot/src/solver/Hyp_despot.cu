@@ -212,7 +212,7 @@ void DESPOT::PrepareGPUMemory(const DSPOMDP* model, int num_actions,
 			offset_obs_prob = offset_lb+num_actions * Globals::config.num_scenarios * sizeof(Dvc_ValuedAction);
 			if(offset_obs_prob%sizeof(float)!=0) offset_obs_prob=(offset_obs_prob/sizeof(float)+1)*sizeof(float);
 
-			MC_DataSize=offset_obs_prob+num_actions * Globals::config.num_scenarios * Globals::config.num_scenarios * sizeof(Dvc_float);
+			MC_DataSize=offset_obs_prob+num_actions * Globals::config.num_scenarios * Globals::config.num_scenarios * sizeof(float);
 
 		}
 		else
@@ -259,8 +259,8 @@ void DESPOT::PrepareGPUMemory(const DSPOMDP* model, int num_actions,
 
 		if(Globals::config.track_alpha_vector)
 		{
-			Dvc_obs_prob_all_a_p_obs = (float*)(Dvc_MC_Data[i]+offset_obs_prob);
-			Hst_obs_prob_all_a_p_obs = (float*)(Hst_MC_Data[i]+offset_obs_prob);
+			Dvc_obs_prob_all_a_p_obs[i] = (float*)(Dvc_MC_Data[i]+offset_obs_prob);
+			Hst_obs_prob_all_a_p_obs[i] = (float*)(Hst_MC_Data[i]+offset_obs_prob);
 		}
 
 		if(Globals::config.track_alpha_vector)
@@ -1053,10 +1053,10 @@ void DESPOT::PrepareGPUDataForCommonQNode(QNode* qnode, const DSPOMDP* model, in
 			/*Link the new particle list to the new node*/
 			for(int i = 0; i < NumParticles; i++)
 			{
-				int action = particleIds[i]/Globals::config.num_scenarios;
+				int action = particleIDs[i]/Globals::config.num_scenarios;
 				int scenario_id = particleIDs[i] % Globals::config.num_scenarios;
 				assert(new_particles[i].scenario_id == scenario_id);
-				if(qnode->common_children_[action]->GPU_particles == NULL)
+				if(qnode->common_children_[action]->GPU_particles_ == NULL)
 				{
 					qnode->common_children_[action]->GPU_particles_ = new_particles + (i*sizeof(Dvc_State));
 					qnode->common_children_[action]->num_GPU_particles_ = 1;
@@ -1404,6 +1404,7 @@ void DESPOT::GPU_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
 		cout<<endl;
 	}
 	/*Debug lb*/
+	std::vector<int> particleIDs=vnode->particleIDs();	
 	if(Globals::config.track_alpha_vector)
 	{
 		/*Expand common QNode*/
@@ -1601,7 +1602,7 @@ void DESPOT::GPU_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
 				common_qnode->default_move.value_array = (&(common_qnode->default_lower_bound_alpha_vector));
 				if(Globals::config.use_sawtooth_upper_bound)
 				{
-					common_qnode->vnode_upper_bound_per_particle = common_parent->default_upper_bound_alpha_vector;
+					common_qnode->vnode_upper_bound_per_particle = common_qnode->default_upper_bound_alpha_vector;
 
 				}
 
@@ -1688,7 +1689,7 @@ void DESPOT::GPU_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
 	else
 	{
 
-	std::vector<int> particleIDs=vnode->particleIDs();
+
 	/*Expand v-node*/
 	for (int action = 0; action < NumActions; action++) {
 		/*Partition particles by observation*/

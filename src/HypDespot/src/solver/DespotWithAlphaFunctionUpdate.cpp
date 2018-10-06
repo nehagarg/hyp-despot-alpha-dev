@@ -35,7 +35,7 @@ namespace despot {
         	}
 			if(parent->common_parent_->common_children_.size()==0)
 			{
-				DESPOT::GPU_Expand_Action(vnode,lb,ub,model,streams,history);
+				DESPOT::GPU_Expand_Action(parent,lb,ub,model,streams,history);
 			}
 			if(Globals::config.use_multi_thread_)
 			{
