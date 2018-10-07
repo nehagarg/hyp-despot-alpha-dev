@@ -945,7 +945,7 @@ _InitBounds_IntArrayObs(int total_num_scenarios, int num_particles,
 
 __global__ void
 _CalObsProb_LongObs(int total_num_scenarios, int num_particles,
-		Dvc_State* new_particles, const int* vnode_particleIDs,
+		Dvc_State* new_particles, const int* vnode_particleIDs, bool* term_all_a_p,
 		float* obs_prob_all_a_p_obs, OBS_TYPE* observations_all_a_p)
 {
 	int s_mult_o = num_particles*num_particles;
@@ -976,22 +976,21 @@ _CalObsProb_LongObs(int total_num_scenarios, int num_particles,
 
 		float obs_prob;
 		if (threadIdx.y == 0 && (blockIdx.y * blockDim.x + threadIdx.x) < s_mult_o) {
+			if(term_all_a_p[particle_list_pos] == false  && term_all_a_p[obs_list_pos] == false)
+			{
 			obs_prob = DvcModelObsProb_(observations_all_a_p[obs_list_pos], current_particle, action);
-		}
-
-
-
 
 
 		/*Prepare data for returning to host*/
-		if (threadIdx.y == 0 && (blockIdx.y * blockDim.x + threadIdx.x) < s_mult_o) {
+
 			int global_list_pos=(action * total_num_scenarios*total_num_scenarios) + (obs_list_pos*total_num_scenarios) + scenario_id;
 			obs_prob_all_a_p_obs[global_list_pos] = obs_prob;
+			}
 		}
 }
 __global__ void
 _CalObsProb_IntArrayObs(int total_num_scenarios, int num_particles,
-		Dvc_State* new_particles, const int* vnode_particleIDs,
+		Dvc_State* new_particles, const int* vnode_particleIDs, bool* term_all_a_p,
 		float* obs_prob_all_a_p_obs, int* observations_all_a_p,const int num_obs_elements,
 		int Shared_mem_per_particle)
 {
@@ -1020,13 +1019,21 @@ _CalObsProb_IntArrayObs(int total_num_scenarios, int num_particles,
 
 			float obs_prob;
 			if (threadIdx.y == 0 && (blockIdx.y * blockDim.x + threadIdx.x) < s_mult_o) {
-				obs_prob = DvcModelObsProbIntObs_(observations_all_a_p + (obs_list_pos*num_obs_elements), current_particle, action);
-			}
+				if(term_all_a_p[particle_list_pos] == false  && term_all_a_p[obs_list_pos] == false)
+				{
+				int Intobs[num_obs_elements];
+				for(int i=0;i<num_obs_elements;i++)
+				{
+					Intobs[i] = observations_all_a_p[obs_list_pos*num_obs_elements+i] ;
+				}
+				obs_prob = DvcModelObsProbIntObs_(Intobs, current_particle, action);
+
 
 			/*Prepare data for returning to host*/
-			if (threadIdx.y == 0 && (blockIdx.y * blockDim.x + threadIdx.x) < s_mult_o) {
+
 				int global_list_pos=(action * total_num_scenarios*total_num_scenarios) + (obs_list_pos*total_num_scenarios) + scenario_id;
 				obs_prob_all_a_p_obs[global_list_pos] = obs_prob;
+				}
 			}
 
 }
@@ -1378,13 +1385,13 @@ void DESPOT::MCSimulation(VNode* vnode, int ThreadID,
 						_CalObsProb_IntArrayObs<<<GridDim, ThreadDim, threadx * Shared_mem_per_particle * sizeof(int),
 								Globals::GetThreadCUDAStream(ThreadID)>>>(Globals::config.num_scenarios,
 								NumParticles, Dvc_stepped_particles_all_a[ThreadID],
-								Dvc_particleIDs_long[ThreadID], Dvc_obs_prob_all_a_p_obs[ThreadID],
+								Dvc_particleIDs_long[ThreadID], Dvc_term_all_a_and_p[ThreadID], Dvc_obs_prob_all_a_p_obs[ThreadID],
 								Dvc_obs_all_a_and_p[ThreadID], num_Obs_element, Shared_mem_per_particle);
 					else
 						_CalObsProb_IntArrayObs<<<GridDim, ThreadDim, threadx * Shared_mem_per_particle * sizeof(int)>>>(
 								Globals::config.num_scenarios, NumParticles,
 								Dvc_stepped_particles_all_a[ThreadID],
-								Dvc_particleIDs_long[ThreadID], Dvc_obs_prob_all_a_p_obs[ThreadID],
+								Dvc_particleIDs_long[ThreadID], Dvc_term_all_a_and_p[ThreadID], Dvc_obs_prob_all_a_p_obs[ThreadID],
 								Dvc_obs_all_a_and_p[ThreadID] ,num_Obs_element,Shared_mem_per_particle);
 				}
 				else
@@ -1393,13 +1400,13 @@ void DESPOT::MCSimulation(VNode* vnode, int ThreadID,
 						_CalObsProb_LongObs<<<GridDim, ThreadDim, threadx * Shared_mem_per_particle * sizeof(int),
 								Globals::GetThreadCUDAStream(ThreadID)>>>(Globals::config.num_scenarios,
 								NumParticles, Dvc_stepped_particles_all_a[ThreadID],
-								Dvc_particleIDs_long[ThreadID], Dvc_obs_prob_all_a_p_obs[ThreadID],
+								Dvc_particleIDs_long[ThreadID], Dvc_term_all_a_and_p[ThreadID], Dvc_obs_prob_all_a_p_obs[ThreadID],
 								Dvc_obs_all_a_and_p[ThreadID]);
 					else
 						_CalObsProb_LongObs<<<GridDim, ThreadDim, threadx * Shared_mem_per_particle * sizeof(int)>>>(
 								Globals::config.num_scenarios, NumParticles,
 								Dvc_stepped_particles_all_a[ThreadID],
-								Dvc_particleIDs_long[ThreadID], Dvc_obs_prob_all_a_p_obs[ThreadID],
+								Dvc_particleIDs_long[ThreadID], Dvc_term_all_a_and_p[ThreadID], Dvc_obs_prob_all_a_p_obs[ThreadID],
 								Dvc_obs_all_a_and_p[ThreadID]);
 				}
 			}
