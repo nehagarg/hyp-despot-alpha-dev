@@ -1020,7 +1020,7 @@ _CalObsProb_IntArrayObs(int total_num_scenarios, int num_particles,
 
 			float obs_prob;
 			if (threadIdx.y == 0 && (blockIdx.y * blockDim.x + threadIdx.x) < s_mult_o) {
-				obs_prob = DvcModelObsProbIntObs_(observations_all_a_p[obs_list_pos*num_obs_elements], current_particle, action);
+				obs_prob = DvcModelObsProbIntObs_(observations_all_a_p + (obs_list_pos*num_obs_elements), current_particle, action);
 			}
 
 			/*Prepare data for returning to host*/
@@ -1370,6 +1370,7 @@ void DESPOT::MCSimulation(VNode* vnode, int ThreadID,
 					ThreadDim.y = model->ParallelismInStep();
 				if(Obs_type==OBS_INT_ARRAY)
 				{
+					int num_Obs_element=num_Obs_element_in_GPU;
 					if(GPUDoPrint || DESPOT::Print_nodes){
 						printf("obs prob particle %d\n", vnode->GetGPUparticles() );
 					}
