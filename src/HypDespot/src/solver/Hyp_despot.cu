@@ -946,21 +946,88 @@ _InitBounds_IntArrayObs(int total_num_scenarios, int num_particles,
 __global__ void
 _CalObsProb_LongObs(int total_num_scenarios, int num_particles,
 		Dvc_State* new_particles, const int* vnode_particleIDs,
-		float* upper_all_a_p, float* utility_upper_all_a_p,
-		Dvc_ValuedAction* default_move_all_a_p, OBS_TYPE* observations_all_a_p,
-		Dvc_RandomStreams* streams, Dvc_History* history, int depth,
-		int hist_size)
+		float* obs_prob_all_a_p_obs, OBS_TYPE* observations_all_a_p)
 {
+	int s_mult_o = num_particles*num_particles;
+	int action = blockIdx.x;
+		int s_mult_o_id = (blockIdx.y * blockDim.x + threadIdx.x) % (s_mult_o);
+		int obs_id = vnode_particleIDs[s_mult_o_id/num_particles];
+		int scenario_id = vnode_particleIDs[s_mult_o_id % num_particles];
+		//int parent_PID = vnode_particleIDs[PID];
+		Dvc_State* current_particle = (Dvc_State*) ((int*) localParticles + 60 * threadIdx.x);
 
+		int particle_list_pos = action * total_num_scenarios + scenario_id;
+		int obs_list_pos = action * total_num_scenarios + obs_id;
+
+		/*Copy particle from global memory to shared memory*/
+		if (threadIdx.y == 0) {
+			Dvc_State* temp = DvcModelGet_(new_particles, particle_list_pos);
+			if(DvcModelCopyToShared_)
+				DvcModelCopyToShared_(current_particle, temp, 0, false);
+			else
+				printf("CalObsProb kernel: DvcModelCopyToShared_ has not been defined!\n");
+		}
+		__syncthreads();
+
+		/*Calculate obs prob for stepped particle*/
+
+
+
+
+		float obs_prob;
+		if (threadIdx.y == 0 && (blockIdx.y * blockDim.x + threadIdx.x) < s_mult_o) {
+			obs_prob = DvcModelObsProb_(observations_all_a_p[obs_list_pos], current_particle, action);
+		}
+
+
+
+
+
+		/*Prepare data for returning to host*/
+		if (threadIdx.y == 0 && (blockIdx.y * blockDim.x + threadIdx.x) < s_mult_o) {
+			int global_list_pos=(action * total_num_scenarios*total_num_scenarios) + (obs_list_pos*total_num_scenarios) + scenario_id;
+			obs_prob_all_a_p_obs[global_list_pos] = obs_prob;
+		}
 }
 __global__ void
 _CalObsProb_IntArrayObs(int total_num_scenarios, int num_particles,
 		Dvc_State* new_particles, const int* vnode_particleIDs,
-		float* upper_all_a_p, float* utility_upper_all_a_p,
-		Dvc_ValuedAction* default_move_all_a_p, OBS_TYPE* observations_all_a_p,
-		Dvc_RandomStreams* streams, Dvc_History* history, int depth,
-		int hist_size,int Shared_mem_per_particle)
+		float* obs_prob_all_a_p_obs, int* observations_all_a_p,const int num_obs_elements,
+		int Shared_mem_per_particle)
 {
+	int s_mult_o = num_particles*num_particles;
+		int action = blockIdx.x;
+			int s_mult_o_id = (blockIdx.y * blockDim.x + threadIdx.x) % (s_mult_o);
+			int obs_id = vnode_particleIDs[s_mult_o_id/num_particles];
+			int scenario_id = vnode_particleIDs[s_mult_o_id % num_particles];
+			//int parent_PID = vnode_particleIDs[PID];
+			Dvc_State* current_particle = (Dvc_State*) ((int*) localParticles + 60 * threadIdx.x);
+
+			int particle_list_pos = action * total_num_scenarios + scenario_id;
+			int obs_list_pos = action * total_num_scenarios + obs_id;
+
+			/*Copy particle from global memory to shared memory*/
+			if (threadIdx.y == 0) {
+				Dvc_State* temp = DvcModelGet_(new_particles, particle_list_pos);
+				if(DvcModelCopyToShared_)
+					DvcModelCopyToShared_(current_particle, temp, 0, false);
+				else
+					printf("CalObsProb kernel: DvcModelCopyToShared_ has not been defined!\n");
+			}
+			__syncthreads();
+
+			/*Calculate obs prob for stepped particle*/
+
+			float obs_prob;
+			if (threadIdx.y == 0 && (blockIdx.y * blockDim.x + threadIdx.x) < s_mult_o) {
+				obs_prob = DvcModelObsProbIntObs_(observations_all_a_p[obs_list_pos*num_obs_elements], current_particle, action);
+			}
+
+			/*Prepare data for returning to host*/
+			if (threadIdx.y == 0 && (blockIdx.y * blockDim.x + threadIdx.x) < s_mult_o) {
+				int global_list_pos=(action * total_num_scenarios*total_num_scenarios) + (obs_list_pos*total_num_scenarios) + scenario_id;
+				obs_prob_all_a_p_obs[global_list_pos] = obs_prob;
+			}
 
 }
 
@@ -1291,8 +1358,16 @@ void DESPOT::MCSimulation(VNode* vnode, int ThreadID,
 	#endif
 		if(Globals::config.track_alpha_vector)
 		{
+
 			if(Do_rollout)
 			{
+				int s_mult_o = NumParticles*NumParticles;
+				blocky = (s_mult_o % threadx == 0) ?
+									s_mult_o / threadx : s_mult_o / threadx + 1;
+					GridDim.x = NumActions;
+					GridDim.y = blocky;
+					ThreadDim.x = threadx;
+					ThreadDim.y = model->ParallelismInStep();
 				if(Obs_type==OBS_INT_ARRAY)
 				{
 					if(GPUDoPrint || DESPOT::Print_nodes){
@@ -1302,20 +1377,14 @@ void DESPOT::MCSimulation(VNode* vnode, int ThreadID,
 						_CalObsProb_IntArrayObs<<<GridDim, ThreadDim, threadx * Shared_mem_per_particle * sizeof(int),
 								Globals::GetThreadCUDAStream(ThreadID)>>>(Globals::config.num_scenarios,
 								NumParticles, Dvc_stepped_particles_all_a[ThreadID],
-								Dvc_particleIDs_long[ThreadID], Dvc_ub_all_a_p[ThreadID],
-								Dvc_uub_all_a_p[ThreadID], Dvc_lb_all_a_p[ThreadID],
-								Dvc_obs_all_a_and_p[ThreadID], Dvc_streams[ThreadID],
-								Dvc_history[ThreadID], vnode->depth() + 1,
-								history.Size() + 1,Shared_mem_per_particle);
+								Dvc_particleIDs_long[ThreadID], Dvc_obs_prob_all_a_p_obs[ThreadID],
+								Dvc_obs_all_a_and_p[ThreadID], num_Obs_element, Shared_mem_per_particle);
 					else
 						_CalObsProb_IntArrayObs<<<GridDim, ThreadDim, threadx * Shared_mem_per_particle * sizeof(int)>>>(
 								Globals::config.num_scenarios, NumParticles,
 								Dvc_stepped_particles_all_a[ThreadID],
-								Dvc_particleIDs_long[ThreadID], Dvc_ub_all_a_p[ThreadID],
-								Dvc_uub_all_a_p[ThreadID], Dvc_lb_all_a_p[ThreadID],
-								Dvc_obs_all_a_and_p[ThreadID],Dvc_streams[ThreadID],
-								Dvc_history[ThreadID], vnode->depth() + 1,
-								history.Size() + 1,Shared_mem_per_particle);
+								Dvc_particleIDs_long[ThreadID], Dvc_obs_prob_all_a_p_obs[ThreadID],
+								Dvc_obs_all_a_and_p[ThreadID] ,num_Obs_element,Shared_mem_per_particle);
 				}
 				else
 				{
@@ -1323,20 +1392,14 @@ void DESPOT::MCSimulation(VNode* vnode, int ThreadID,
 						_CalObsProb_LongObs<<<GridDim, ThreadDim, threadx * Shared_mem_per_particle * sizeof(int),
 								Globals::GetThreadCUDAStream(ThreadID)>>>(Globals::config.num_scenarios,
 								NumParticles, Dvc_stepped_particles_all_a[ThreadID],
-								Dvc_particleIDs_long[ThreadID], Dvc_ub_all_a_p[ThreadID],
-								Dvc_uub_all_a_p[ThreadID], Dvc_lb_all_a_p[ThreadID],
-								Dvc_obs_all_a_and_p[ThreadID], Dvc_streams[ThreadID],
-								Dvc_history[ThreadID], vnode->depth() + 1,
-								history.Size() + 1);
+								Dvc_particleIDs_long[ThreadID], Dvc_obs_prob_all_a_p_obs[ThreadID],
+								Dvc_obs_all_a_and_p[ThreadID]);
 					else
 						_CalObsProb_LongObs<<<GridDim, ThreadDim, threadx * Shared_mem_per_particle * sizeof(int)>>>(
 								Globals::config.num_scenarios, NumParticles,
 								Dvc_stepped_particles_all_a[ThreadID],
-								Dvc_particleIDs_long[ThreadID], Dvc_ub_all_a_p[ThreadID],
-								Dvc_uub_all_a_p[ThreadID], Dvc_lb_all_a_p[ThreadID],
-								Dvc_obs_all_a_and_p[ThreadID], Dvc_streams[ThreadID],
-								Dvc_history[ThreadID], vnode->depth() + 1,
-								history.Size() + 1);
+								Dvc_particleIDs_long[ThreadID], Dvc_obs_prob_all_a_p_obs[ThreadID],
+								Dvc_obs_all_a_and_p[ThreadID]);
 				}
 			}
 		}
@@ -1546,7 +1609,7 @@ void DESPOT::GPU_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
 	                for(int i = 0; i < common_qnode->particleIDs_.size();i++)
 	                {
 	                	int scenario_id = common_qnode->particleIDs_[i];
-	                    double prob = Hst_obs_prob_all_a_p_obs[ThreadID][action * NumScenarios + (scenario_id*NumScenarios) + it->second[0]];
+	                    double prob = Hst_obs_prob_all_a_p_obs[ThreadID][action * NumScenarios*NumScenarios + (it->second[0]*NumScenarios) + scenario_id];
 	                    //int scenario_id = common_qnode->particles_[i]->scenario_id;
 	                    //prob = model->ObsProb(obs, *common_qnode->particles_[i], qnode->edge());
 	                    //TODO: Get prob from stored value
