@@ -1000,7 +1000,7 @@ _CalObsProb_IntArrayObs(int total_num_scenarios, int num_particles,
 			int obs_id = vnode_particleIDs[s_mult_o_id/num_particles];
 			int scenario_id = vnode_particleIDs[s_mult_o_id % num_particles];
 			//int parent_PID = vnode_particleIDs[PID];
-			Dvc_State* current_particle = (Dvc_State*) ((int*) localParticles + 60 * threadIdx.x);
+			Dvc_State* current_particle = (Dvc_State*) ((int*) localParticles + Shared_mem_per_particle* threadIdx.x);
 
 			int particle_list_pos = action * total_num_scenarios + scenario_id;
 			int obs_list_pos = action * total_num_scenarios + obs_id;
@@ -1021,7 +1021,7 @@ _CalObsProb_IntArrayObs(int total_num_scenarios, int num_particles,
 			if (threadIdx.y == 0 && (blockIdx.y * blockDim.x + threadIdx.x) < s_mult_o) {
 				if(term_all_a_p[particle_list_pos] == false  && term_all_a_p[obs_list_pos] == false)
 				{
-				int Intobs[num_obs_elements];
+				int Intobs[200]; //not compiling with num_obs_elements
 				for(int i=0;i<num_obs_elements;i++)
 				{
 					Intobs[i] = observations_all_a_p[obs_list_pos*num_obs_elements+i] ;
