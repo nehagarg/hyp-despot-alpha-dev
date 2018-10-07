@@ -978,7 +978,7 @@ _CalObsProb_LongObs(int total_num_scenarios, int num_particles,
 		if (threadIdx.y == 0 && (blockIdx.y * blockDim.x + threadIdx.x) < s_mult_o) {
 			if(term_all_a_p[particle_list_pos] == false  && term_all_a_p[obs_list_pos] == false)
 			{
-			obs_prob = DvcModelObsProb_(observations_all_a_p[obs_list_pos], current_particle, action);
+			obs_prob = DvcModelObsProb_(observations_all_a_p[obs_list_pos], *current_particle, action);
 
 
 		/*Prepare data for returning to host*/
@@ -991,7 +991,7 @@ _CalObsProb_LongObs(int total_num_scenarios, int num_particles,
 __global__ void
 _CalObsProb_IntArrayObs(int total_num_scenarios, int num_particles,
 		Dvc_State* new_particles, const int* vnode_particleIDs, bool* term_all_a_p,
-		float* obs_prob_all_a_p_obs, int* observations_all_a_p,const int num_obs_elements,
+		float* obs_prob_all_a_p_obs, OBS_TYPE* observations_all_a_p,const int num_obs_elements,
 		int Shared_mem_per_particle)
 {
 	int s_mult_o = num_particles*num_particles;
@@ -1026,7 +1026,7 @@ _CalObsProb_IntArrayObs(int total_num_scenarios, int num_particles,
 				{
 					Intobs[i] = observations_all_a_p[obs_list_pos*num_obs_elements+i] ;
 				}
-				obs_prob = DvcModelObsProbIntObs_(Intobs, current_particle, action);
+				obs_prob = DvcModelObsProbIntObs_(Intobs, *current_particle, action);
 
 
 			/*Prepare data for returning to host*/
