@@ -151,7 +151,7 @@ void DrivingController::PlanningLoop(Solver*& solver, World* world, Logger* logg
 			break;
 	}
 
-	if(Globals::config.experiment_mode && !terminal){
+	if(!terminal){
 		cout << "- final_state:\n";
 		static_cast<PedPomdp*>(ped_pomdp_model)->PrintWorldState(
 				static_cast<PomdpStateWorld&>(*driving_simulator_->GetCurrentState()), cout);
