@@ -16,6 +16,7 @@ public:
 
 	bool RunStep(despot::Solver*, despot::World*, despot::Logger*);
 
+	void PlanningLoop(Solver*& solver, World* world, Logger* logger);
 
 
 	Simulator* driving_simulator_;

@@ -143,6 +143,22 @@ bool DrivingController::RunStep(Solver* solver, World* world, Logger* logger) {
 			step_start_t);
 }
 
+void DrivingController::PlanningLoop(Solver*& solver, World* world, Logger* logger) {
+	bool terminal;
+	for (int i = 0; i < Globals::config.sim_len; i++) {
+		terminal = RunStep(solver, world, logger);
+		if (terminal)
+			break;
+	}
+
+	if(Globals::config.experiment_mode && !terminal){
+		cout << "- final_state:\n";
+		static_cast<PedPomdp*>(ped_pomdp_model)->PrintWorldState(
+				static_cast<PomdpStateWorld&>(*driving_simulator_->GetCurrentState()), cout);
+	}
+}
+
+
 int main(int argc, char* argv[]) {
 
   return DrivingController().RunPlanning(argc, argv);
