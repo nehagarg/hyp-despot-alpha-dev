@@ -4,6 +4,7 @@
 
 namespace despot {
     
+bool DespotWithAlphaFunctionUpdate::PedPomdpProb = false;
     DespotWithAlphaFunctionUpdate::DespotWithAlphaFunctionUpdate(const DSPOMDP* model, 
         ScenarioLowerBound* lb, 
         ScenarioUpperBound* ub, 
@@ -75,6 +76,7 @@ namespace despot {
         //std::vector<OBS_TYPE> observations;
 	// Partition particles by observation
 	std::map<OBS_TYPE, std::vector<int> > partitions;
+	std::map<OBS_TYPE, std::vector<int> > obs_vectors;
         //std::map<OBS_TYPE, std::vector<State*> > partitions_belief_; //Stores belief particles
         
 	OBS_TYPE obs;
@@ -115,6 +117,10 @@ namespace despot {
                     common_qnode->particles_.push_back(copy);
                     num_particles_pushed++;
                     partitions[obs].push_back(particle->scenario_id);
+                    if(DespotWithAlphaFunctionUpdate::PedPomdpProb)
+						{
+							obs_vectors[obs] = static_cast<PedPomdp*>(model)->ObserveVector(*copy);
+						}
                     }
 
                 else {
@@ -173,6 +179,13 @@ namespace despot {
 	for (std::map<OBS_TYPE, std::vector<int> >::iterator it = partitions.begin();
 		it != partitions.end(); it++) {
 		OBS_TYPE obs = it->first;
+		std::vector<int> obs_vec;
+		if(DespotWithAlphaFunctionUpdate::PedPomdpProb)
+			{
+				obs_vec = obs_vectors[obs] ;
+			}
+
+
                 //int observation_particle_size_ = partitions[obs].size();
 		VNode* vnode;
 		if (Globals::config.use_multi_thread_)
@@ -203,8 +216,14 @@ namespace despot {
                 {
                     double prob;
                     //int scenario_id = common_qnode->particles_[i]->scenario_id;
-                    prob = model->ObsProb(obs, *common_qnode->particles_[i], qnode->edge());
-                
+                    if(DespotWithAlphaFunctionUpdate::PedPomdpProb)
+					{
+						prob = static_cast<PedPomdp*>(model)->ObsProb(obs_vec, *common_qnode->particles_[i], qnode->edge());
+					}
+                    else
+                    {
+                    	prob = model->ObsProb(obs, *common_qnode->particles_[i], qnode->edge());
+                    }
                     
                    // std::cout << "Obs Prob: for obs " <<  obs << " " << prob << " ";
                 

@@ -161,5 +161,6 @@ void DrivingController::PlanningLoop(Solver*& solver, World* world, Logger* logg
 
 int main(int argc, char* argv[]) {
 
+	DespotWithAlphaFunctionUpdate::PedPomdpProb = true;
   return DrivingController().RunPlanning(argc, argv);
 }

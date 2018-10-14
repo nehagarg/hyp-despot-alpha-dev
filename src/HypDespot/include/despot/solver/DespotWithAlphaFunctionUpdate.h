@@ -57,6 +57,7 @@ public:
     static void Expand(QNode* qnode, ScenarioLowerBound* lower_bound,
 		ScenarioUpperBound* upper_bound, const DSPOMDP* model,
 		RandomStreams& streams, History& history);
+    static bool PedPomdpProb;
 
 private:
 

@@ -285,6 +285,11 @@ double PedPomdp::ObsProb(uint64_t obs, const State& s, int action) const {
 	return obs == Observe(s);
 }
 
+double PedPomdp::ObsProb(const std::vector<int>& obs, const State& s, int action) const {
+	PomdpState& state = static_cast<PomdpState&>(s);
+	return 1.0;
+}
+
 std::vector<std::vector<double>> PedPomdp::GetBeliefVector(const std::vector<State*> particles) const {
 	std::vector<std::vector<double>> belief_vec;
 	return belief_vec;

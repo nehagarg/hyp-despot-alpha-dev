@@ -74,6 +74,7 @@ public:
 	uint64_t Observe(const State& ) const;
 	const std::vector<int>& ObserveVector(const State& )   const;
 	double ObsProb(uint64_t z, const State& s, int action) const;
+	double ObsProb(const std::vector<int>& z, const State& s, int action) const;
 
 	inline int NumActions() const { return 3; }
 
