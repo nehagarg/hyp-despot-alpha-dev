@@ -287,7 +287,16 @@ double PedPomdp::ObsProb(uint64_t obs, const State& s, int action) const {
 
 double PedPomdp::ObsProb(const std::vector<int>& obs, const State& s, int action) const {
 	PomdpState& state = static_cast<PomdpState&>(s);
-	return 1.0;
+	double prob = 1.0;
+	double b = 0.0;
+	for (int j = 0; j < state.num; j ++) {
+		b = b + (obs[2*j + 2] - state.peds[j].pos.x )*(obs[2*j + 2] - state.peds[j].pos.x );
+		b = b + (obs[2*j + 3] - state.peds[j].pos.y )*(obs[2*j + 3] - state.peds[j].pos.y );
+	}
+	double stddev = 1.0;
+	b = - b / (2.0* stddev*stddev);
+	return exp(b);
+	//return 1.0;
 }
 
 std::vector<std::vector<double>> PedPomdp::GetBeliefVector(const std::vector<State*> particles) const {
