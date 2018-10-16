@@ -7,6 +7,7 @@
 #include "ped_pomdp.h"
 #include "prior.h"
 #include "custom_particle_belief.h"
+#include <despot/solver/DespotWithAlphaFunctionUpdate.h>
 
 using namespace despot;
 static DSPOMDP* ped_pomdp_model;

@@ -286,7 +286,7 @@ double PedPomdp::ObsProb(uint64_t obs, const State& s, int action) const {
 }
 
 double PedPomdp::ObsProb(const std::vector<int>& obs, const State& s, int action) const {
-	PomdpState& state = static_cast<PomdpState&>(s);
+	const PomdpState& state = static_cast<const PomdpState&>(s);
 	double prob = 1.0;
 	double b = 0.0;
 	for (int j = 0; j < state.num; j ++) {
