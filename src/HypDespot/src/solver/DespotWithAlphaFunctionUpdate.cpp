@@ -119,7 +119,7 @@ bool DespotWithAlphaFunctionUpdate::PedPomdpProb = false;
                     partitions[obs].push_back(particle->scenario_id);
                     if(DespotWithAlphaFunctionUpdate::PedPomdpProb)
 						{
-							obs_vectors[obs] = static_cast<PedPomdp*>(model)->ObserveVector(*copy);
+							obs_vectors[obs] = model->ObserveVector(*copy);
 						}
                     }
 
@@ -218,7 +218,7 @@ bool DespotWithAlphaFunctionUpdate::PedPomdpProb = false;
                     //int scenario_id = common_qnode->particles_[i]->scenario_id;
                     if(DespotWithAlphaFunctionUpdate::PedPomdpProb)
 					{
-						prob = static_cast<PedPomdp*>(model)->ObsProb(obs_vec, *common_qnode->particles_[i], qnode->edge());
+						prob = model->ObsProb(obs_vec, *common_qnode->particles_[i], qnode->edge());
 					}
                     else
                     {

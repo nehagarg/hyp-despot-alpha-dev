@@ -92,6 +92,19 @@ State* DSPOMDP::CreateStartState(std::string type) const{
 	exit(1);
 }
 
+double DSPOMDP::ObsProb(const std::vector<int>& z, const State& state,
+		ACT_TYPE action) const
+{
+	cerr << "Unimplemented function: DSPOMDP::ObsProb" << endl;
+		exit(1);
+}
+
+const std::vector<int>& DSPOMDP::ObserveVector(const State& s)   const
+	{
+	cerr << "Unimplemented function: DSPOMDP::ObserveVector" << endl;
+			exit(1);
+	}
+
 ParticleUpperBound* DSPOMDP::CreateParticleUpperBound(string name) const {
 	if (name == "TRIVIAL" || name == "DEFAULT") {
 		return new TrivialParticleUpperBound(this);

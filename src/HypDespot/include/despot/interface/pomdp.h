@@ -185,6 +185,21 @@ public:
 	virtual double ObsProb(OBS_TYPE obs, const State& state,
 		ACT_TYPE action) const = 0;
 
+	/* ========================================================================
+	 * Functions related to beliefs and starting states.
+	 * ========================================================================*/
+	/**
+	 * [Optional]
+	 * Returns the observation probability. Used mainly for ped pomdp
+	 * @param obs    Observation candidate
+	 * @param state  Current state of the world
+	 * @param action Action that has been taken
+	 */
+	virtual double ObsProb( const std::vector<int>& z, const State& state,
+		ACT_TYPE action) const;
+
+	virtual const std::vector<int>& ObserveVector(const State& s)   const;
+
 	/**
 	 * [Optional]
 	 * Returns a starting state of simulation.
