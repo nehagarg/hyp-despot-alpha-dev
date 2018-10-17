@@ -64,6 +64,19 @@ public:
 	string text() const {
 		return concat(car.vel);
 		//return "state.h text(): fdfdfdfdfdfdf";
+		ostringstream oss;
+
+		oss << "car pos / dist_trav / vel = " << "(" << car.pos << ") / "
+			    << car.dist_travelled << " / "
+			    << car.vel << endl;
+			oss << num << " pedestrians " << endl;
+			for (int i = 0; i < num; i ++) {
+				oss << "ped " << i << ": id / pos / vel / goal   =  " << peds[i].id << " / "
+				    << "(" << peds[i].pos.x << ", " << peds[i].pos.y << ") / "
+				    << peds[i].vel << " / "
+				    << peds[i].goal << std::endl;
+			}
+			return oss.str();
 	}
 };
 
