@@ -531,6 +531,16 @@ VNode* DESPOT::ConstructTree(vector<State*>& particles, RandomStreams& streams,
 	{
 		InitBounds(root, lower_bound, upper_bound, streams, history);
 	}
+	if(Globals::config.track_alpha_vector)
+	  {
+	    logd << " Root node's bounds: (" << root->lower_bound() << root->lower_bound_alpha_vector<< ", "
+		 << root->upper_bound() << root->common_parent()->default_upper_bound_alpha_vector << ")" << std::endl;
+	  }
+	else
+	  {
+	    logd << " Root node's bounds: (" << root->lower_bound() << ", "
+		 << root->upper_bound() << ")" << endl;
+	  }
 	Initial_root_gap = Gap(root);
 	logd
 	        << "[DESPOT::ConstructTree] END - Initializing lower and upper bounds at the root node.";
