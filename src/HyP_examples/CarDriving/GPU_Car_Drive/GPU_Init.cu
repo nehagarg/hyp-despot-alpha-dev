@@ -34,6 +34,7 @@ void UpdateGPUPath(DSPOMDP* Hst_model);
 __global__ void PassPedPomdpFunctionPointers(Dvc_PedPomdp* model)
 {
 	DvcModelStepIntObs_=&(model->Dvc_Step);
+	DvcModelObsProbIntObs_=&(model->Dvc_ObsProbInt);
 	DvcModelCopyNoAlloc_=&(model->Dvc_Copy_NoAlloc);
 	DvcModelCopyToShared_=&(model->Dvc_Copy_ToShared);
 	DvcModelGet_=&(model->Dvc_Get);

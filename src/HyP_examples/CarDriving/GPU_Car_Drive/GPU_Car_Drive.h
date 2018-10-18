@@ -92,6 +92,7 @@ public:
 	DEVICE ~Dvc_PedPomdp();
 	DEVICE static bool Dvc_Step(Dvc_State& state, float rand_num, int action, float& reward,
 	                            int* obs);
+	DEVICE static float Dvc_ObsProbInt(int* obs, Dvc_State& state, int action);
 	DEVICE static int NumActions();
 	DEVICE static float ObsProb(OBS_TYPE obs, const Dvc_State& state, int action);
 	DEVICE static int Dvc_NumObservations();

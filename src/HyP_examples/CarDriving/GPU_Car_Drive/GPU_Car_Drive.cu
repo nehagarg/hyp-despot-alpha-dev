@@ -781,6 +781,24 @@ DEVICE int Dvc_PedPomdp::NumActions() {
 	return 3;
 }
 
+
+DEVICE float Dvc_PedPomdp::Dvc_ObsProbInt(int* obs, Dvc_State& state, int action)
+{
+	//const PomdpState& state = static_cast<const PomdpState&>(s);
+	Dvc_PomdpState& pedpomdp_state = static_cast<Dvc_PomdpState&>(state);//copy contents, link cells to existing ones
+		//PrintState(state);
+		float prob = 1.0;
+		float b = 0.0;
+		for (int j = 0; j < pedpomdp_state.num; j ++) {
+		  b = b + ((obs[2*j + 3]*Dvc_ModelParams::pos_rln) - pedpomdp_state.peds[j].pos.x )*((obs[2*j + 3]*Dvc_ModelParams::pos_rln) - pedpomdp_state.peds[j].pos.x );
+		  b = b + ((obs[2*j + 4]*Dvc_ModelParams::pos_rln) - pedpomdp_state.peds[j].pos.y )*((obs[2*j + 4]*Dvc_ModelParams::pos_rln) - pedpomdp_state.peds[j].pos.y );
+		  //std::cout << j << " obs vec " << obs[2*j + 2]<< "," << obs[2*j + 3] << ")b= " << b<< std::endl;
+		}
+		float stddev = 1.0;
+		b = - b / (2.0* stddev*stddev);
+		//std::cout << "b= " << b << std::endl;
+		return expf(b);
+}
 DEVICE void Dvc_PedPomdp::Dvc_Copy_NoAlloc(Dvc_State* des, const Dvc_State* src, int pos, bool offset_des) {
 	/*Pass member values, assign member pointers to existing state pointer*/
 	const Dvc_PomdpState* src_i= static_cast<const Dvc_PomdpState*>(src)+pos;
