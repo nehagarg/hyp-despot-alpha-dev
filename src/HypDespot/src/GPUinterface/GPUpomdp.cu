@@ -8,8 +8,8 @@ namespace despot {
 
 DEVICE bool (*DvcModelStep_)(Dvc_State&, float, ACT_TYPE, float&, OBS_TYPE&)=NULL;
 DEVICE bool (*DvcModelStepIntObs_)(Dvc_State&, float, ACT_TYPE, float&, int*)=NULL;
-DEVICE double (*DvcModelObsProb_)(OBS_TYPE&, Dvc_State&, ACT_TYPE)=NULL;
-DEVICE double (*DvcModelObsProbIntObs_)(int*, Dvc_State&, ACT_TYPE)=NULL;
+DEVICE float (*DvcModelObsProb_)(OBS_TYPE&, Dvc_State&, ACT_TYPE)=NULL;
+DEVICE float (*DvcModelObsProbIntObs_)(int*, Dvc_State&, ACT_TYPE)=NULL;
 DEVICE Dvc_ValuedAction (*DvcModelGetBestAction_)()=NULL;
 DEVICE int (*DvcModelNumActions_)() = NULL;
 DEVICE float (*DvcModelGetMaxReward_)()=NULL;
