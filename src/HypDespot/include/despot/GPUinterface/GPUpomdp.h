@@ -126,8 +126,8 @@ public:
 
 DEVICE extern bool (*DvcModelStep_)(Dvc_State&, float, ACT_TYPE, float&, OBS_TYPE&);
 DEVICE extern bool (*DvcModelStepIntObs_)(Dvc_State&, float, ACT_TYPE, float&, int*);
-DEVICE extern double (*DvcModelObsProb_)(OBS_TYPE&, Dvc_State&, ACT_TYPE);
-DEVICE extern double (*DvcModelObsProbIntObs_)(int*, Dvc_State&, ACT_TYPE);
+DEVICE extern float (*DvcModelObsProb_)(OBS_TYPE&, Dvc_State&, ACT_TYPE);
+DEVICE extern float (*DvcModelObsProbIntObs_)(int*, Dvc_State&, ACT_TYPE);
 
 DEVICE extern int (*DvcModelNumActions_)();
 DEVICE extern void (*DvcModelCopyNoAlloc_)(Dvc_State*, const Dvc_State*, int pos,
