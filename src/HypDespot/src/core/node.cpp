@@ -301,7 +301,7 @@ int VNode::PolicyTreeSize() const {
 }
 
 void VNode::default_move(ValuedAction move) {
-    if(Globals::config.track_alpha_vector)
+    /*if(Globals::config.track_alpha_vector)
     {
 
         if(common_parent_ == NULL)
@@ -317,13 +317,13 @@ void VNode::default_move(ValuedAction move) {
         
     }
     else
-    {
+    {*/
 	default_move_ = move;
-    }
+    //}
 }
 
 ValuedAction VNode::default_move() const {
-    if(Globals::config.track_alpha_vector)
+ /*   if(Globals::config.track_alpha_vector)
     {
         if(common_parent_ == NULL)
         {
@@ -337,9 +337,9 @@ ValuedAction VNode::default_move() const {
         
     }
     else
-    {
+    {*/
 	return default_move_;
-    }
+    //}
 }
 
 void VNode::lower_bound(double value) {

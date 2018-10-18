@@ -333,7 +333,7 @@ int Shared_VNode::PolicyTreeSize() const {
 
 void Shared_VNode::default_move(ValuedAction move) {
 	lock_guard<mutex> lck(_mutex);
-	if(Globals::config.track_alpha_vector)
+	/*if(Globals::config.track_alpha_vector)
 	    {
 
 
@@ -347,12 +347,12 @@ void Shared_VNode::default_move(ValuedAction move) {
 	    else
 	    {
 		default_move_ = move;
-	    }
-	//default_move_ = move;
+	    }*/
+	default_move_ = move;
 }
 
 ValuedAction Shared_VNode::default_move() const {
-	if(Globals::config.track_alpha_vector)
+	/*if(Globals::config.track_alpha_vector)
 	    {
 
 			return common_parent_->default_move;
@@ -363,8 +363,8 @@ ValuedAction Shared_VNode::default_move() const {
 	    {
 		return default_move_;
 	    }
-
-	//return default_move_;
+*/
+	return default_move_;
 }
 
 void Shared_VNode::lower_bound(double value) {
