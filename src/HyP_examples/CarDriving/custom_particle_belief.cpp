@@ -201,6 +201,10 @@ void PedPomdpBelief::ResampleParticles(const PedPomdp* model){
 	if(DESPOT::Debug_mode)
 		std::srand(0);
 
+
+	for (int i = 0; i < particles_.size(); i++)
+					model_->Free(particles_[i]);
+
 	particles_ = particles;
 
 	if (fabs(State::Weight(particles) - 1.0) > 1e-6) {
