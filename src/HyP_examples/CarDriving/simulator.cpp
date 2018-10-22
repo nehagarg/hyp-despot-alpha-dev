@@ -120,21 +120,34 @@ State* Simulator::GetCurrentState() const{
 	//cout << "[GetCurrentState] current num peds in simulator: " << num_of_peds_world << endl;
 
 	std::vector<PedDistPair> sorted_peds = stateTracker->getSortedPeds();
-	if (sorted_peds.size() ==0){
+	/*if (sorted_peds.size() ==0){
 		return NULL;
-	}
+	}*/
 
 	current_state.car.pos = world_state.car.pos;
 	current_state.car.vel = world_state.car.vel;
 	current_state.car.dist_travelled = world_state.car.dist_travelled;
 	current_state.num = /*num_of_peds_world*/sorted_peds.size();
 
+	if (sorted_peds.size() ==0){
+			current_state.num = world_state.num;
 
-	//update s.peds to the nearest n_peds peds
-	for(int i=0; i<current_state.num; i++) {
-		//cout << "[GetCurrentState] ped id:"<< sorted_peds[i].second.id << endl;
-		if(i<sorted_peds.size())
-			current_state.peds[i] = world_state.peds[sorted_peds[i].second.id];
+			for(int i=0; i<current_state.num; i++) {
+				current_state.peds[i] = world_state.peds[i];
+				//current_state.peds_mode[i] = world_state.peds_mode[i];
+			}
+	}
+	else{
+
+
+		//update s.peds to the nearest n_peds peds
+		for(int i=0; i<current_state.num; i++) {
+			//cout << "[GetCurrentState] ped id:"<< sorted_peds[i].second.id << endl;
+			if(i<sorted_peds.size()){
+				current_state.peds[i] = world_state.peds[sorted_peds[i].second.id];
+				//current_state.peds_mode[i] = world_state.peds_mode[sorted_peds[i].second.id];
+			}
+		}
 	}
 	return &current_state;
 }
