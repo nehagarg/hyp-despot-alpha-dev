@@ -238,8 +238,8 @@ void PedPomdpBelief::ResampleParticles(const PedPomdp* model){
 		}
 	}
 
-	if (fabs(State::Weight(particles) - 1.0) > 1e-6) {
-		loge << "[PedPomdpBelief::PedPomdpBelief] Particle weights sum to " << State::Weight(particles) << " instead of 1" << endl;
+	if (fabs(State::Weight(particles_) - 1.0) > 1e-6) {
+		loge << "[PedPomdpBelief::PedPomdpBelief] Particle weights sum to " << State::Weight(particles_) << " instead of 1" << endl;
 		exit(1);
 	}
 
@@ -247,8 +247,11 @@ void PedPomdpBelief::ResampleParticles(const PedPomdp* model){
 	// cerr << "Number of particles in initial belief: " << particles_.size() << endl;
 
 	if (prior_ == NULL) {
-		for (int i = 0; i < particles.size(); i++)
-			initial_particles_.push_back(model_->Copy(particles[i]));
+		for (int i = 0; i < initial_particles_.size(); i++)
+		 			model_->Free(initial_particles_[i]);
+		initial_particles_.resize(0);
+		for (int i = 0; i < particles_.size(); i++)
+			initial_particles_.push_back(model_->Copy(particles_[i]));
 	}
 }
 
