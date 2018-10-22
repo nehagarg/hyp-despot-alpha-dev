@@ -294,7 +294,7 @@ def SaveHistory(filename, key, value, num_runs):
 
 if __name__ == '__main__' :
 
-	file_flag='*data'
+	file_flag='trial_'
 
 	folder='./'
 	remove_incomplete=False
@@ -304,9 +304,9 @@ if __name__ == '__main__' :
 	if len(sys.argv) > 1:
 		folder = sys.argv[1]
 	if len(sys.argv) > 2:
-		remove_incomplete = bool(sys.argv[2])
+		file_flag = sys.argv[2]
 	if len(sys.argv) > 3:
-		file_flag = sys.argv[3]
+		remove_incomplete = bool(sys.argv[3])
 	
 	data=CarDriveData()
 	root = os.path.dirname(os.path.realpath(__file__))+'/'
