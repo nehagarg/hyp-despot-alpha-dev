@@ -61,8 +61,9 @@ public:
 	PedStruct peds[ModelParams::N_PED_IN];
 	PomdpState() {}
 
+	
 	string text() const {
-		return concat(car.vel);
+	  //	return concat(car.vel);
 		//return "state.h text(): fdfdfdfdfdfdf";
 		ostringstream oss;
 
