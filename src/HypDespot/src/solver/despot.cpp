@@ -617,8 +617,8 @@ VNode* DESPOT::ConstructTree(vector<State*>& particles, RandomStreams& streams,
 	} else {
 
 		do {
-			if (statistics->num_expanded_nodes > 10000)
-				break;
+		  //if (statistics->num_expanded_nodes > 10000)
+		  //		break;
 			//std::cout << "Starting trial ####################################" << num_trials << std::endl;
 			//root->PrintTree();
 			double start = clock();
@@ -973,7 +973,13 @@ ValuedAction DESPOT::Search() {
 	start = get_time_second();
 	ValuedAction astar = OptimalAction(root_);
 
+	//int ii;
+	//std::cout << "Before deleting root" << std::endl;
+	//std::cin >> ii;
 	delete root_;
+	//std::cout << "After deleting root" << std::endl;
+	//std::cin >> ii;
+	
 
 
 	logi << "[DESPOT::Search] Time for deleting tree: "
