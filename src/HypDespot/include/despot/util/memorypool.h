@@ -20,6 +20,10 @@ public:
 		return allocated_;
 	}
 
+	MemoryObject(): allocated_(false)
+	{
+
+	}
 public:
 	bool allocated_;
 };
