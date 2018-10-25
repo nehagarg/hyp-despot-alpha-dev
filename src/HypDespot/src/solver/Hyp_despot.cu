@@ -1008,7 +1008,7 @@ _CalObsProb_LongObs(int total_num_scenarios, int num_particles,
 __global__ void
 _CalObsProb_IntArrayObs(int total_num_scenarios, int num_particles,
 		Dvc_State* new_particles, const int* vnode_particleIDs, bool* term_all_a_p,
-		float* obs_prob_all_a_p_obs, OBS_TYPE* observations_all_a_p,const int num_obs_elements,
+		float* obs_prob_all_a_p_obs, int* observations_all_a_p,const int num_obs_elements,
 		int Shared_mem_per_particle)
 {
 	int s_mult_o = num_particles*num_particles;
@@ -1474,13 +1474,13 @@ void DESPOT::MCSimulation(VNode* vnode, int ThreadID,
 								Globals::GetThreadCUDAStream(ThreadID)>>>(Globals::config.num_scenarios,
 								NumParticles, Dvc_stepped_particles_all_a[ThreadID],
 								Dvc_particleIDs_long[ThreadID], Dvc_term_all_a_and_p[ThreadID], Dvc_obs_prob_all_a_p_obs[ThreadID],
-								Dvc_obs_all_a_and_p[ThreadID], num_Obs_element, Shared_mem_per_particle);
+								Dvc_obs_int_all_a_and_p[ThreadID], num_Obs_element, Shared_mem_per_particle);
 					else
 						_CalObsProb_IntArrayObs<<<GridDim, ThreadDim, threadx * Shared_mem_per_particle * sizeof(int)>>>(
 								Globals::config.num_scenarios, NumParticles,
 								Dvc_stepped_particles_all_a[ThreadID],
 								Dvc_particleIDs_long[ThreadID], Dvc_term_all_a_and_p[ThreadID], Dvc_obs_prob_all_a_p_obs[ThreadID],
-								Dvc_obs_all_a_and_p[ThreadID] ,num_Obs_element,Shared_mem_per_particle);
+								Dvc_obs_int_all_a_and_p[ThreadID] ,num_Obs_element,Shared_mem_per_particle);
 				}
 				else
 				{
