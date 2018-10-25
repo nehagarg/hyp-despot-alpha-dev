@@ -1180,18 +1180,32 @@ void DESPOT::MCSimulation(VNode* vnode, int ThreadID,
 	logd << "[DESPOT::MCSimulation] Step GPU particles "<< endl;
 
 
-	logd << "vnode->GetGPUparticles() = "<< vnode->GetGPUparticles() << 
-		 "Dvc_r_all_a = "<< Dvc_r_all_a <<
-		 " Dvc_obs_int_all_a_and_p = "<< Dvc_obs_int_all_a_and_p<<
+	logd << "vnode->GetGPUparticles() = "<< vnode->GetGPUparticles() ;
+	if(Globals::config.track_alpha_vector)
+	{
+		logd << "Dvc_r_all_a_and_p = "<< Dvc_r_all_a_and_p ;
+	}
+	else
+	{
+		 logd << "Dvc_r_all_a = "<< Dvc_r_all_a ;
+	}
+		 logd << " Dvc_obs_int_all_a_and_p = "<< Dvc_obs_int_all_a_and_p<<
 		 " Dvc_stepped_particles_all_a = " << Dvc_stepped_particles_all_a <<
 		 " Dvc_streams = " << Dvc_streams <<
 		 " Dvc_term_all_a_and_p = " << Dvc_term_all_a_and_p <<
 		 " Dvc_particleIDs_long = " << Dvc_particleIDs_long <<
 		 endl;
 
-	logd << "vnode->GetGPUparticles() = "<< vnode->GetGPUparticles() <<
-		 " Dvc_r_all_a[ThreadID] = "<< Dvc_r_all_a[ThreadID] <<
-		 " Dvc_obs_int_all_a_and_p[ThreadID] = "<< Dvc_obs_int_all_a_and_p[ThreadID]<<
+	logd << "vnode->GetGPUparticles() = "<< vnode->GetGPUparticles();
+	if(Globals::config.track_alpha_vector)
+		{
+			logd << "Dvc_r_all_a_and_p[ThreadID] = "<< Dvc_r_all_a_and_p[ThreadID] ;
+		}
+		else
+		{
+		 logd << " Dvc_r_all_a[ThreadID] = "<< Dvc_r_all_a[ThreadID] ;
+		}
+	logd << " Dvc_obs_int_all_a_and_p[ThreadID] = "<< Dvc_obs_int_all_a_and_p[ThreadID]<<
 		 " Dvc_stepped_particles_all_a[ThreadID] = " << Dvc_stepped_particles_all_a[ThreadID] <<
 		 " Dvc_streams[ThreadID] = " << Dvc_streams[ThreadID] <<
 		 " Dvc_term_all_a_and_p[ThreadID] = " << Dvc_term_all_a_and_p[ThreadID] <<
