@@ -1667,7 +1667,7 @@ void DESPOT::GPU_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
 				residual_vnode->extra_node = true;
 				residual_vnode->obs_probs_holder = residual_vnode;
 				residual_vnode->obs_probs.resize(Globals::config.num_scenarios, 0);
-
+				residual_vnode->num_GPU_particles_ = common_qnode->particleIDs_.size();
 
 			}
 
@@ -1696,7 +1696,7 @@ void DESPOT::GPU_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
 			logd << " New node created!" << std::endl;
 			children[obs] = child_vnode;
 	                child_vnode->obs_probs_holder = child_vnode;
-
+	                child_vnode->num_GPU_particles_ = common_qnode->particleIDs_.size();
 	                if(obs == Globals::RESIDUAL_OBS)
 	                {
 	                    child_vnode->extra_node = true;
