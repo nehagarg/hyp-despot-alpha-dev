@@ -516,9 +516,10 @@ Step_LongObs(int total_num_scenarios, int num_particles, Dvc_State* vnode_partic
 
 		int terminal = DvcModelStep_(*current_particle, streams->Entry(current_particle->scenario_id),
 				action, reward, obs);
-
-		reward = reward * current_particle->weight;
-
+		if(!Dvc_config->track_alpha_vector)
+		{
+			reward = reward * current_particle->weight;
+		}
 		/*Record stepped particles*/
 		int global_list_pos = action * total_num_scenarios + parent_PID;
 		if (threadIdx.y == 0) {
@@ -532,8 +533,15 @@ Step_LongObs(int total_num_scenarios, int num_particles, Dvc_State* vnode_partic
 				observations_all_a_p[global_list_pos] = (OBS_TYPE) (-1);
 			}
 
-			/*Accumulate rewards of all particles from the v-node for CPU usage*/
-			atomicAdd(step_reward_all_a + action, reward);
+			if(!Dvc_config->track_alpha_vector)
+			{
+				/*Accumulate rewards of all particles from the v-node for CPU usage*/
+				atomicAdd(step_reward_all_a + action, reward);
+			}
+			else
+			{
+				step_reward_all_a[global_list_pos] = reward;
+			}
 		}
 		if (threadIdx.y == 0)
 			terminal_all_a_p[global_list_pos] = terminal;
@@ -751,8 +759,10 @@ Step_IntObs(int total_num_scenarios, int num_particles, Dvc_State* vnode_particl
 			printf("Undefined DvcModelStepIntObs_!\n");
 		}
 
-		reward = reward * current_particle->weight;
-
+		if(!Dvc_config->track_alpha_vector)
+		{
+			reward = reward * current_particle->weight;
+		}
 		int parent_PID = vnode_particleIDs[PID];
 		/*Record stepped particles*/
 		int global_list_pos = action * total_num_scenarios + parent_PID;
@@ -769,8 +779,15 @@ Step_IntObs(int total_num_scenarios, int num_particles, Dvc_State* vnode_particl
 				observations_all_a_p[global_list_pos*num_obs_elements] = 0;//no content in obs list
 			}
 
-			/*Accumulate rewards of all particles from the v-node for CPU usage*/
-			atomicAdd(step_reward_all_a + action, reward);
+			if(!Dvc_config->track_alpha_vector)
+			{
+				/*Accumulate rewards of all particles from the v-node for CPU usage*/
+				atomicAdd(step_reward_all_a + action, reward);
+			}
+			else
+			{
+				step_reward_all_a[global_list_pos] = reward;
+			}
 
 			if (obs_i == 0)
 				terminal_all_a_p[global_list_pos] = terminal;
@@ -1230,7 +1247,7 @@ void DESPOT::MCSimulation(VNode* vnode, int ThreadID,
 					Dvc_streams[ThreadID],
 					(vnode->parent()==NULL)?-1:vnode->parent()->edge(),
 					Shared_mem_per_particle);
-			}
+
 			if (Do_rollout)
 				Step_IntObs<<<GridDim, ThreadDim, threadx * Shared_mem_per_particle * sizeof(int),
 						Globals::GetThreadCUDAStream(ThreadID)>>>(Globals::config.num_scenarios,
@@ -1242,6 +1259,22 @@ void DESPOT::MCSimulation(VNode* vnode, int ThreadID,
 						Dvc_streams[ThreadID],
 						Dvc_term_all_a_and_p[ThreadID],
 						Shared_mem_per_particle);
+			}
+			else
+			{
+				if (Do_rollout)
+								Step_IntObs<<<GridDim, ThreadDim, threadx * Shared_mem_per_particle * sizeof(int),
+										Globals::GetThreadCUDAStream(ThreadID)>>>(Globals::config.num_scenarios,
+										NumParticles,
+										vnode->GetGPUparticles(),
+										Dvc_particleIDs_long[ThreadID], Dvc_r_all_a_and_p[ThreadID],
+										Dvc_obs_int_all_a_and_p[ThreadID],num_Obs_element,
+										Dvc_stepped_particles_all_a[ThreadID],
+										Dvc_streams[ThreadID],
+										Dvc_term_all_a_and_p[ThreadID],
+										Shared_mem_per_particle);
+
+			}
 		}
 		else{
 			if(!Globals::config.track_alpha_vector){
@@ -1252,7 +1285,7 @@ void DESPOT::MCSimulation(VNode* vnode, int ThreadID,
 					Dvc_streams[ThreadID],
 					(vnode->parent()==NULL)?-1:vnode->parent()->edge(),
 					Shared_mem_per_particle);
-			}
+
 			if (Do_rollout)
 				Step_IntObs<<<GridDim, ThreadDim, threadx * Shared_mem_per_particle * sizeof(int)>>>
 					(Globals::config.num_scenarios,
@@ -1264,6 +1297,21 @@ void DESPOT::MCSimulation(VNode* vnode, int ThreadID,
 					Dvc_streams[ThreadID],
 					Dvc_term_all_a_and_p[ThreadID],
 					Shared_mem_per_particle);
+			}
+			else
+			{
+				if (Do_rollout)
+								Step_IntObs<<<GridDim, ThreadDim, threadx * Shared_mem_per_particle * sizeof(int)>>>
+									(Globals::config.num_scenarios,
+									NumParticles,
+									vnode->GetGPUparticles(),
+									Dvc_particleIDs_long[ThreadID], Dvc_r_all_a_and_p[ThreadID],
+									Dvc_obs_int_all_a_and_p[ThreadID],num_Obs_element,
+									Dvc_stepped_particles_all_a[ThreadID],
+									Dvc_streams[ThreadID],
+									Dvc_term_all_a_and_p[ThreadID],
+									Shared_mem_per_particle);
+			}
 		}
 	}
 	else
@@ -1275,7 +1323,7 @@ void DESPOT::MCSimulation(VNode* vnode, int ThreadID,
 					NumParticles, vnode->GetGPUparticles(),
 					Dvc_particleIDs_long[ThreadID], Dvc_streams[ThreadID],
 					(vnode->parent()==NULL)?-1:vnode->parent()->edge());
-			}
+
 			if (Do_rollout)
 				Step_LongObs<<<GridDim, ThreadDim, threadx * Shared_mem_per_particle * sizeof(int),
 						Globals::GetThreadCUDAStream(ThreadID)>>>(Globals::config.num_scenarios,
@@ -1285,6 +1333,19 @@ void DESPOT::MCSimulation(VNode* vnode, int ThreadID,
 						Dvc_stepped_particles_all_a[ThreadID],
 						Dvc_streams[ThreadID],
 						Dvc_term_all_a_and_p[ThreadID]);
+			}
+			else
+			{
+				if (Do_rollout)
+								Step_LongObs<<<GridDim, ThreadDim, threadx * Shared_mem_per_particle * sizeof(int),
+										Globals::GetThreadCUDAStream(ThreadID)>>>(Globals::config.num_scenarios,
+										NumParticles, vnode->GetGPUparticles(),
+										Dvc_particleIDs_long[ThreadID], Dvc_r_all_a_and_p[ThreadID],
+										Dvc_obs_all_a_and_p[ThreadID],
+										Dvc_stepped_particles_all_a[ThreadID],
+										Dvc_streams[ThreadID],
+										Dvc_term_all_a_and_p[ThreadID]);
+			}
 		}
 		else{
 			if(!Globals::config.track_alpha_vector)
@@ -1294,7 +1355,7 @@ void DESPOT::MCSimulation(VNode* vnode, int ThreadID,
 					NumParticles, vnode->GetGPUparticles(),
 					Dvc_particleIDs_long[ThreadID], Dvc_streams[ThreadID],
 					(vnode->parent()==NULL)?-1:vnode->parent()->edge());
-			}
+
 			if (Do_rollout)
 				Step_LongObs<<<GridDim, ThreadDim, threadx * Shared_mem_per_particle * sizeof(int)>>>
 						(Globals::config.num_scenarios,
@@ -1304,6 +1365,19 @@ void DESPOT::MCSimulation(VNode* vnode, int ThreadID,
 						Dvc_stepped_particles_all_a[ThreadID],
 						Dvc_streams[ThreadID],
 						Dvc_term_all_a_and_p[ThreadID]);
+			}
+			else
+			{
+				if (Do_rollout)
+								Step_LongObs<<<GridDim, ThreadDim, threadx * Shared_mem_per_particle * sizeof(int)>>>
+										(Globals::config.num_scenarios,
+										NumParticles, vnode->GetGPUparticles(),
+										Dvc_particleIDs_long[ThreadID], Dvc_r_all_a_and_p[ThreadID],
+										Dvc_obs_all_a_and_p[ThreadID],
+										Dvc_stepped_particles_all_a[ThreadID],
+										Dvc_streams[ThreadID],
+										Dvc_term_all_a_and_p[ThreadID]);
+			}
 		}
 	}
 
