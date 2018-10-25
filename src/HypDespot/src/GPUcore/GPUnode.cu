@@ -12,6 +12,7 @@ void VNode::AssignGPUparticles( Dvc_State* src, int size)
 	{
 		common_parent_->GPU_particles_ = src;
 		common_parent_->num_GPU_particles_ = size;
+		num_GPU_particles_=size;
 	}
 	else
 	{
