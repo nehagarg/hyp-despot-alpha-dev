@@ -30,11 +30,22 @@ VNode::VNode(vector<State*>& particles,std::vector<int> particleIDs, int depth, 
 	for (int i = 0; i < particles_.size(); i++) {
 	  if(particleIDs_.size() > i)
 	    {
-		logd << " " << i << " = " <<"("<< particleIDs_[i]<<")"<< *particles_[i] << endl;
+		logd << " " << i << " = " <<"("<< particleIDs_[i]<<")";
+		if(particles_[i]!=NULL) //can be null in case of GPU expansion
+		{
+			logd << *particles_[i];
+		}
+		logd << endl;
 	    }
 	  else
 	    {
-	      logd << " " << i << " = " << *particles_[i] << endl;
+	      logd << " " << i << " = " ;
+	      if(particles_[i]!=NULL) //can be null in case of GPU expansion
+		  {
+	    	  logd << *particles_[i];
+		  }
+	      logd << endl;
+
 	    }
 	}
 	weight_=0;
