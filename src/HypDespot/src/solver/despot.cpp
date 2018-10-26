@@ -1829,6 +1829,10 @@ void DESPOT::Expand(VNode* vnode, ScenarioLowerBound* lower_bound,
 
 			children.push_back(qnode);
 		}
+		else
+		{
+			qnode = vnode->Child(action);
+		}
 		if (use_GPU_ && vnode->PassGPUThreshold())
 		{
 			if(Globals::config.track_alpha_vector)
