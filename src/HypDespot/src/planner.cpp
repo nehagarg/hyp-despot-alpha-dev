@@ -80,8 +80,15 @@ int Planner::RunPlanning(int argc, char *argv[]) {
 		return 0;
 
 	if(Globals::config.useGPU)
-		PrepareGPU();
+	{
+		//Set the track_alpha_vector befor Prepare GPU
+		if (solver_type == "BTDESPOTALPHA" ||  solver_type == "BTDESPOTALPHAST")
+		{
+			Globals::config.track_alpha_vector = true;
+		}
 
+		PrepareGPU();
+	}
 	clock_t main_clock_start = clock();
 
 	/* =========================
