@@ -410,7 +410,11 @@ public:
 
 	virtual int ParallelismInStep() const=0;
 
-	virtual Dvc_State* GetPointerToParticleList(int offser, Dvc_State* full_list) const;
+	virtual Dvc_State* GetPointerToParticleList(int offser, Dvc_State* full_list) const
+	{
+		cerr << "Caution! Function " << __FUNCTION__ << " haven't been implemented" << std::endl;
+		exit(1);
+	}
 
 	
 };
