@@ -1142,20 +1142,24 @@ void DESPOT::PrepareGPUDataForCommonQNode(QNode* qnode, const DSPOMDP* model, in
 					&Globals::GetThreadCUDAStream(ThreadID));
 
 			/*Link the new particle list to the new node*/
-			for(int i = 0; i < NumParticles; i++)
+			int particle_offset = 0;
+			for(int action = 0; action < qnode->common_children_.size(); action++)
 			{
-				int action = particleIDs[i]/Globals::config.num_scenarios;
+				qnode->common_children_[action]->GPU_particles_ = model->GetPointerToParticleList(particle_offset, new_particles);
+				qnode->common_children_[action]->num_GPU_particles_ = qnode->common_children_[action]->particleIDs_.size();
+				particle_offset = particle_offset + qnode->common_children_[action]->num_GPU_particles_;
+				/*int action = particleIDs[i]/Globals::config.num_scenarios;
 				int scenario_id = particleIDs[i] % Globals::config.num_scenarios;
 				assert(new_particles[i].scenario_id == scenario_id);
 				if(qnode->common_children_[action]->GPU_particles_ == NULL)
 				{
-					qnode->common_children_[action]->GPU_particles_ = new_particles + (i*sizeof(Dvc_State));
+					qnode->common_children_[action]->GPU_particles_ = new_particles + i;
 					qnode->common_children_[action]->num_GPU_particles_ = 1;
 				}
 				else
 				{
 					qnode->common_children_[action]->num_GPU_particles_ = qnode->common_children_[action]->num_GPU_particles_ + 1;
-				}
+				}*/
 			}
 
 	}

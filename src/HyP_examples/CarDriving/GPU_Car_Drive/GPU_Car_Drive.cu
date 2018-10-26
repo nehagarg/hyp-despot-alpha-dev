@@ -255,8 +255,11 @@ __global__ void CopyParticles(Dvc_PomdpState* des,Dvc_PomdpState* src,
 			des_i->peds[i].vel=src_i->peds[i].vel;
 		}
 
-		//Accumulate weight of the particles
-		atomicAdd(weight, des_i->weight);
+		if(!Dvc_config->track_alpha_vector)
+		{
+			//Accumulate weight of the particles
+			atomicAdd(weight, des_i->weight);
+		}
 	}
 }
 
@@ -435,6 +438,10 @@ void PedPomdp::CopyGPUParticlesFromParent(Dvc_State* des,Dvc_State* src,int src_
 }
 
 
+Dvc_State* PedPomdp::GetPointerToParticleList(int offset,  Dvc_State* full_list) const
+{
+	return static_cast<Dvc_PomdpState*>(full_list)+ offset;
+}
 Dvc_State* PedPomdp::CopyParticlesToGPU(Dvc_State* dvc_particles, const std::vector<State*>& particles, bool deep_copy) const
 	//dvc_particles: managed device memory storing particles
 	// deep_copy: option on whether to copy list objects in side particles

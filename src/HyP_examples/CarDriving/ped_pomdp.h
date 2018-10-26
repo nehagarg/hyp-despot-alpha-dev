@@ -135,6 +135,8 @@ public:
 		Dvc_RandomStreams* streams, int stream_pos,
 			void* CUDAstream=NULL, int shift=0) const;
 
+	Dvc_State* GetPointerToParticleList(int offset, Dvc_State* full_list) const;
+
 	void CreateMemoryPool() const;
 	
 	void DestroyMemoryPool(MEMORY_MODE mode) const;

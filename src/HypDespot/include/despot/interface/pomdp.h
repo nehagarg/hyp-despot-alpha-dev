@@ -410,6 +410,8 @@ public:
 
 	virtual int ParallelismInStep() const=0;
 
+	virtual Dvc_State* GetPointerToParticleList(int offser, Dvc_State* full_list) const;
+
 	
 };
 
