@@ -1048,7 +1048,7 @@ _CalObsProb_IntArrayObs(int total_num_scenarios, int num_particles,
 
 			/*Prepare data for returning to host*/
 
-				int global_list_pos=(action * total_num_scenarios*total_num_scenarios) + (obs_list_pos*total_num_scenarios) + scenario_id;
+				int global_list_pos=(action * total_num_scenarios*total_num_scenarios) + (obs_id*total_num_scenarios) + scenario_id;
 				obs_prob_all_a_p_obs[global_list_pos] = obs_prob;
 				}
 			}
@@ -1646,6 +1646,12 @@ void DESPOT::GPU_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
 
 
 			} //Loop over NumParticles
+#ifdef RECORD_TIME
+		double oldValue=MakePartitionTime.load();
+		MakePartitionTime.compare_exchange_weak(oldValue,oldValue+ Globals::ElapsedTime(start));
+		/*Create new v-nodes for partitions, calculate the bounds*/
+		auto nodestart = Time::now();
+#endif
 			step_reward = Globals::Discount(vnode->depth()) * step_reward
 					- Globals::config.pruning_constant;//pruning_constant is used for regularization
 
@@ -1712,7 +1718,7 @@ void DESPOT::GPU_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
 	                    double prob = Hst_obs_prob_all_a_p_obs[ThreadID][action * NumScenarios*NumScenarios + (it->second[0]*NumScenarios) + scenario_id];
 	                    //int scenario_id = common_qnode->particles_[i]->scenario_id;
 	                    //prob = model->ObsProb(obs, *common_qnode->particles_[i], qnode->edge());
-	                    //TODO: Get prob from stored value
+
 
 	                   // std::cout << "Obs Prob: for obs " <<  obs << " " << prob << " ";
 
@@ -1744,7 +1750,7 @@ void DESPOT::GPU_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
 	                logd << " Creating node for obs " << obs << std::endl;
 
 
-	        //TODO: change this part
+	        //Update upper bound lower bound
 			history.Add(qnode->edge(), obs);
 			if(common_qnode->default_move.value_array == NULL)
 			{
