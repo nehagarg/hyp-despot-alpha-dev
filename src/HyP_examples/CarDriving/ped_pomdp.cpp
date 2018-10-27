@@ -26,7 +26,7 @@ public:
 	{
 	}
 
-	ValuedAction SingleParticleValue(PomdpState* state) {
+	ValuedAction SingleParticleValue(PomdpState* state) const {
 		int min_step = numeric_limits<int>::max();
 		auto& carpos = ped_pomdp_->world_model->path[state->car.pos];
 		double carvel = state->car.vel;
