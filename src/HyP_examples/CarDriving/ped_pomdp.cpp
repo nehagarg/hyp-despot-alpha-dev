@@ -26,9 +26,7 @@ public:
 	{
 	}
 
-	// IMPORTANT: Check after changing reward function.
-	virtual ValuedAction Value(const std::vector<State*>& particles) const {
-		PomdpState* state = static_cast<PomdpState*>(particles[0]);
+	ValuedAction SingleParticleValue(PomdpState* state) {
 		int min_step = numeric_limits<int>::max();
 		auto& carpos = ped_pomdp_->world_model->path[state->car.pos];
 		double carvel = state->car.vel;
@@ -38,8 +36,8 @@ public:
 			auto& p = state->peds[i];
 			// 3.25 is maximum distance to collision boundary from front laser (see collsion.cpp)
 			int step = (p.vel + carvel <= 1e-5) ? min_step : int(ceil(ModelParams::control_freq
-			           * max(COORD::EuclideanDistance(carpos, p.pos) - /*1.0*/3.25, 0.0)
-			           / ((p.vel + carvel))));
+					   * max(COORD::EuclideanDistance(carpos, p.pos) - /*1.0*/3.25, 0.0)
+					   / ((p.vel + carvel))));
 
 			if(DoPrintCPU)
 				printf("   step,min_step, p.vel + carvel=%d %d %f\n",step,min_step, p.vel + carvel);
@@ -54,7 +52,7 @@ public:
 		if (min_step != numeric_limits<int>::max()) {
 			double crash_penalty = ped_pomdp_->CrashPenalty(*state);
 			value = (move_penalty) * (1 - Globals::Discount(min_step)) / (1 - Globals::Discount())
-			        + crash_penalty * Globals::Discount(min_step);
+					+ crash_penalty * Globals::Discount(min_step);
 			if(DoPrintCPU)
 				printf("   min_step,crash_penalty, value=%d %f %f\n"
 						,min_step, crash_penalty,value);
@@ -63,13 +61,21 @@ public:
 		if(DoPrintCPU)
 			printf("   min_step,num_peds,move_penalty, value=%d %d %f %f\n"
 					,min_step,state->num, move_penalty,value);
-		return ValuedAction(ped_pomdp_->ACT_CUR, State::Weight(particles) * value);
+		return ValuedAction(ped_pomdp_->ACT_CUR, value);
+	}
+
+
+	// IMPORTANT: Check after changing reward function.
+	virtual ValuedAction Value(const std::vector<State*>& particles) const {
+		PomdpState* state = static_cast<PomdpState*>(particles[0]);
+		ValuedAction single_particle_action = SingleParticleValue(state);
+		return ValuedAction(single_particle_action.action, State::Weight(particles) * single_particle_action.value);
 	}
         
        ValuedAction Value(const std::vector<State*>& particles, std::vector<double>& alpha_vector_lower_bound) const
        {
            //TODO: Check if it is correct
-           ValuedAction ans = Value(particles);
+           /*ValuedAction ans = Value(particles);
            if(ans.value > 0)
            {
             ans.value = ans.value/State::Weight(particles);
@@ -77,7 +83,19 @@ public:
            for(int i = 0; i < alpha_vector_lower_bound.size(); i++)
            {
                alpha_vector_lower_bound[i] = ans.value;
-           }
+           }*/
+    	   ValuedAction ans;
+    	   for(int i = 0; i < particles.size(); i++)
+    	   {
+    		   PomdpState* state = static_cast<PomdpState*>(particles[i]);
+			   ValuedAction single_particle_action = SingleParticleValue(state);
+			   if(i==0)
+			   {
+				   ans = single_particle_action;
+			   }
+			   alpha_vector_lower_bound[particles[i]->scenario_id] = single_particle_action.value;
+    	   }
+
            ans.value_array = &(alpha_vector_lower_bound);
            return ans;
        }
