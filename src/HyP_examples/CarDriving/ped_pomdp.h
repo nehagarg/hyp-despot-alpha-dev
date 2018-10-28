@@ -47,6 +47,7 @@ public:
 
 	PedPomdp();
 	PedPomdp(WorldModel &);
+	PedPomdp(std::string params_file);
 	void UpdateVel(int& vel, int action, Random& random) const;
 	void RobStep(int &robY,int &rob_vel, int action, Random& random) const;
 	void PedStep(PomdpState& state, Random& random) const;

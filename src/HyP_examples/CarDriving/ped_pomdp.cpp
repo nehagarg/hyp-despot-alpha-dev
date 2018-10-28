@@ -116,6 +116,28 @@ PedPomdp::PedPomdp() :
 	use_rvo = false;
 }
 
+PedPomdp::PedPomdp(std::string params_file) :
+	world_model(NULL),
+	random_(Random((unsigned) Seeds::Next()))
+{
+	use_rvo = false;
+	ifstream fin(params_file.c_str(), ifstream::in);
+	string line, key, val;
+		while (is >> key >> val) {
+			 if (key == "n_peds_in")
+	                {
+	                    is >> ModelParams::N_PED_IN;
+	                }
+			 else if (key == "noise_goal_angle")
+			 {
+					 is >> ModelParams::NOISE_GOAL_ANGLE;
+			 }
+
+
+		}
+}
+
+
 const std::vector<int>& PedPomdp::ObserveVector(const State& state_) const {
 	const PomdpState &state = static_cast<const PomdpState&>(state_);
 	static std::vector<int> obs_vec;

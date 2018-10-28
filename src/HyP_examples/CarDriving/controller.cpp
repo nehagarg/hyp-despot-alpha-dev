@@ -16,7 +16,10 @@ static ACT_TYPE action = (ACT_TYPE)(-1);
 static OBS_TYPE obs =(OBS_TYPE)(-1);
 
 DSPOMDP* DrivingController::InitializeModel(option::Option* options) {
-	DSPOMDP* model = new PedPomdp();
+	 DSPOMDP* model = !options[E_PARAMS_FILE] ?
+	      new PedPomdp() : new PedPomdp(options[E_PARAMS_FILE].arg);
+	 DESPOT::num_Obs_element_in_GPU=1+ModelParams::N_PED_IN*2+2;
+	//DSPOMDP* model = new PedPomdp();
 	static_cast<PedPomdp*>(model)->world_model=&Simulator::worldModel;
 
 	ped_pomdp_model= model;
