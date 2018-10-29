@@ -157,7 +157,7 @@ protected:
 
 	static void PrepareGPUDataForRoot(VNode* node, const DSPOMDP* model, const std::vector<int>& particleIDs, std::vector<State*>& particles);
 	static void PrepareGPUDataForNode(VNode* vnode, const DSPOMDP* model, int ThreadID ,RandomStreams& streams);
-	static void PrepareGPUDataForCommonQNode(QNode* vnode,const DSPOMDP* model, int ThreadID, RandomStreams& streams, std::vector<int>& particleIDs );
+	static void PrepareGPUDataForCommonQNode(QNode* vnode,const DSPOMDP* model, int ThreadID, RandomStreams& streams, const std::vector<int>& particleIDs );
 
 	double AverageInitLower() const;
 	double StderrInitLower() const;

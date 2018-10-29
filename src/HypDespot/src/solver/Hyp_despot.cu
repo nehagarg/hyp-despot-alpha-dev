@@ -1110,7 +1110,7 @@ void DESPOT::PrepareGPUDataForNode(VNode* vnode,const DSPOMDP* model, int Thread
 #endif
 }
 
-void DESPOT::PrepareGPUDataForCommonQNode(QNode* qnode, const DSPOMDP* model, int ThreadID, RandomStreams& streams, std::vector<int>& particleIDs )
+void DESPOT::PrepareGPUDataForCommonQNode(QNode* qnode, const DSPOMDP* model, int ThreadID, RandomStreams& streams, const std::vector<int>& particleIDs )
 {
 #ifdef RECORD_TIME
 	auto start = Time::now();
