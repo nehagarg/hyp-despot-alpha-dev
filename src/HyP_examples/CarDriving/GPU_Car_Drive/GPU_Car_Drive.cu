@@ -349,7 +349,14 @@ Dvc_State* PedPomdp::AllocGPUParticles(int numParticles, MEMORY_MODE mode, Dvc_S
 		Hst_temp_IDs=new int*[num_threads];
 		for(int i=0;i<num_threads;i++)
 		{
-			cudaHostAlloc(&Hst_temp_IDs[i],numParticles*sizeof(int),0);
+			if(Globals::config.track_alpha_vector)
+			{
+				cudaHostAlloc(&Hst_temp_IDs[i],numParticles*NumActions()*sizeof(int),0);
+			}
+			else
+			{
+				cudaHostAlloc(&Hst_temp_IDs[i],numParticles*sizeof(int),0);
+			}
 		}
 
 		/*Intermediate memory for copying weights to device memory. 
