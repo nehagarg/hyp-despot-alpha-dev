@@ -121,12 +121,12 @@ PedPomdp::PedPomdp(std::string params_file) :
 	random_(Random((unsigned) Seeds::Next()))
 {
 	use_rvo = false;
-	ifstream fin(params_file.c_str(), ifstream::in);
+	ifstream is(params_file.c_str(), ifstream::in);
 	string line, key, val;
 		while (is >> key >> val) {
 			 if (key == "n_peds_in")
 	                {
-	                    is >> ModelParams::N_PED_IN;
+			  ;//is >> ModelParams::N_PED_IN;
 	                }
 			 else if (key == "noise_goal_angle")
 			 {
