@@ -445,6 +445,12 @@ __global__ void DebugSteppedParticles(Dvc_State* stepped_particles, int stepped_
 	}
 
 }
+
+void DESPOT::CheckSteppedParticles(int num_actions)
+{
+	int stepped_particles_size = num_actions*Globals::config.num_scenarios;
+	DebugSteppedParticles<<<1,1>>>(Dvc_stepped_particles_all_a[0], stepped_particles_size);
+}
 /**
  * PreStep kernel (Long observation type):
  * Forward the particle copied from parent node for one simulation step to keep it up-to-date

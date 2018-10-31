@@ -133,6 +133,7 @@ protected:
 
 	/************** HyP-DESPOT ************/
 
+	static void CheckSteppedParticles(int num_actions);
 	static void ReadBackData(int ThreadID);
 
 	static void MCSimulation(VNode* vnode, int ThreadID,
