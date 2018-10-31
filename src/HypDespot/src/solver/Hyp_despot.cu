@@ -440,6 +440,7 @@ __global__ void DebugSteppedParticles(Dvc_State* stepped_particles, int stepped_
 	//int global_list_pos = action*total_num_scenarios + scenario_id;
 	for(int i = 0; i < stepped_particles_size; i++)
 	{
+		printf("Checking particle %d ", i);
 		Dvc_State* temp = DvcModelGet_(stepped_particles, i);
 		DvcModelCopyNoAlloc_(temp, temp, 0, false);
 	}
@@ -449,7 +450,10 @@ __global__ void DebugSteppedParticles(Dvc_State* stepped_particles, int stepped_
 void DESPOT::CheckSteppedParticles(int num_actions)
 {
 	int stepped_particles_size = num_actions*Globals::config.num_scenarios;
+	std::cout << "Checking " << stepped_particles_size << " stepped particles  ..." ;
 	DebugSteppedParticles<<<1,1>>>(Dvc_stepped_particles_all_a[0], stepped_particles_size);
+	cudaDeviceSynchronize();
+	std::cout << "Done\n";
 }
 /**
  * PreStep kernel (Long observation type):
@@ -788,6 +792,7 @@ Step_IntObs(int total_num_scenarios, int num_particles, Dvc_State* vnode_particl
 
 		if (obs_i == 0) {
 			Dvc_State* temp = DvcModelGet_(new_particles, global_list_pos);
+			//printf("Block id %d, thread id %d, global lis pos %d, des_i %p \n", blockIdx.x, threadIdx.x, global_list_pos, (void*) temp);
 			DvcModelCopyNoAlloc_(temp, current_particle, 0, false);
 
 			/*Record all observations for CPU usage*/
@@ -1086,20 +1091,20 @@ void DESPOT::PrepareGPUDataForNode(VNode* vnode,const DSPOMDP* model, int Thread
 	auto start = Time::now();
 #endif
 	streams.position(vnode->depth());
-	if(!Globals::config.track_alpha_vector)
-
-	{
+	
 		const std::vector<State*>& particles = vnode->particles();
 		const std::vector<int>& particleIDs = vnode->particleIDs();
 		int NumParticles = particleIDs.size();
 
 		/*Copy particle IDs in the new node to the ID list in device memory*/
-		/*Not needed with alpha vector update as expanded particles are not thrown*/
+		/*Needed with alpha vector update to not step terminal particles*/
 
 
 		model->CopyParticleIDsToGPU(Dvc_particleIDs_long[ThreadID], particleIDs,
 			&Globals::GetThreadCUDAStream(ThreadID));
+		if(!Globals::config.track_alpha_vector)
 
+		{
 		if(vnode->parent()!=NULL) // New node but not root node
 		{
 			/*Create GPU particles for the new v-node*/
@@ -1286,6 +1291,7 @@ void DESPOT::MCSimulation(VNode* vnode, int ThreadID,
 			}
 			else
 			{
+
 				if (Do_rollout)
 								Step_IntObs<<<GridDim, ThreadDim, threadx * Shared_mem_per_particle * sizeof(int),
 										Globals::GetThreadCUDAStream(ThreadID)>>>(Globals::config.num_scenarios,
@@ -1324,7 +1330,11 @@ void DESPOT::MCSimulation(VNode* vnode, int ThreadID,
 			}
 			else
 			{
+
 				if (Do_rollout)
+				{
+								//DESPOT::CheckSteppedParticles(NumActions);
+								//std::cout << "Thread id is " << ThreadID << std::endl;
 								Step_IntObs<<<GridDim, ThreadDim, threadx * Shared_mem_per_particle * sizeof(int)>>>
 									(Globals::config.num_scenarios,
 									NumParticles,
@@ -1335,6 +1345,7 @@ void DESPOT::MCSimulation(VNode* vnode, int ThreadID,
 									Dvc_streams[ThreadID],
 									Dvc_term_all_a_and_p[ThreadID],
 									Shared_mem_per_particle);
+									}
 			}
 		}
 	}
@@ -1578,6 +1589,7 @@ void DESPOT::GPU_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
 	AveNumParticles = AveNumParticles * (HitCount - 1) / HitCount
 			+ NumActions * NumParticles / HitCount;
 
+	
 	/*Run Monte Carlo simulations in GPU: update particles and perform rollouts*/
 	MCSimulation(vnode, ThreadID,model, streams,history,true);
 
