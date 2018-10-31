@@ -1145,6 +1145,7 @@ void DESPOT::PrepareGPUDataForCommonQNode(QNode* qnode, const DSPOMDP* model, in
 			int particle_offset = 0;
 			for(int action = 0; action < qnode->common_children_.size(); action++)
 			{
+				logd << "Action " << action << " Particle offset " << particle_offset << std::endl;
 				qnode->common_children_[action]->GPU_particles_ = model->GetPointerToParticleList(particle_offset, new_particles);
 				qnode->common_children_[action]->num_GPU_particles_ = qnode->common_children_[action]->particleIDs_.size();
 				particle_offset = particle_offset + qnode->common_children_[action]->num_GPU_particles_;
@@ -1547,7 +1548,14 @@ void DESPOT::GPU_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
 
 
 	int NumParticles = vnode->particleIDs().size();
-
+	/*std::cout << "Num particles : " << NumParticles << "," << vnode->num_GPU_particles_ << std::endl;
+	std::cout << "Particles ids " ;
+	for(int i = 0; i < vnode->particleIDs().size(); i++)
+	{
+		std::cout << vnode->particleIDs()[i] << " ";
+	}
+	std::cout << std::endl;
+	*/
 	AveNumParticles = AveNumParticles * (HitCount - 1) / HitCount
 			+ NumActions * NumParticles / HitCount;
 
@@ -1567,15 +1575,21 @@ void DESPOT::GPU_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
 		cout<<endl;
 	}
 	/*Debug lb*/
-	std::vector<int> particleIDs=vnode->particleIDs();	
+	std::vector<int> particleIDs=vnode->particleIDs();
 	if(Globals::config.track_alpha_vector)
 	{
 		/*Expand common QNode*/
 		std::vector<int> particleIds_all_a;
+		logd << "Num particles " << NumParticles << "[";
+		/*for (int i = 0; i < NumParticles; i++) {
+		    logd << particleIDs[i] << "," ;
+		}*/
+		logd << std::endl;
 		for (int action = 0; action < NumActions; action++) {
 			#ifdef RECORD_TIME
 				auto start = Time::now();
 			#endif
+			logd << "GPU Expand Action " << action << std::endl;
 			QNode* qnode;
 			if(action >= vnode->children().size())
 			{
@@ -1599,11 +1613,13 @@ void DESPOT::GPU_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
 			{
 				common_qnode->vnode_upper_bound_per_particle.resize(Globals::config.num_scenarios, 0);
 			}
-			double step_reward;
+			double step_reward = 0;
 			std::map<OBS_TYPE, std::vector<int> > partitions;
 			std::map<OBS_TYPE, VNode*>& children = qnode->children();
 			for (int i = 0; i < NumParticles; i++) {
+			    
 				int parent_PID = particleIDs[i]; // parent_PID corresponds to scenario id
+				logd << "Steppig particle " << parent_PID << std::endl;
 				common_qnode->step_reward_vector[parent_PID] = Globals::Discount(vnode->depth()) * Hst_r_all_a_and_p[ThreadID][action * NumScenarios
 									+ parent_PID];
 				step_reward += Hst_r_all_a_and_p[ThreadID][action * NumScenarios
@@ -1618,13 +1634,17 @@ void DESPOT::GPU_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
 					int num_obs_elements=Int_obs_list[0];
 					tempobs.resize(num_obs_elements);
 
-					for(int i=0;i<num_obs_elements;i++)
+					logd << "Received obs ";
+					for(int j=0;j<num_obs_elements;j++)
 					{
-						tempobs[i]=Int_obs_list[i+1];
+						tempobs[j]=Int_obs_list[j+1];
+						logd << tempobs[j] << " ";
 					}
 
 					std::hash<std::vector<int>> myhash;
 					obs=myhash(tempobs);
+					logd << "Obs hash " << obs << std::endl;
+					
 				}
 				else
 				{
@@ -1635,11 +1655,18 @@ void DESPOT::GPU_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
 
 
 
-				if (Hst_term_all_a_and_p[ThreadID][action * NumScenarios + parent_PID] == false) {
+				//False flag for debugging
+				/*if(parent_PID == 2)
+				{
+					Hst_term_all_a_and_p[ThreadID][action * NumScenarios + parent_PID] = true;
+				}
+				*/
+				if (Hst_term_all_a_and_p[ThreadID][action * NumScenarios + parent_PID] == false ) {
 
 					particleIds_all_a.push_back(action * NumScenarios
 								+ parent_PID);
 					common_qnode->particleIDs_.push_back(parent_PID);
+					common_qnode->particles_.push_back(NULL); //Required to keep size of particles_ consistent with particleIds
 					partitions[obs].push_back(parent_PID);
 				}
 
@@ -1657,6 +1684,7 @@ void DESPOT::GPU_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
 
 			qnode->step_reward = step_reward;
 			VNode* residual_vnode;
+			logd << "Particles survived " << common_qnode->particleIDs_.size()  << std::endl;
 			if(common_qnode->particleIDs_.size() > 0)
 			{
 				if (Globals::config.use_multi_thread_)
@@ -1720,7 +1748,7 @@ void DESPOT::GPU_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
 	                    //prob = model->ObsProb(obs, *common_qnode->particles_[i], qnode->edge());
 
 
-	                   // std::cout << "Obs Prob: for obs " <<  obs << " " << prob << " ";
+	                   logd << "Obs Prob: for obs " <<  obs << " " << prob << " ";
 
 			 // Terminal state is not required to be explicitly represented and may not have any observation
 				child_vnode->particle_weights[common_qnode->particleIDs_[i]] = vnode->particle_weights[common_qnode->particleIDs_[i]]* prob;

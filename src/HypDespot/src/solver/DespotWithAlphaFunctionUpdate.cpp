@@ -183,6 +183,13 @@ bool DespotWithAlphaFunctionUpdate::PedPomdpProb = false;
 		if(DespotWithAlphaFunctionUpdate::PedPomdpProb)
 			{
 				obs_vec = obs_vectors[obs] ;
+				logd << "Creating node for obs " << obs << " " ;
+				/*for(int j = 0; j < obs_vec.size();j++)
+				  {
+				    std::cout << obs_vec[j] << " " ;
+				  }
+				std::cout << std::endl;
+				*/
 			}
 
 
@@ -218,6 +225,7 @@ bool DespotWithAlphaFunctionUpdate::PedPomdpProb = false;
                     //int scenario_id = common_qnode->particles_[i]->scenario_id;
                     if(DespotWithAlphaFunctionUpdate::PedPomdpProb)
 					{
+	  
 						prob = model->ObsProb(obs_vec, *common_qnode->particles_[i], qnode->edge());
 					}
                     else
@@ -343,6 +351,7 @@ bool DespotWithAlphaFunctionUpdate::PedPomdpProb = false;
             }
             else
             {
+	      logd << "Copying from existing qnode \n";
             std::map<OBS_TYPE, VNode*>& populated_children = populated_qnode->children();
             for (std::map<OBS_TYPE, VNode*>::iterator it = populated_children.begin();
 		it != populated_children.end(); it++)
@@ -370,17 +379,31 @@ bool DespotWithAlphaFunctionUpdate::PedPomdpProb = false;
                 }
 		children[obs] = vnode;
                 vnode->obs_probs_holder = it->second;
+		if(Globals::config.useGPU)
+		  {
+		    vnode->num_GPU_particles_ = common_qnode->particleIDs_.size();
+		  }
+		   
                 //vnode->obs_probs.insert(vnode->obs_probs.begin(),it->second->obs_probs.begin(), it->second->obs_probs.end());
                 double total_weight = 0;
                 for(int i = 0; i < common_qnode->particles_.size();i++)
                 {
-                    double prob = vnode->obs_probs_holder->obs_probs[common_qnode->particles_[i]->scenario_id];
+		  int scenario_id;
+		  if(Globals::config.useGPU)
+		    {
+		      scenario_id = common_qnode->particleIDs_[i];
+		    }
+		  else
+		    {
+		      scenario_id = common_qnode->particles_[i]->scenario_id;
+		    }
+                    double prob = vnode->obs_probs_holder->obs_probs[scenario_id];
                     
-                   // std::cout << "Obs Prob: for obs " <<  obs << " " << prob << " ";
+                   logd << "Obs Prob: for obs " <<  obs << " " << prob << " ";
                 
 		 // Terminal state is not required to be explicitly represented and may not have any observation
-			vnode->particle_weights[common_qnode->particles_[i]->scenario_id] = parent->particle_weights[common_qnode->particles_[i]->scenario_id]* prob;
-			total_weight += vnode->particle_weights[common_qnode->particles_[i]->scenario_id];
+			vnode->particle_weights[scenario_id] = parent->particle_weights[scenario_id]* prob;
+			total_weight += vnode->particle_weights[scenario_id];
                         //Total weight should not be zero as one particle actually produced that observation
                         
                         
@@ -390,7 +413,16 @@ bool DespotWithAlphaFunctionUpdate::PedPomdpProb = false;
                 {
                     if(total_weight > 0) //total weight might be zero if particle weight is zero
                     {
-                    vnode->particle_weights[common_qnode->particles_[i]->scenario_id] = vnode->particle_weights[common_qnode->particles_[i]->scenario_id]/total_weight;
+		      int scenario_id;
+		      if(Globals::config.useGPU)
+			{
+			  scenario_id = common_qnode->particleIDs_[i];
+			}
+		      else
+			{
+			  scenario_id = common_qnode->particles_[i]->scenario_id;
+			}
+                    vnode->particle_weights[scenario_id] = vnode->particle_weights[scenario_id]/total_weight;
                     }
                     
                     
