@@ -432,6 +432,19 @@ void DESPOT::CalExplorationValue(Shared_VNode* node) {
  */
 extern __shared__ int localParticles[];
 
+
+__global__ void DebugSteppedParticles(Dvc_State* stepped_particles, int stepped_particles_size)
+{
+	//int action = blockIdx.x;
+	//int scenario_id = (blockIdx.y * blockDim.x + threadIdx.x) % total_num_scenarios;
+	//int global_list_pos = action*total_num_scenarios + scenario_id;
+	for(int i = 0; i < stepped_particles_size; i++)
+	{
+		Dvc_State* temp = DvcModelGet_(stepped_particles, i);
+		DvcModelCopyNoAlloc_(temp, temp, 0, false);
+	}
+
+}
 /**
  * PreStep kernel (Long observation type):
  * Forward the particle copied from parent node for one simulation step to keep it up-to-date
