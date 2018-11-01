@@ -1823,7 +1823,7 @@ void DESPOT::Expand(VNode* vnode, ScenarioLowerBound* lower_bound,
 		{
 			if(Globals::config.use_multi_thread_)
 				{
-					(static_cast<Shared_QNode*>(node->common_parent_))->unlock();
+					(static_cast<Shared_QNode*>(vnode->common_parent_))->unlock();
 				}
 		}
 
