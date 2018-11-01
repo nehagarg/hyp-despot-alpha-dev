@@ -1636,6 +1636,8 @@ void DESPOT::GPU_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
 			{
 			qnode = vnode->Child(action);
 			}
+			if(Globals::config.use_multi_thread_ && Globals::config.exploration_mode==UCT)
+						static_cast<Shared_QNode*>(qnode)->visit_count_=1.1;
 			vnode->common_parent_->common_children_.push_back(qnode);
 			QNode* common_qnode = qnode;
 			common_qnode->populating_node = qnode;
