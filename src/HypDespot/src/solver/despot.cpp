@@ -1798,6 +1798,13 @@ void DESPOT::Expand(VNode* vnode, ScenarioLowerBound* lower_bound,
 
 	if (use_GPU_ && !vnode->PassGPUThreshold())
 	{
+		if(Globals::config.track_alpha_vector)
+		{
+			if(Globals::config.use_multi_thread_)
+				{
+					(static_cast<Shared_QNode*>(vnode->common_parent_))->lock();
+				}
+		}
 		const vector<State*>& particles = vnode->particles();
 		if (particles[0] == NULL) // switching point
 		{
@@ -1811,6 +1818,13 @@ void DESPOT::Expand(VNode* vnode, ScenarioLowerBound* lower_bound,
 			if (Globals::MapThread(this_thread::get_id()) == 0) {
 				logd << " Read-back GPU particle at depth " << vnode->depth() << ": " << endl; //Debugging
 			}
+		}
+		if(Globals::config.track_alpha_vector)
+		{
+			if(Globals::config.use_multi_thread_)
+				{
+					(static_cast<Shared_QNode*>(node->common_parent_))->unlock();
+				}
 		}
 
 		Globals::AddExpanded();
