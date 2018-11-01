@@ -28,7 +28,7 @@ bool DespotWithAlphaFunctionUpdate::PedPomdpProb = false;
     {
         logd << "Expanding in Despot With Alpha function update" << std::endl;
         VNode* parent = qnode->parent();
-        if(Globals::config.useGPU)
+        if(Globals::config.useGPU && parent->PassGPUThreshold())
 		{
         	if(Globals::config.use_multi_thread_)
         	{
@@ -352,7 +352,7 @@ bool DespotWithAlphaFunctionUpdate::PedPomdpProb = false;
             else
             {
 	      logd << "Copying from existing qnode \n";
-	      if(Globals::config.useGPU)
+	      if(Globals::config.useGPU && parent->PassGPUThreshold())
 	      {
 
 	    	  if(Globals::config.use_multi_thread_ && Globals::config.exploration_mode==UCT)
@@ -398,7 +398,7 @@ bool DespotWithAlphaFunctionUpdate::PedPomdpProb = false;
                 for(int i = 0; i < common_qnode->particles_.size();i++)
                 {
 		  int scenario_id;
-		  if(Globals::config.useGPU)
+		  if(Globals::config.useGPU && parent->PassGPUThreshold())
 		    {
 		      scenario_id = common_qnode->particleIDs_[i];
 		    }
@@ -423,7 +423,7 @@ bool DespotWithAlphaFunctionUpdate::PedPomdpProb = false;
                     if(total_weight > 0) //total weight might be zero if particle weight is zero
                     {
 		      int scenario_id;
-		      if(Globals::config.useGPU)
+		      if(Globals::config.useGPU && parent->PassGPUThreshold())
 			{
 			  scenario_id = common_qnode->particleIDs_[i];
 			}
