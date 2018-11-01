@@ -1171,7 +1171,7 @@ void DESPOT::PrepareGPUDataForCommonQNode(QNode* qnode, const DSPOMDP* model, in
 			{
 				logd << "Action " << action << " Particle offset " << particle_offset << std::endl;
 				qnode->common_children_[action]->GPU_particles_ = model->GetPointerToParticleList(particle_offset, new_particles);
-				qnode->common_children_[action]->num_GPU_particles_ = qnode->common_children_[action]->particleIDs_.size();
+				//qnode->common_children_[action]->num_GPU_particles_ = qnode->common_children_[action]->particleIDs_.size();
 				particle_offset = particle_offset + qnode->common_children_[action]->num_GPU_particles_;
 				/*int action = particleIDs[i]/Globals::config.num_scenarios;
 				int scenario_id = particleIDs[i] % Globals::config.num_scenarios;
@@ -1714,8 +1714,10 @@ void DESPOT::GPU_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
 					- Globals::config.pruning_constant;//pruning_constant is used for regularization
 
 			qnode->step_reward = step_reward;
+			common_qnode->num_GPU_particles_ = common_qnode->particleIDs_.size();
 			VNode* residual_vnode;
 			logd << "Particles survived " << common_qnode->particleIDs_.size()  << std::endl;
+
 			if(common_qnode->particleIDs_.size() > 0)
 			{
 				if (Globals::config.use_multi_thread_)
@@ -1912,7 +1914,10 @@ void DESPOT::GPU_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
 
 
 		}//Loop over actions
-		DESPOT::PrepareGPUDataForCommonQNode(vnode->common_parent_, model, ThreadID, streams, particleIds_all_a);
+		if(particleIds_all_a.size() > 0)
+		{
+			DESPOT::PrepareGPUDataForCommonQNode(vnode->common_parent_, model, ThreadID, streams, particleIds_all_a);
+		}
 	}
 	else
 	{
