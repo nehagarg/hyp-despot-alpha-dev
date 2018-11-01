@@ -1801,8 +1801,11 @@ void DESPOT::Expand(VNode* vnode, ScenarioLowerBound* lower_bound,
 		const vector<State*>& particles = vnode->particles();
 		if (particles[0] == NULL) // switching point
 		{
-			GPU_UpdateParticles(vnode, lower_bound, upper_bound, model, streams,
+			if(!Globals::config.track_alpha_vector)
+			{
+				GPU_UpdateParticles(vnode, lower_bound, upper_bound, model, streams,
 			                    history);
+			}
 			vnode->ReadBackCPUParticles(model);
 
 			if (Globals::MapThread(this_thread::get_id()) == 0) {
