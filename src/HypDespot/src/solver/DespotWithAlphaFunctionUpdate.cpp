@@ -352,6 +352,15 @@ bool DespotWithAlphaFunctionUpdate::PedPomdpProb = false;
             else
             {
 	      logd << "Copying from existing qnode \n";
+	      if(Globals::config.useGPU)
+	      {
+
+	    	  if(Globals::config.use_multi_thread_ && Globals::config.exploration_mode==UCT)
+	    	  {
+	    		  assert(static_cast<Shared_QNode*>(qnode)->visit_count_ == 0);
+	 				static_cast<Shared_QNode*>(qnode)->visit_count_=1.1;
+	    	  }
+	      }
             std::map<OBS_TYPE, VNode*>& populated_children = populated_qnode->children();
             for (std::map<OBS_TYPE, VNode*>::iterator it = populated_children.begin();
 		it != populated_children.end(); it++)
