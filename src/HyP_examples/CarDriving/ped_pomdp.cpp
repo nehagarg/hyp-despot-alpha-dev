@@ -16,53 +16,6 @@ static std::map<uint64_t, std::vector<int>> Obs_hash_table;
 static PomdpState hashed_state;
 
 
-class PedPomdpDoNothingParticleLowerBound : public ParticleLowerBound {
-private:
-	const PedPomdp* ped_pomdp_;
-public:
-	PedPomdpDoNothingParticleLowerBound(const DSPOMDP* model) :
-		ParticleLowerBound(model),
-		ped_pomdp_(static_cast<const PedPomdp*>(model))
-	{
-	}
-
-	ValuedAction SingleParticleValue(PomdpState* state) const {
-
-
-		double move_penalty = ped_pomdp_->MovementPenalty(*state);
-
-		// Car speed is 0
-		double value = move_penalty / (1 - Globals::Discount());
-
-
-		if(DoPrintCPU)
-			printf("move_penalty, value=%f %f\n",
-					move_penalty,value);
-		return ValuedAction(0, value);
-	}
-
-
-	// IMPORTANT: Check after changing reward function.
-	virtual ValuedAction Value(const std::vector<State*>& particles) const {
-		PomdpState* state = static_cast<PomdpState*>(particles[0]);
-		ValuedAction single_particle_action = SingleParticleValue(state);
-		return ValuedAction(single_particle_action.action, State::Weight(particles) * single_particle_action.value);
-	}
-
-       ValuedAction Value(const std::vector<State*>& particles, std::vector<double>& alpha_vector_lower_bound) const
-       {
-    	   PomdpState* state = static_cast<PomdpState*>(particles[0]);
-           ValuedAction ans = SingleParticleValue(state);
-    	   for(int i = 0; i < particles.size(); i++)
-    	   {
-
-			   alpha_vector_lower_bound[particles[i]->scenario_id] = ans.value;
-    	   }
-
-           ans.value_array = &(alpha_vector_lower_bound);
-           return ans;
-       }
-};
 class PedPomdpParticleLowerBound : public ParticleLowerBound {
 private:
 	const PedPomdp* ped_pomdp_;
@@ -78,22 +31,26 @@ public:
 		auto& carpos = ped_pomdp_->world_model->path[state->car.pos];
 		double carvel = state->car.vel;
 
-		// Find mininum num of steps for car-pedestrian collision
-		for (int i = 0; i < state->num; i++) {
-			auto& p = state->peds[i];
-			// 3.25 is maximum distance to collision boundary from front laser (see collsion.cpp)
-			int step = (p.vel + carvel <= 1e-5) ? min_step : int(ceil(ModelParams::control_freq
-					   * max(COORD::EuclideanDistance(carpos, p.pos) - /*1.0*/3.25, 0.0)
-					   / ((p.vel + carvel))));
+		if(carvel > 1.0+1e-4) //Car moving
+		{
 
-			if(DoPrintCPU)
-				printf("   step,min_step, p.vel + carvel=%d %d %f\n",step,min_step, p.vel + carvel);
-			min_step = min(step, min_step);
+			// Find mininum num of steps for car-pedestrian collision
+			for (int i = 0; i < state->num; i++) {
+				auto& p = state->peds[i];
+				// 3.25 is maximum distance to collision boundary from front laser (see collsion.cpp)
+				int step = (p.vel + carvel <= 1e-5) ? min_step : int(ceil(ModelParams::control_freq
+						   * max(COORD::EuclideanDistance(carpos, p.pos) - /*1.0*/3.25, 0.0)
+						   / ((p.vel + carvel))));
+
+				if(DoPrintCPU)
+					printf("   step,min_step, p.vel + carvel=%d %d %f\n",step,min_step, p.vel + carvel);
+				min_step = min(step, min_step);
+			}
 		}
 
 		double move_penalty = ped_pomdp_->MovementPenalty(*state);
 
-		// Case 1, no pedestrian: Constant car speed
+		// Case 1, no pedestrian: Constant car speed or zero car speed
 		double value = move_penalty / (1 - Globals::Discount());
 		// Case 2, with pedestrians: Constant car speed, head-on collision with nearest neighbor
 		if (min_step != numeric_limits<int>::max()) {
@@ -504,7 +461,7 @@ ScenarioLowerBound* PedPomdp::CreateScenarioLowerBound(string name,
 	else if (name == "DONOTHING") {
 			Globals::config.rollout_type = "INDEPENDENT";
 			cout << "DO nothing policy rollout" << endl;
-			lb = new PedPomdpDoNothingScenarioLowerBound(this, new PedPomdpDoNothingParticleLowerBound(this));
+			lb = new PedPomdpDoNothingScenarioLowerBound(this, new PedPomdpParticleLowerBound(this));
 		}
 
 
