@@ -31,7 +31,7 @@ public:
 		auto& carpos = ped_pomdp_->world_model->path[state->car.pos];
 		double carvel = state->car.vel;
 
-		if(carvel > 1.0+1e-4) //Car moving
+		if(carvel >= 0.001) //Car moving
 		{
 
 			// Find mininum num of steps for car-pedestrian collision
@@ -437,7 +437,7 @@ public:
 	           RandomStreams& streams, History& history) const {
 		const PomdpState *state=static_cast<const PomdpState*>(particles[0]);
 		double carvel = state->car.vel;
-		if (carvel > 1.0+1e-4) return 2;
+		if (carvel >= 0.001) return 2;
 		return -1;
 		//return ped_pomdp_->world_model->defaultPolicy(particles);
 	}
