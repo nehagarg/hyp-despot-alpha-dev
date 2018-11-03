@@ -16,6 +16,53 @@ static std::map<uint64_t, std::vector<int>> Obs_hash_table;
 static PomdpState hashed_state;
 
 
+class PedPomdpDoNothingParticleLowerBound : public ParticleLowerBound {
+private:
+	const PedPomdp* ped_pomdp_;
+public:
+	PedPomdpDoNothingParticleLowerBound(const DSPOMDP* model) :
+		ParticleLowerBound(model),
+		ped_pomdp_(static_cast<const PedPomdp*>(model))
+	{
+	}
+
+	ValuedAction SingleParticleValue(PomdpState* state) const {
+
+
+		double move_penalty = ped_pomdp_->MovementPenalty(*state);
+
+		// Car speed is 0
+		double value = move_penalty / (1 - Globals::Discount());
+
+
+		if(DoPrintCPU)
+			printf("move_penalty, value=%f %f\n",
+					move_penalty,value);
+		return ValuedAction(0, value);
+	}
+
+
+	// IMPORTANT: Check after changing reward function.
+	virtual ValuedAction Value(const std::vector<State*>& particles) const {
+		PomdpState* state = static_cast<PomdpState*>(particles[0]);
+		ValuedAction single_particle_action = SingleParticleValue(state);
+		return ValuedAction(single_particle_action.action, State::Weight(particles) * single_particle_action.value);
+	}
+
+       ValuedAction Value(const std::vector<State*>& particles, std::vector<double>& alpha_vector_lower_bound) const
+       {
+    	   PomdpState* state = static_cast<PomdpState*>(particles[0]);
+           ValuedAction ans = SingleParticleValue(state);
+    	   for(int i = 0; i < particles.size(); i++)
+    	   {
+
+			   alpha_vector_lower_bound[particles[i]->scenario_id] = ans.value;
+    	   }
+
+           ans.value_array = &(alpha_vector_lower_bound);
+           return ans;
+       }
+};
 class PedPomdpParticleLowerBound : public ParticleLowerBound {
 private:
 	const PedPomdp* ped_pomdp_;
@@ -417,20 +464,51 @@ public:
 	}
 };
 
+class PedPomdpDoNothingScenarioLowerBound : public DefaultPolicy {
+protected:
+	const PedPomdp* ped_pomdp_;
+
+public:
+	PedPomdpDoNothingScenarioLowerBound(const DSPOMDP* model, ParticleLowerBound* bound) :
+		DefaultPolicy(model, bound),
+		ped_pomdp_(static_cast<const PedPomdp*>(model))
+	{
+	}
+
+	//Make car vel zero
+	int Action(const std::vector<State*>& particles,
+	           RandomStreams& streams, History& history) const {
+		const PomdpState *state=static_cast<const PomdpState*>(particles[0]);
+		double carvel = state->car.vel;
+		if (carvel > 1.0+1e-4) return 2;
+		return -1;
+		//return ped_pomdp_->world_model->defaultPolicy(particles);
+	}
+};
+
 
 ScenarioLowerBound* PedPomdp::CreateScenarioLowerBound(string name,
         string particle_bound_name) const {
-	name = "SMART";
+	//name = "SMART";
 	ScenarioLowerBound* lb;
 	if (name == "TRIVIAL") {
 		lb = new TrivialParticleLowerBound(this);
 	} else if (name == "RANDOM") {
 		lb = new RandomPolicy(this, new PedPomdpParticleLowerBound(this));
-	} else if (name == "SMART") {
+	} else if (name == "SMART" || name == "DEFAULT") {
+		name = "SMART";
 		Globals::config.rollout_type = "INDEPENDENT";
 		cout << "Smart policy independent rollout" << endl;
 		lb = new PedPomdpSmartScenarioLowerBound(this, new PedPomdpParticleLowerBound(this));
-	} else {
+	}
+	else if (name == "DONOTHING") {
+			Globals::config.rollout_type = "INDEPENDENT";
+			cout << "DO nothing policy rollout" << endl;
+			lb = new PedPomdpDoNothingScenarioLowerBound(this, new PedPomdpDoNothingParticleLowerBound(this));
+		}
+
+
+	else {
 		cerr << "Unsupported scenario lower bound: " << name << endl;
 		exit(0);
 	}
