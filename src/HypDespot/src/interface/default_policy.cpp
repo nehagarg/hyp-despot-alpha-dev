@@ -61,6 +61,17 @@ ValuedAction DefaultPolicy::RecursiveValue(const vector<State*>& particles,
             }
 	} else {
 		ACT_TYPE action = Action(particles, streams, history);
+		if(action == -1)
+		{
+			if(compute_alpha_vector)
+			            {
+			                return particle_lower_bound_->Value(particles, alpha_vector_lower_bound);
+			            }
+			            else
+			            {
+					return particle_lower_bound_->Value(particles);
+			            }
+		}
 
                 OBS_TYPE obs;
 		double reward;
