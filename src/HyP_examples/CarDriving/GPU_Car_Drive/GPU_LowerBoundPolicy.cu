@@ -11,6 +11,16 @@ using despot::Dvc_State;
 
 #include <despot/GPUinterface/GPUpomdp.h>
 
+DEVICE int Dvc_PedPomdpDoNothingPolicy::Action(
+		int scenarioID, const Dvc_State* particles,
+				Dvc_RandomStreams& streams,
+				Dvc_History& history)
+{
+	const Dvc_PomdpState &state=static_cast<const Dvc_PomdpState&>(particles[0]);
+	float carvel = state.car.vel;
+	if (carvel >= 0.001) return 2;
+	return -1;
+}
 DEVICE int Dvc_PedPomdpSmartPolicy::Action(
 		int scenarioID, const Dvc_State* particles,
 				Dvc_RandomStreams& streams,

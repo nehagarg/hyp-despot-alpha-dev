@@ -61,27 +61,33 @@ DEVICE Dvc_ValuedAction Dvc_DefaultPolicy::Value(Dvc_State* particles,
 		__syncthreads();
 
 
-		float reward;
-
-		if(DvcModelStep_)
+		if(action[threadIdx.x] == -1)
 		{
-			OBS_TYPE obs;
-			terminal = DvcModelStep_(*particle, streams.Entry(scenarioID), action[threadIdx.x], reward, obs);
+			terminal = false;
 		}
 		else
 		{
-			terminal = DvcModelStepIntObs_(*particle, streams.Entry(scenarioID), action[threadIdx.x], reward,NULL);
-		}
-		if(threadIdx.y==0)
-		{
-			atomicAnd(&all_terminated[threadIdx.x],terminal);
+			float reward;
 
-			Accum_Value += Dvc_Globals::Dvc_Discount(Dvc_config,depth-init_depth+0)* reward;
-		}
-		streams.Advance();
+			if(DvcModelStep_)
+			{
+				OBS_TYPE obs;
+				terminal = DvcModelStep_(*particle, streams.Entry(scenarioID), action[threadIdx.x], reward, obs);
+			}
+			else
+			{
+				terminal = DvcModelStepIntObs_(*particle, streams.Entry(scenarioID), action[threadIdx.x], reward,NULL);
+			}
+			if(threadIdx.y==0)
+			{
+				atomicAnd(&all_terminated[threadIdx.x],terminal);
 
+				Accum_Value += Dvc_Globals::Dvc_Discount(Dvc_config,depth-init_depth+0)* reward;
+			}
+			streams.Advance();
+		}
 		__syncthreads();
-		if(all_terminated[threadIdx.x])
+		if(all_terminated[threadIdx.x] || (action[threadIdx.x] == -1))
 		{
 			break;
 		}
@@ -89,13 +95,17 @@ DEVICE Dvc_ValuedAction Dvc_DefaultPolicy::Value(Dvc_State* particles,
 	}
 	
 
-	/*use default value for leaf positions*/
+	/*use default value for leaf positions or when policy gives -1 as action*/
 	if(threadIdx.y==0)
 	{
 		if(!terminal)
 		{
 			Dvc_ValuedAction va = DvcParticleLowerBound_Value_(0,particle);
 			Accum_Value += Dvc_Globals::Dvc_Discount(Dvc_config,depth-init_depth) * va.value;
+			if(Action_decision == -1)
+			{
+				Action_decision = va.action;
+			}
 		}
 	}
 

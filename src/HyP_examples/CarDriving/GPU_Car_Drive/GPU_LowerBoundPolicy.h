@@ -25,6 +25,14 @@ public:
 
 };
 
+class Dvc_PedPomdpDoNothingPolicy: public Dvc_DefaultPolicy {
+public:
+	DEVICE static int Action(int scenarioID, const Dvc_State* particles,
+		Dvc_RandomStreams& streams,
+		Dvc_History& history);
+
+};
+
 
 class Dvc_PedPomdpParticleLowerBound: public Dvc_ParticleLowerBound {
 private:
@@ -40,23 +48,25 @@ public:
 		int min_step = archaeopteryx::util::numeric_limits<int>::max();
 		auto& carpos = path->way_points_[state->car.pos];
 		float carvel = state->car.vel;
-
-		// Find mininum num of steps for car-pedestrian collision
-		for (int i=0; i<state->num; i++) {
-			auto& p = state->peds[i];
-			// 3.25 is maximum distance to collision boundary from front laser (see collsion.cpp)
-			int step = (p.vel + carvel<=1e-5)?min_step: int(ceil(Dvc_ModelParams::control_freq
-						* max(Dvc_COORD::EuclideanDistance(carpos, p.pos) - /*1.0*/3.25, 0.0)
-						/ ((p.vel + carvel))));
-			if(step<0) printf("Wrong step, vel_sum=%d %f!!!\n"
-								,step, (p.vel + carvel));
-			min_step = min(step, min_step);
+		if(carvel >= 0.001) //Car moving
+		{
+			// Find mininum num of steps for car-pedestrian collision
+			for (int i=0; i<state->num; i++) {
+				auto& p = state->peds[i];
+				// 3.25 is maximum distance to collision boundary from front laser (see collsion.cpp)
+				int step = (p.vel + carvel<=1e-5)?min_step: int(ceil(Dvc_ModelParams::control_freq
+							* max(Dvc_COORD::EuclideanDistance(carpos, p.pos) - /*1.0*/3.25, 0.0)
+							/ ((p.vel + carvel))));
+				if(step<0) printf("Wrong step, vel_sum=%d %f!!!\n"
+									,step, (p.vel + carvel));
+				min_step = min(step, min_step);
+			}
 		}
 
 		float value = Dvc_ModelParams::REWARD_FACTOR_VEL *
 							(state->car.vel - Dvc_ModelParams::VEL_MAX) / Dvc_ModelParams::VEL_MAX;
 
-		// Case 1, no pedestrian: Constant car speed
+		// Case 1, no pedestrian: Constant car speed or zero car speed
 		value = value / (1 - Dvc_Globals::Dvc_Discount(Dvc_config));
 		// Case 2, with pedestrians: Constant car speed, head-on collision with nearest neighbor
 		if (min_step != archaeopteryx::util::numeric_limits<int>::max()) {

@@ -23,6 +23,7 @@ static Dvc_PedPomdp* Dvc_pomdpmodel=NULL;
 static Dvc_PedPomdpParticleLowerBound* b_smart_lowerbound=NULL;
 static Dvc_PedPomdpParticleUpperBound1* upperbound=NULL;
 static Dvc_PedPomdpSmartPolicy* smart_lowerbound=NULL;
+static Dvc_PedPomdpDoNothingPolicy* do_nothing_lowerbound=NULL;
 
 static Dvc_COORD* tempGoals=NULL;
 static Dvc_COORD* tempPath=NULL;
@@ -195,10 +196,18 @@ __global__ void PassPedPomdpPlbFuncPointers(Dvc_PedPomdpParticleLowerBound* b_lo
 
 void PedPomdp::InitGPULowerBound(string name,
 		string particle_bound_name) const{
-	HANDLE_ERROR(cudaMallocManaged((void**)&smart_lowerbound, sizeof(Dvc_PedPomdpSmartPolicy)));
+	if(name=="DONOTHING")
+	{
+		HANDLE_ERROR(cudaMallocManaged((void**)&do_nothing_lowerbound, sizeof(Dvc_PedPomdpDoNothingPolicy)));
 
-	PassPedPomdpPolicyFuncPointers<<<1,1,1>>>(smart_lowerbound);
+		PassPedPomdpPolicyFuncPointers<<<1,1,1>>>(do_nothing_lowerbound);
+	}
+	else
+	{
+		HANDLE_ERROR(cudaMallocManaged((void**)&smart_lowerbound, sizeof(Dvc_PedPomdpSmartPolicy)));
 
+		PassPedPomdpPolicyFuncPointers<<<1,1,1>>>(smart_lowerbound);
+	}
 	HANDLE_ERROR(cudaDeviceSynchronize());
 
 	HANDLE_ERROR(cudaMallocManaged((void**)&b_smart_lowerbound, sizeof(Dvc_PedPomdpParticleLowerBound)));
@@ -229,6 +238,7 @@ void PedPomdp::DeleteGPULowerBound(string name,
 		string particle_bound_name)
 {
 	  if(smart_lowerbound)HANDLE_ERROR(cudaFree(smart_lowerbound));
+	  if(do_nothing_lowerbound) HANDLE_ERROR(cudaFree(do_nothing_lowerbound));
 	  if(b_smart_lowerbound)HANDLE_ERROR(cudaFree(b_smart_lowerbound));
 }
 
