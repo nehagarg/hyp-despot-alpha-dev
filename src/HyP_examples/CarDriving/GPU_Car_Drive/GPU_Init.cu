@@ -188,6 +188,13 @@ __global__ void PassPedPomdpPolicyFuncPointers(Dvc_PedPomdpSmartPolicy* lowerbou
 	DvcDefaultPolicyAction_=&(lowerbound->Action);
 	DvcLowerBoundValue_=&(lowerbound->Value);
 }
+
+__global__ void PassPedPomdpPolicyFuncPointers(Dvc_PedPomdpDoNothingPolicy* lowerbound)
+{
+	DvcDefaultPolicyAction_=&(lowerbound->Action);
+	DvcLowerBoundValue_=&(lowerbound->Value);
+}
+
 __global__ void PassPedPomdpPlbFuncPointers(Dvc_PedPomdpParticleLowerBound* b_lowerbound)
 {
 	DvcParticleLowerBound_Value_=&(b_lowerbound->Value);
