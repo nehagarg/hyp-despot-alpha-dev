@@ -89,7 +89,7 @@ class CarDriveData:
 		line = line.replace("(", "")
 		line = line.replace(")", "")
 		line = line.replace(",", "")
-
+                #print line
 		return line
 
 	def loadData(self,filename):
@@ -131,24 +131,24 @@ class CarDriveData:
 			elif "- Action =" in line:
 				self.total_step+=1
 				self.actions=line_split[3]
-			elif "Trials:" in line:
+			elif line.startswith("Trials:"):
 				if float(line_split[6])>0:
 					self.num_trial.append(int(line_split[6]))
 				self.total_search_depth+=int(line_split[8])
 			elif "Execute default" in line:
 				self.default_count+=1
-			elif "# nodes: expanded" in line:
+			elif line.startswith("# nodes: expanded"):
 				self.expansion_count+=int(line_split[8])
 				self.policy_size+=int(line_split[12])
 				self.expanded_nodes.append(int(line_split[8]))
 				self.tree_nodes.append(int(line_split[10]))
-			elif "Time (CPU s)" in line:
+			elif line.startswith("Time (CPU s)"):
 				self.expansion_time+=float(line_split[13])
 				self.total_time+=float(line_split[17])
-			elif "Initial bounds:" in line:
+			elif line.startswith("Initial bounds:"):
 				self.init_lb+=float(self.remove_redundant(line_split[2]))
 				self.init_ub+=float(self.remove_redundant(line_split[3]))
-			elif "Final bounds:" in line:
+			elif line.startswith("Final bounds:"):
 				self.final_lb+=float(self.remove_redundant(line_split[2]))
 				self.final_ub+=float(self.remove_redundant(line_split[3]))
 				#num_rounds = num_rounds + 1;
@@ -322,6 +322,7 @@ if __name__ == '__main__' :
 		#print existing_files
 		current_value=0
 		for existing_file in existing_files:
+                        #print existing_file
 			value_records, succ, col=data.loadData(existing_file)
 			current_value+=sum(value_records)
 			#data.num_finishedrounds+=len(value_records)
