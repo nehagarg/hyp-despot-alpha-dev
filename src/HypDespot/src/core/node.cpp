@@ -500,12 +500,14 @@ void VNode::PrintTree(int depth, ostream& os) {
 			<< "l - lower bound" << endl
 			<< "u - upper bound" << endl
 			<< "r - totol weighted one step reward" << endl
-			<< "w - total particle weight" << endl;
+			<< "w - total particle weight" << endl
+		    << "ogb - obs prob" << endl;
 	}
 
 	os << "(" << "d:" << this->default_move().value <<
 		" l:" << this->lower_bound() << ", u:" << this->upper_bound()
-		<< ", w:" << this->Weight() << ", weu:" << DESPOT::WEU(this)
+		<< ", w:" << this->Weight() << ", ogb:" << this->prob_o_given_b
+		<< ", weu:" << DESPOT::WEU(this)
 		<< ")"
 		<< endl;
 
