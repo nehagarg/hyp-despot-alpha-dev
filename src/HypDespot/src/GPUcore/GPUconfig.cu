@@ -11,6 +11,7 @@ __global__ void copy(const Dvc_Config* src)
 	Dvc_config->root_seed = src->root_seed;
 	Dvc_config->time_per_move = src->time_per_move;
 	Dvc_config->num_scenarios = src->num_scenarios;
+	Dvc_config->num_obs = src->num_obs;
 	Dvc_config->pruning_constant = src->pruning_constant;
 	Dvc_config->xi = src->xi;
 	Dvc_config->sim_len = src->sim_len;

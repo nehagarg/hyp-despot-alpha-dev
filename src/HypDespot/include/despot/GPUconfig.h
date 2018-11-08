@@ -13,6 +13,7 @@ public:
 	unsigned int root_seed;
 	double time_per_move;  // CPU time available to construct the search tree
 	int num_scenarios;
+	int num_obs;
 	double pruning_constant;
 	double xi; // xi * gap(root) is the target uncertainty at the root.
 	int sim_len; // Number of steps to run the simulation for.
