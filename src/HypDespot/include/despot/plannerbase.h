@@ -30,6 +30,7 @@ enum OptionIndex {
 	E_SEED,
 	E_TIMEOUT,
 	E_NUMPARTICLES,
+	E_NUMOBS,
 	E_PRUNE,
 	E_GAP,
 	E_SIM_LEN,

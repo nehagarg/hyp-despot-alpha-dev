@@ -53,6 +53,9 @@ option::Descriptor* BuildUsage(string lower_bounds_str,
 					{ E_NUMPARTICLES, 0, "n", "nparticles",
 							option::Arg::Required,
 							"-n <arg>  \t--nparticles <arg>  \tNumber of particles (default 500)." },
+					{ E_NUMOBS, 0, "no", "nobs",
+												option::Arg::Required,
+												"-no <arg>  \t--nobs <arg>  \tNumber of obs (default number of particles)." },
 					{ E_PRUNE, 0, "p", "prune", option::Arg::Required,
 							"-p <arg>  \t--prune <arg>  \tPruning constant (default no pruning)." },
 					{ E_GAP, 0, "", "xi", option::Arg::Required,
@@ -299,6 +302,11 @@ void PlannerBase::OptionParse(option::Option *options, int &num_runs,
 
 	if (options[E_NUMPARTICLES])
 		Globals::config.num_scenarios = atoi(options[E_NUMPARTICLES].arg);
+
+	if (options[E_NUMOBS])
+		Globals::config.num_obs = atoi(options[E_NUMOBS].arg);
+	else
+		Globals::config.num_obs = Globals::config.num_scenarios;
 
 	if (options[E_PRUNE])
 		Globals::config.pruning_constant = atof(options[E_PRUNE].arg);

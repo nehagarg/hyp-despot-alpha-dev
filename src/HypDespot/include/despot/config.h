@@ -11,6 +11,7 @@ struct Config {
 	unsigned int root_seed;
 	double time_per_move;  // CPU time available to construct the search tree
 	int num_scenarios;
+	int num_obs;
 	double pruning_constant;
 	double xi; // xi * gap(root) is the target uncertainty at the root.
 	int sim_len; // Number of steps to run the simulation for.
@@ -35,6 +36,7 @@ struct Config {
 		root_seed(42),
 		time_per_move(1),
 		num_scenarios(500),
+		num_obs(500),
 		pruning_constant(0),
 		xi(0.95),
 		sim_len(90),

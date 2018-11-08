@@ -29,6 +29,7 @@ public:
 		root_seed(42),
 		time_per_move(1),
 		num_scenarios(500),
+		num_obs(500),
 		pruning_constant(0),
 		xi(0.95),
 		sim_len(90),

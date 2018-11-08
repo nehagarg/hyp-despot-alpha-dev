@@ -32,6 +32,7 @@ void Dvc_Config::CopyToGPU(const Config* src) {
 	tmp->root_seed = src->root_seed;
 	tmp->time_per_move = src->time_per_move;
 	tmp->num_scenarios = src->num_scenarios;
+	tmp->num_obs = src->num_obs;
 	tmp->pruning_constant = src->pruning_constant;
 	tmp->xi = src->xi;
 	tmp->sim_len = src->sim_len;
