@@ -171,7 +171,8 @@ public:
 		  model = new UncNavigation(size, number);
 	  }
 
-	  model->InitGPUModel();
+	  if (Globals::config.useGPU)
+		  model->InitGPUModel();
 
 	  return model;
   }
