@@ -422,6 +422,8 @@ void PlannerBase::DisplayParameters(option::Option *options, DSPOMDP *model) {
 	<< "Simulation steps = " << Globals::config.sim_len << endl
 	<< "Number of scenarios = " << Globals::config.num_scenarios
 	<< endl
+	<< "Number of observations = " << Globals::config.num_obs
+	<< endl
 	<< "Search time per step = " << Globals::config.time_per_move
 	<< endl
 	<< "Regularization constant = "
