@@ -1341,7 +1341,12 @@ double DESPOT::WEU(VNode* vnode, double xi) {
 		root = root->parent()->parent();
 	}
 
-	return Gap(vnode) - xi * vnode->Weight() * Gap(root);
+	double prob_o_given_b = 1.0;
+	if(Globals::config.track_alpha_vector)
+	{
+		prob_o_given_b = vnode->prob_o_given_b;
+	}
+	return prob_o_given_b*(Gap(vnode) - xi * vnode->Weight() * Gap(root));
 }
 
 double DESPOT::WEU(Shared_VNode* vnode, double xi) {
@@ -1353,7 +1358,12 @@ double DESPOT::WEU(Shared_VNode* vnode, double xi) {
 	//cout <<"vnode->Weight()="<<vnode->Weight()<<endl;
 	//cout <<"Gap(root)="<<Gap(root)<<endl;
 	//return Gap((VNode*) vnode) - xi * vnode->Weight() * Gap(root);
-	return Gap(vnode, true) - xi * vnode->Weight() * Gap(root);
+	double prob_o_given_b = 1.0;
+	if(Globals::config.track_alpha_vector)
+	{
+		prob_o_given_b = vnode->prob_o_given_b;
+	}
+	return prob_o_given_b*(Gap(vnode, true) - xi * vnode->Weight() * Gap(root));
 }
 
 VNode* DESPOT::SelectBestWEUNode(QNode* qnode) {

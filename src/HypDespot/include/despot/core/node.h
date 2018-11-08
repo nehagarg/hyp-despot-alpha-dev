@@ -58,6 +58,7 @@ public:
         VNode* obs_probs_holder;  //Used in despot with alpha function update Vnode holding obs probs
         QNode* common_parent_; //Used in despot with alpha function update Vnode holding particles
         double belief_mult_es; //Used in sawtooth approximation
+        double prob_o_given_b; //Used in WEU
         //=================================================================================
         
 	VNode(){;}

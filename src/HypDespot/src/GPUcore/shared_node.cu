@@ -47,6 +47,7 @@ Shared_VNode::Shared_VNode(vector<State*>& particles,std::vector<int> particleID
 	                particles_[i] = NULL;
 	            }
 	            particles_.clear();
+	            prob_o_given_b = 1.0;
 	            //particleIDs.clear();
 
 	           //upper_bound_alpha_vector_.resize(Globals::config.num_scenarios, 0);

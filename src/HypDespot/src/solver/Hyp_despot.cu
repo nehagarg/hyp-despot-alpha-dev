@@ -1799,6 +1799,7 @@ void DESPOT::GPU_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
 
 
 	                }
+	                child_vnode->prob_o_given_b = total_weight;
 	                //std::cout << "Max prob sum " << max_prob_sum << std::endl;
 	                for(int i = 0; i < common_qnode->particleIDs_.size(); i++)
 	                {
@@ -1865,6 +1866,7 @@ void DESPOT::GPU_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
 		            {
 		                child_vnode->obs_probs[common_qnode->particleIDs_[i]] = child_vnode->obs_probs[common_qnode->particleIDs_[i]]/max_prob_sum;
 		            }
+		            child_vnode->prob_o_given_b = child_vnode->prob_o_given_b/max_prob_sum;
 		            }
 		        }
 
@@ -1890,7 +1892,7 @@ void DESPOT::GPU_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
 
 
 	                }
-
+	                child_vnode->prob_o_given_b = total_weight;
 	                for(int i = 0; i < common_qnode->particleIDs_.size(); i++)
 	                {
 	                    if(total_weight > 0) //total weight might be zero for residual node

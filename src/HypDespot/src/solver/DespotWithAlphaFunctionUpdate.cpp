@@ -249,6 +249,7 @@ bool DespotWithAlphaFunctionUpdate::PedPomdpProb = false;
                         
                         
                 }
+                vnode->prob_o_given_b = total_weight;
                 //std::cout << "Max prob sum " << max_prob_sum << std::endl;
                 for(int i = 0; i < common_qnode->particles_.size(); i++)
                 {
@@ -285,6 +286,7 @@ bool DespotWithAlphaFunctionUpdate::PedPomdpProb = false;
             {    
                 vnode->obs_probs[common_qnode->particles_[i]->scenario_id] = vnode->obs_probs[common_qnode->particles_[i]->scenario_id]/max_prob_sum;
             }
+            vnode->prob_o_given_b = vnode->prob_o_given_b/max_prob_sum;
             }
         }
         //Residual node
@@ -309,7 +311,7 @@ bool DespotWithAlphaFunctionUpdate::PedPomdpProb = false;
                         
                         
                 }
-                
+                residual_vnode->prob_o_given_b = total_weight;
                 for(int i = 0; i < common_qnode->particles_.size(); i++)
                 {
                     if(total_weight > 0) //total weight might be zero for residual node
@@ -418,6 +420,7 @@ bool DespotWithAlphaFunctionUpdate::PedPomdpProb = false;
                         
                         
                 }
+                vnode->prob_o_given_b = total_weight;
                 for(int i = 0; i < common_qnode->particles_.size(); i++)
                 {
                     if(total_weight > 0) //total weight might be zero if particle weight is zero
@@ -902,6 +905,8 @@ void DespotWithAlphaFunctionUpdate::UpdateSibling(Shared_VNode* vnode, Shared_VN
 {
 	if (DESPOT::Gap(sibling_node) <=0.0)
 		return;
+	if(vnode->IsLeaf())
+		return;
 
 	double qnode_lower_bound = 0;
 	std::vector<double> vnode_lower_bound_vector;
@@ -1012,6 +1017,8 @@ void DespotWithAlphaFunctionUpdate::UpdateSibling(Shared_VNode* vnode, Shared_VN
 
         if (DESPOT::Gap(sibling_node) <=0.0)
             return;
+        if(vnode->IsLeaf())
+        		return;
                 
 	//std::cout << "Updating sibing ";
         double qnode_lower_bound = 0;

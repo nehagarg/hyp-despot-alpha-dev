@@ -59,6 +59,7 @@ VNode::VNode(vector<State*>& particles,std::vector<int> particleIDs, int depth, 
                 particles_[i] = NULL;
             }
             particles_.clear();
+            prob_o_given_b = 1.0;
             
            //upper_bound_alpha_vector_.resize(Globals::config.num_scenarios, 0);
            //lower_bound_alpha_vector.resize(Globals::config.num_scenarios, 0); 
