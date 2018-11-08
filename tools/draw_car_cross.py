@@ -244,7 +244,7 @@ def printStatistics():
 	print "Average distance = %.5f" % ave_dist
 
 
-Writer = animation.writers['ffmpeg']
+Writer = animation.writers['avconv'] #ffmpeg
 writer = Writer(fps=15, metadata=dict(artist='Me'), bitrate=1800)
 
 if __name__ == '__main__' :
@@ -256,6 +256,7 @@ if __name__ == '__main__' :
 	print 'Loading data...'
 	car_pos, car_vel, ped_pos, ped_id, ped_goal, obstacles, laser_range, dis_trav = loadData(file_name)
 
+	#print car_vel
 	printStatistics()
 
 	show_anim=True
