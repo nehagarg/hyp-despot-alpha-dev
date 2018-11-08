@@ -1892,7 +1892,7 @@ void DESPOT::GPU_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
 
 
 	                }
-	                child_vnode->prob_o_given_b = total_weight;
+	                residual_vnode->prob_o_given_b = total_weight;
 	                for(int i = 0; i < common_qnode->particleIDs_.size(); i++)
 	                {
 	                    if(total_weight > 0) //total weight might be zero for residual node
