@@ -116,12 +116,15 @@ bool DespotWithAlphaFunctionUpdate::PedPomdpProb = false;
 
                     common_qnode->particles_.push_back(copy);
                     num_particles_pushed++;
-                    partitions[obs].push_back(particle->scenario_id);
-                    if(DespotWithAlphaFunctionUpdate::PedPomdpProb)
-						{
-							obs_vectors[obs] = model->ObserveVector(*copy);
-						}
+                    if(partitions.size() < Globals::config.num_obs)
+                    {
+                    	partitions[obs].push_back(particle->scenario_id);
+                    	if(DespotWithAlphaFunctionUpdate::PedPomdpProb)
+							{
+								obs_vectors[obs] = model->ObserveVector(*copy);
+							}
                     }
+				}
 
                 else {
                         model->Free(copy);
