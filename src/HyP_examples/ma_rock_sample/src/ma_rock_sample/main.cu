@@ -236,7 +236,8 @@ public:
 
 		}
 
-		model->InitGPUModel();
+		if (Globals::config.useGPU)
+			model->InitGPUModel();
 
 		return model;
 	}

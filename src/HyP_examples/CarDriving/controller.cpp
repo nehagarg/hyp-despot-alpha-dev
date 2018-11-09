@@ -32,7 +32,8 @@ World* DrivingController::InitializeWorld(std::string& world_type, DSPOMDP* mode
 	driving_simulator_=new Simulator(static_cast<DSPOMDP*>(model),
 			Globals::config.root_seed/*random seed*/);
 
-	model->InitGPUModel();
+	if (Globals::config.useGPU)
+		model->InitGPUModel();
 
    //Establish connection with external system
 	driving_simulator_->Connect();

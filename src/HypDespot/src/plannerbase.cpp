@@ -114,17 +114,6 @@ PlannerBase::PlannerBase(string lower_bounds_str, string base_lower_bounds_str,
 
 PlannerBase::~PlannerBase() {
 }
-World* PlannerBase::InitializeWorld(std::string& world_type, DSPOMDP* model,
-		option::Option* options) {
-	if (world_type == "pomdp")
-		return InitializePOMDPWorld(world_type, model, options);
-	else {
-		cerr
-				<< "Unsupported world type (pomdp by default). To support custom world, implement "
-				<< __FUNCTION__ << endl;
-		exit(-1);
-	}
-}
 
 World* PlannerBase::InitializePOMDPWorld(string& world_type, DSPOMDP *model,
 		option::Option* options) {

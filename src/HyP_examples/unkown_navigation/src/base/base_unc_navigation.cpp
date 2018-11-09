@@ -492,7 +492,8 @@ ScenarioUpperBound* BaseUncNavigation::CreateScenarioUpperBound(string name,
 		exit(0);
 	}
 
-	InitGPUUpperBound(name,	particle_bound_name);
+	if (Globals::config.useGPU)
+		InitGPUUpperBound(name,	particle_bound_name);
 	return bound;
 }
 
@@ -523,7 +524,8 @@ ScenarioLowerBound* BaseUncNavigation::CreateScenarioLowerBound(string name, str
 		lb = NULL;
 	}
 
-	InitGPULowerBound(name, particle_bound_name);
+	if (Globals::config.useGPU)
+		InitGPULowerBound(name, particle_bound_name);
 	return lb;
 }
 

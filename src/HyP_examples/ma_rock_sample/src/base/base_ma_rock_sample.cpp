@@ -784,8 +784,8 @@ ScenarioUpperBound* BaseMultiAgentRockSample::CreateScenarioUpperBound(string na
 		cerr << "Unsupported scenario upper bound: " << name << endl;
 		exit(0);
 	}
-
-	InitGPUUpperBound(name,	particle_bound_name);
+	if (Globals::config.useGPU)
+		InitGPUUpperBound(name,	particle_bound_name);
 	return bound;
 }
 
@@ -852,7 +852,8 @@ ScenarioLowerBound* BaseMultiAgentRockSample::CreateScenarioLowerBound(string na
 		lb = NULL;
 	}
 
-	InitGPULowerBound(name, particle_bound_name);
+	if (Globals::config.useGPU)
+		InitGPULowerBound(name, particle_bound_name);
 	return lb;
 }
 

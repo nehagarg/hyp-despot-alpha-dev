@@ -16,6 +16,8 @@ Cai, P., Luo, Y., Hsu, D. and Lee, W.S., HyP-DESPOT: A Hybrid Parallel Algorithm
 * Cmake 
   * Version >=3.8 is required for CUDA integration
 * CUDA and an NVIDIA GPU with computational capacity >=3.0
+* libunwind
+  * For memory checking and error handling
   
 ### 1. Create a catkin workspace:
 ```bash
