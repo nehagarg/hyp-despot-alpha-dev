@@ -1650,10 +1650,11 @@ void DESPOT::Backup(VNode* vnode, bool real) {
 		logd << " Iter " << iter << " " << vnode << endl;
 		string msg = "backup to VNode";
 		msg += real ? "(true)" : "(blocker)";
+		int vnode_updated = 0;
 		if (Globals::config.use_multi_thread_) {
 			if(Globals::config.track_alpha_vector)
 			{
-				DespotWithAlphaFunctionUpdate::Update(static_cast<Shared_VNode*>(vnode), real);
+				vnode_updated = DespotWithAlphaFunctionUpdate::Update(static_cast<Shared_VNode*>(vnode), real);
 			}
 			else
 			{
@@ -1675,7 +1676,7 @@ void DESPOT::Backup(VNode* vnode, bool real) {
 			//Update(vnode, real);
                     if(Globals::config.track_alpha_vector)
                     {
-                        DespotWithAlphaFunctionUpdate::Update(vnode);
+                        vnode_updated = DespotWithAlphaFunctionUpdate::Update(vnode);
                     }
                     else
                     {
@@ -1711,10 +1712,10 @@ void DESPOT::Backup(VNode* vnode, bool real) {
 						if(it->first != vnode->edge())
 						{
 							//std::cout << "Updating sibling" << std::endl;
-						  DespotWithAlphaFunctionUpdate::UpdateSibling(static_cast<Shared_VNode*>(vnode), static_cast<Shared_VNode*>(it->second), real);
+						  DespotWithAlphaFunctionUpdate::UpdateSibling(static_cast<Shared_VNode*>(vnode), static_cast<Shared_VNode*>(it->second), real, vnode_updated);
 						}
 					}
-				DespotWithAlphaFunctionUpdate::Update(static_cast<Shared_QNode*>(parentq), real);
+				DespotWithAlphaFunctionUpdate::Update(static_cast<Shared_QNode*>(parentq), real, vnode_updated);
 			}
 			else
 			{
@@ -1745,10 +1746,10 @@ void DESPOT::Backup(VNode* vnode, bool real) {
                                 if(it->first != vnode->edge())
                                 {
                                     //std::cout << "Updating sibling" << std::endl;
-                                    DespotWithAlphaFunctionUpdate::UpdateSibling(vnode, it->second);
+                                    DespotWithAlphaFunctionUpdate::UpdateSibling(vnode, it->second, vnode_updated);
                                 }
                             }
-                            DespotWithAlphaFunctionUpdate::Update(parentq);
+                            DespotWithAlphaFunctionUpdate::Update(parentq, vnode_updated);
                         }
                         else
                         {

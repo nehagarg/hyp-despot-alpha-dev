@@ -486,10 +486,10 @@ bool DespotWithAlphaFunctionUpdate::PedPomdpProb = false;
         }
 
 	if(Globals::config.use_multi_thread_){
-	  DespotWithAlphaFunctionUpdate::Update(static_cast<Shared_QNode*>(qnode), false);
+	  DespotWithAlphaFunctionUpdate::Update(static_cast<Shared_QNode*>(qnode), false, 7);
 	}
 	else {
-	  DespotWithAlphaFunctionUpdate::Update(qnode);
+	  DespotWithAlphaFunctionUpdate::Update(qnode,7);
 	}
 	//qnode->step_reward = step_reward;
 	//qnode->lower_bound(lower_bound);
@@ -515,9 +515,12 @@ bool DespotWithAlphaFunctionUpdate::PedPomdpProb = false;
     
     
 
-void DespotWithAlphaFunctionUpdate::Update(Shared_VNode* vnode, bool real)
+int DespotWithAlphaFunctionUpdate::Update(Shared_VNode* vnode, bool real)
 {
 	//lock_guard < mutex > lck(vnode->GetMutex());//lock v_node during updation
+	int upper_bound_changed = 0;
+	int lower_bound_changed = 0;
+	int boundary_upper_bound_changed = 0;
 	vnode->lock();
 	if (((VNode*) vnode)->depth() > 0 && real) {
 		if ( Globals::config.exploration_mode == VIRTUAL_LOSS) //release virtual loss
@@ -528,7 +531,7 @@ void DespotWithAlphaFunctionUpdate::Update(Shared_VNode* vnode, bool real)
 	}
 	if (((VNode*) vnode)->IsLeaf()) {
 	  vnode->unlock();
-			return;
+			return (4*boundary_upper_bound_changed + 2*upper_bound_changed + lower_bound_changed);
 		}
 	vnode->unlock();
 	double lower = ((VNode*) vnode)->default_move().value;
@@ -593,6 +596,7 @@ void DespotWithAlphaFunctionUpdate::Update(Shared_VNode* vnode, bool real)
 				for (int i = 0; i < Globals::config.num_scenarios; i++){
 					if(vnode_upper_bound_per_particle[i] < common_parent->vnode_upper_bound_per_particle[i])
 					{
+						boundary_upper_bound_changed = 1;
 						common_parent->vnode_upper_bound_per_particle[i] = vnode_upper_bound_per_particle[i];
 					}
 					//vnode->belief_mult_es += vnode->particle_weights[i]*common_parent->vnode_upper_bound_per_particle[i];
@@ -601,23 +605,30 @@ void DespotWithAlphaFunctionUpdate::Update(Shared_VNode* vnode, bool real)
 
 		vnode->lock();
 		if (lower > ((VNode*)vnode)->lower_bound()) {
+			lower_bound_changed = 1;
 			((VNode*)vnode)->lower_bound(lower);
 					((VNode*)vnode)->lower_bound_alpha_vector = max_lower_action;
 		}
 		if (upper < ((VNode*)vnode)->upper_bound()) {
+			upper_bound_changed = 1;
 			((VNode*)vnode)->upper_bound(upper);
 					//vnode->upper_bound_alpha_vector = max_upper_action;
 
 		}
 		vnode->unlock();
+		return (4*boundary_upper_bound_changed + 2*upper_bound_changed + lower_bound_changed);
 		        //std::cout << "Update Estimated value " <<  vnode->has_estimated_upper_bound_value << " array size " << vnode->estimated_upper_bound_alpha_vector.value_array->size() << std::endl;
 			/*if (utility_upper < vnode->utility_upper_bound) {
 				vnode->utility_upper_bound = utility_upper;
 			}*/
 }
-void DespotWithAlphaFunctionUpdate::Update(VNode* vnode) {
-    if (vnode->IsLeaf()) {
-		return;
+int DespotWithAlphaFunctionUpdate::Update(VNode* vnode) {
+    int upper_bound_changed = 0;
+    int lower_bound_changed = 0;
+    int boundary_upper_bound_changed = 0;
+
+	if (vnode->IsLeaf()) {
+		return (4*boundary_upper_bound_changed + 2*upper_bound_changed + lower_bound_changed);
 	}
 
 	double lower = vnode->default_move().value;
@@ -682,6 +693,7 @@ void DespotWithAlphaFunctionUpdate::Update(VNode* vnode) {
             for (int i = 0; i < Globals::config.num_scenarios; i++){
                 if(vnode_upper_bound_per_particle[i] < common_parent->vnode_upper_bound_per_particle[i])
                 {
+                	boundary_upper_bound_changed = 1;
                     common_parent->vnode_upper_bound_per_particle[i] = vnode_upper_bound_per_particle[i];
                 }
                 vnode->belief_mult_es += vnode->particle_weights[i]*common_parent->vnode_upper_bound_per_particle[i];
@@ -689,14 +701,17 @@ void DespotWithAlphaFunctionUpdate::Update(VNode* vnode) {
         }
 
 	if (lower > vnode->lower_bound()) {
+		lower_bound_changed = 1;
 		vnode->lower_bound(lower);
                 vnode->lower_bound_alpha_vector = max_lower_action;
 	}
 	if (upper < vnode->upper_bound()) {
+		upper_bound_changed = 1;
 		vnode->upper_bound(upper);
                 //vnode->upper_bound_alpha_vector = max_upper_action;
                 
 	}
+	return (4*boundary_upper_bound_changed + 2*upper_bound_changed + lower_bound_changed);
         //std::cout << "Update Estimated value " <<  vnode->has_estimated_upper_bound_value << " array size " << vnode->estimated_upper_bound_alpha_vector.value_array->size() << std::endl;
 	/*if (utility_upper < vnode->utility_upper_bound) {
 		vnode->utility_upper_bound = utility_upper;
@@ -705,8 +720,17 @@ void DespotWithAlphaFunctionUpdate::Update(VNode* vnode) {
     
 
 
-void DespotWithAlphaFunctionUpdate::Update(Shared_QNode* qnode, bool real)
+void DespotWithAlphaFunctionUpdate::Update(Shared_QNode* qnode, bool real, int vnode_update_status)
 {
+
+
+	if(vnode_update_status == 0)
+		        {
+		        	return;
+		        }
+		int lower_bound_changed = vnode_update_status % 2;
+		int upper_bound_changed = (vnode_update_status % 4)/2;
+		int boundary_upper_bound_changed = vnode_update_status / 4;
 	//lock_guard < mutex > lck(qnode->GetMutex());//lock v_node during updation
 	double upper = 0;
 
@@ -795,7 +819,7 @@ void DespotWithAlphaFunctionUpdate::Update(Shared_QNode* qnode, bool real)
 		}
 
 }
-void DespotWithAlphaFunctionUpdate::Update(QNode* qnode) {
+void DespotWithAlphaFunctionUpdate::Update(QNode* qnode, int vnode_update_status) {
         //double lower = qnode->step_reward;
 	//double upper = qnode->step_reward;
 	//double utility_upper = qnode->step_reward
@@ -803,6 +827,14 @@ void DespotWithAlphaFunctionUpdate::Update(QNode* qnode) {
         
         
         //std::vector<double> obs_probablity_sum;
+
+	if(vnode_update_status == 0)
+	        {
+	        	return;
+	        }
+	int lower_bound_changed = vnode_update_status % 2;
+	int upper_bound_changed = (vnode_update_status % 4)/2;
+	int boundary_upper_bound_changed = vnode_update_status / 4;
 
      double upper = 0;   
             
@@ -814,6 +846,7 @@ void DespotWithAlphaFunctionUpdate::Update(QNode* qnode) {
         lower_bound_vector.resize(Globals::config.num_scenarios, 0);
         //upper_bound_vector.resize(Globals::config.num_scenarios, 0);
         //qnode->has_estimated_upper_bound_value = false;
+
         
 	std::map<OBS_TYPE, VNode*>& children = qnode->children();
 	for (std::map<OBS_TYPE, VNode*>::iterator it = children.begin();
@@ -904,13 +937,22 @@ void DespotWithAlphaFunctionUpdate::Update(QNode* qnode) {
 	
 }
 
-void DespotWithAlphaFunctionUpdate::UpdateSibling(Shared_VNode* vnode, Shared_VNode* sibling_node, bool real)
+void DespotWithAlphaFunctionUpdate::UpdateSibling(Shared_VNode* vnode, Shared_VNode* sibling_node, bool real, int vnode_update_status)
 {
 	if (DESPOT::Gap(sibling_node) <=0.0)
 		return;
 	if(vnode->IsLeaf())
 		return;
+	if(vnode_update_status == 0)
+	{
+		return;
+	}
+	int lower_bound_changed = vnode_update_status % 2;
+	int upper_bound_changed = (vnode_update_status % 4)/2;
+	int boundary_upper_bound_changed = vnode_update_status / 4;
 
+	if(lower_bound_changed == 1)
+	{
 	double qnode_lower_bound = 0;
 	std::vector<double> vnode_lower_bound_vector;
 	ValuedAction vnode_valued_action;
@@ -938,8 +980,11 @@ void DespotWithAlphaFunctionUpdate::UpdateSibling(Shared_VNode* vnode, Shared_VN
 
 	}
 	sibling_node->unlock();
+	}
 	if(Globals::config.use_sawtooth_upper_bound)
 	        {
+		if(upper_bound_changed == 1 || boundary_upper_bound_changed == 1)
+		{
 		double vnode_belief_mult_es, vnode_upper_bound;
 		vnode->lock();
 		//vnode_belief_mult_es = vnode->belief_mult_es;
@@ -1010,10 +1055,11 @@ void DespotWithAlphaFunctionUpdate::UpdateSibling(Shared_VNode* vnode, Shared_VN
 	                ((VNode*)sibling_node)->upper_bound(sawtooth_upper_bound);
 	            }
 	            sibling_node->unlock();
+		}
 	        }
 
 }
-    void DespotWithAlphaFunctionUpdate::UpdateSibling(VNode* vnode, VNode* sibling_node) {
+    void DespotWithAlphaFunctionUpdate::UpdateSibling(VNode* vnode, VNode* sibling_node, int vnode_update_status) {
         /*if (sibling_node->IsLeaf()) {
 		return;
 	}*/
@@ -1022,7 +1068,16 @@ void DespotWithAlphaFunctionUpdate::UpdateSibling(Shared_VNode* vnode, Shared_VN
             return;
         if(vnode->IsLeaf())
         		return;
-                
+        if(vnode_update_status == 0)
+        {
+        	return;
+        }
+        int lower_bound_changed = vnode_update_status % 2;
+        int upper_bound_changed = (vnode_update_status % 4)/2;
+        int boundary_upper_bound_changed = vnode_update_status / 4;
+
+        if(lower_bound_changed == 1)
+        {
 	//std::cout << "Updating sibing ";
         double qnode_lower_bound = 0;
         //double qnode_upper_bound = 0;
@@ -1044,8 +1099,11 @@ void DespotWithAlphaFunctionUpdate::UpdateSibling(Shared_VNode* vnode, Shared_VN
 
                
         }
+        }
         if(Globals::config.use_sawtooth_upper_bound)
         {
+        	if(upper_bound_changed == 1 || boundary_upper_bound_changed == 1)
+        	{
 	  /*
 	  std::cout << "Computing sawtooth" <<std::endl;
 	  //print es
@@ -1099,6 +1157,7 @@ void DespotWithAlphaFunctionUpdate::UpdateSibling(Shared_VNode* vnode, Shared_VN
             {
                 sibling_node->upper_bound(sawtooth_upper_bound);
             }
+        	}
         }
         
         //std::cout << "Udate sibling Estimated value " <<  sibling_node->has_estimated_upper_bound_value << " array size " << sibling_node->estimated_upper_bound_alpha_vector.value_array->size() << std::endl;

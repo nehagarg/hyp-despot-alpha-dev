@@ -48,12 +48,12 @@ public:
     
     //void CoreSearch(std::vector<State*>& particles, RandomStreams& streams);
     
-    static void Update(VNode* vnode);
-    static void Update(Shared_VNode* vnode, bool real);
-    static void UpdateSibling(VNode* vnode, VNode* sibling_node);
-    static void UpdateSibling(Shared_VNode* vnode, Shared_VNode* sibling_node, bool real);
-    static void Update(Shared_QNode* qnode, bool real);
-    static void Update(QNode* qnode);
+    static int Update(VNode* vnode);
+    static int Update(Shared_VNode* vnode, bool real);
+    static void UpdateSibling(VNode* vnode, VNode* sibling_node, int vnode_update_status);
+    static void UpdateSibling(Shared_VNode* vnode, Shared_VNode* sibling_node, bool real, int vnode_update_status);
+    static void Update(Shared_QNode* qnode, bool real, int vnode_update_status);
+    static void Update(QNode* qnode, int vnode_update_status);
     static void Expand(QNode* qnode, ScenarioLowerBound* lower_bound,
 		ScenarioUpperBound* upper_bound, const DSPOMDP* model,
 		RandomStreams& streams, History& history);
