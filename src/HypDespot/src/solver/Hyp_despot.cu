@@ -510,7 +510,7 @@ PreStep_LongObs(int total_num_scenarios, int num_particles, Dvc_State* vnode_par
 
 __global__ void
 Step_LongObs(int total_num_scenarios, int num_particles, Dvc_State* vnode_particles,
-		const int* vnode_particleIDs, float* step_reward_all_a,
+		int* vnode_particleIDs, float* step_reward_all_a,
 		OBS_TYPE* observations_all_a_p, Dvc_State* new_particles,
 		Dvc_RandomStreams* streams, bool* terminal_all_a_p) {
 	if (blockIdx.y * blockDim.x + threadIdx.x < num_particles) {
@@ -523,7 +523,7 @@ Step_LongObs(int total_num_scenarios, int num_particles, Dvc_State* vnode_partic
 
 		/*Step the particles*/
 		Dvc_State* current_particle = NULL;
-		int parent_PID = vnode_particleIDs[PID];
+		int parent_PID; // = vnode_particleIDs[PID];
 
 		/*make a local copy of the particle in shared memory*/
 		if (threadIdx.y == 0) {
@@ -542,6 +542,12 @@ Step_LongObs(int total_num_scenarios, int num_particles, Dvc_State* vnode_partic
 		if(!Dvc_config->track_alpha_vector)
 		{
 			reward = reward * current_particle->weight;
+			parent_PID = vnode_particleIDs[PID];
+		}
+		else
+		{
+			parent_PID = current_particle->scenario_id;
+			vnode_particleIDs[PID] = parent_PID;
 		}
 		/*Record stepped particles*/
 		int global_list_pos = action * total_num_scenarios + parent_PID;
@@ -736,7 +742,7 @@ PreStep_IntObs(int num_particles, Dvc_State* vnode_particles,
 __global__ void
 //__launch_bounds__(64, 16)
 Step_IntObs(int total_num_scenarios, int num_particles, Dvc_State* vnode_particles,
-		const int* vnode_particleIDs, float* step_reward_all_a,
+		int* vnode_particleIDs, float* step_reward_all_a,
 		int* observations_all_a_p,const int num_obs_elements,
 		Dvc_State* new_particles,
 		Dvc_RandomStreams* streams, bool* terminal_all_a_p,
@@ -781,12 +787,18 @@ Step_IntObs(int total_num_scenarios, int num_particles, Dvc_State* vnode_particl
 		{
 			printf("Undefined DvcModelStepIntObs_!\n");
 		}
-
+		int parent_PID;
 		if(!Dvc_config->track_alpha_vector)
 		{
 			reward = reward * current_particle->weight;
+			parent_PID = vnode_particleIDs[PID];
 		}
-		int parent_PID = vnode_particleIDs[PID];
+		else
+		{
+			parent_PID = current_particle->scenario_id;
+			vnode_particleIDs[PID] = parent_PID;
+		}
+
 		/*Record stepped particles*/
 		int global_list_pos = action * total_num_scenarios + parent_PID;
 
@@ -835,7 +847,23 @@ _InitBounds_LongObs(int total_num_scenarios, int num_particles,
 	int action = blockIdx.x;
 	int PID = (blockIdx.y * blockDim.x + threadIdx.x) % num_particles;
 
-	int parent_PID = vnode_particleIDs[PID];
+	int parent_PID;
+	if(Dvc_config->track_alpha_vector)
+	{
+		if(num_particles == total_num_scenarios)
+		{
+			parent_PID = PID;
+		}
+		else
+		{
+			parent_PID = vnode_particleIDs[PID];
+		}
+	}
+	else
+	{
+		parent_PID = vnode_particleIDs[PID];
+	}
+	//int parent_PID = vnode_particleIDs[PID];
 	Dvc_State* current_particle = (Dvc_State*) ((int*) localParticles + 60 * threadIdx.x);
 
 	int global_list_pos = action * total_num_scenarios + parent_PID;
@@ -919,8 +947,23 @@ _InitBounds_IntArrayObs(int total_num_scenarios, int num_particles,
 	if (blockIdx.y * blockDim.x + threadIdx.x < num_particles) {
 		int PID = (blockIdx.y * blockDim.x + threadIdx.x) % num_particles;
 		Dvc_State* current_particle = NULL;
-
-		int parent_PID = vnode_particleIDs[PID];
+		int parent_PID;
+		if(Dvc_config->track_alpha_vector)
+		{
+			if(num_particles == total_num_scenarios)
+			{
+				parent_PID = PID;
+			}
+			else
+			{
+				parent_PID = vnode_particleIDs[PID];
+			}
+		}
+		else
+		{
+			parent_PID = vnode_particleIDs[PID];
+		}
+		//int parent_PID = vnode_particleIDs[PID];
 		current_particle = (Dvc_State*) ((int*) localParticles + Shared_mem_per_particle * threadIdx.x);
 
 		int global_list_pos = action * total_num_scenarios + parent_PID;
@@ -1092,19 +1135,21 @@ void DESPOT::PrepareGPUDataForNode(VNode* vnode,const DSPOMDP* model, int Thread
 #endif
 	streams.position(vnode->depth());
 	
+	if(!Globals::config.track_alpha_vector)
+
+			{
 		const std::vector<State*>& particles = vnode->particles();
 		const std::vector<int>& particleIDs = vnode->particleIDs();
 		int NumParticles = particleIDs.size();
 
 		/*Copy particle IDs in the new node to the ID list in device memory*/
 		/*Needed with alpha vector update to not step terminal particles*/
+		/*Now not needed with alpha vector update as we can use scenario id instead of particle id list*/
 
 
 		model->CopyParticleIDsToGPU(Dvc_particleIDs_long[ThreadID], particleIDs,
 			&Globals::GetThreadCUDAStream(ThreadID));
-		if(!Globals::config.track_alpha_vector)
 
-		{
 		if(vnode->parent()!=NULL) // New node but not root node
 		{
 			/*Create GPU particles for the new v-node*/
