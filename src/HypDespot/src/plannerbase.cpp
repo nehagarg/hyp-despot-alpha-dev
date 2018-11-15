@@ -185,7 +185,7 @@ Solver *PlannerBase::InitializeSolver(DSPOMDP *model, Belief* belief,
 		logi << "Created lower bound " << typeid(*lower_bound).name() << endl;
 
 		if (solver_type == "DESPOT" || 
-            solver_type == "BTDESPOTALPHA" || solver_type == "BTDESPOTALPHAST") {
+            solver_type == "BTDESPOTALPHA" || solver_type == "BTDESPOTALPHAST" || solver_type == "PLB" ) {
 			string bubtype =
 					options[E_BUBTYPE] ? options[E_BUBTYPE].arg : "DEFAULT";
 			string ubtype =
@@ -197,7 +197,7 @@ Solver *PlannerBase::InitializeSolver(DSPOMDP *model, Belief* belief,
 					<< endl;
 
 			//solver = new DESPOT(model, lower_bound, upper_bound);
-                        if (solver_type == "DESPOT")
+                        if (solver_type == "DESPOT" || solver_type == "PLB")
                         {
                           solver = new DESPOT(model, lower_bound, upper_bound);
                         }
@@ -215,6 +215,10 @@ Solver *PlannerBase::InitializeSolver(DSPOMDP *model, Belief* belief,
                           solver = new DESPOT(model, lower_bound, upper_bound);
                           
                           
+                        }
+                        if(solver_type == "PLB")
+                        {
+                        	Globals::config.default_action = "PLB";
                         }
 		} else
 			solver = new ScenarioBaselineSolver(lower_bound);

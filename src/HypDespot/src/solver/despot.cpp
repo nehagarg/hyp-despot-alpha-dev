@@ -552,7 +552,10 @@ VNode* DESPOT::ConstructTree(vector<State*>& particles, RandomStreams& streams,
 		if (FIX_SCENARIO == 1)
 			cout << "Root bounds: (" << statistics->initial_lb << "," << statistics->initial_ub << ")" << endl;
 	}
-
+	if(Globals::config.default_action == "PLB")
+	{
+		return root;
+	}
 	int num_trials = 0;
 
 	used_time = Globals::ElapsedTime();
