@@ -16,10 +16,13 @@ DEVICE int Dvc_PedPomdpDoNothingPolicy::Action(
 				Dvc_RandomStreams& streams,
 				Dvc_History& history)
 {
-	const Dvc_PomdpState &state=static_cast<const Dvc_PomdpState&>(particles[0]);
-	float carvel = state.car.vel;
-	if (carvel >= 0.001) return 2;
-	return -1;
+
+	return 2;
+	//For despot with alpha vector update action cannot depend on observation
+	//const Dvc_PomdpState &state=static_cast<const Dvc_PomdpState&>(particles[0]);
+	//float carvel = state.car.vel;
+	//if (carvel >= 0.001) return 2;
+	//return -1;
 }
 DEVICE int Dvc_PedPomdpSmartPolicy::Action(
 		int scenarioID, const Dvc_State* particles,
