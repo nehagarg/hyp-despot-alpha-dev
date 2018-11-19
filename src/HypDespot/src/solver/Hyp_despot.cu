@@ -1789,9 +1789,9 @@ void DESPOT::GPU_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
 								+ parent_PID);
 					common_qnode->particleIDs_.push_back(parent_PID);
 					common_qnode->particles_.push_back(NULL); //Required to keep size of particles_ consistent with particleIds
-					if(partitions.size() < Globals::config.num_obs)
+					if(partitions_all_a[action].size() < Globals::config.num_obs)
 					{
-						partitions[obs].push_back(parent_PID);
+						partitions_all_a[action][obs].push_back(parent_PID);
 					}
 				}
 
