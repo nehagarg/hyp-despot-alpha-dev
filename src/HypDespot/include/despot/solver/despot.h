@@ -134,10 +134,12 @@ protected:
 	/************** HyP-DESPOT ************/
 
 	static void CheckSteppedParticles(int num_actions);
-	static void ReadBackData(int ThreadID);
+	static void ReadBackData(int ThreadID, int offset, int size);
 
 	static void MCSimulation(VNode* vnode, int ThreadID,
 			const DSPOMDP* model, RandomStreams& streams,History& history, bool Do_rollout=true);
+	static void GPU_Cal_Obs_Prob(VNode* vnode, int ThreadID,
+				const DSPOMDP* model);
 	static void GPU_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
 		ScenarioUpperBound* ub, const DSPOMDP* model,
 		RandomStreams& streams,
@@ -158,7 +160,7 @@ protected:
 
 	static void PrepareGPUDataForRoot(VNode* node, const DSPOMDP* model, const std::vector<int>& particleIDs, std::vector<State*>& particles);
 	static void PrepareGPUDataForNode(VNode* vnode, const DSPOMDP* model, int ThreadID ,RandomStreams& streams);
-	static void PrepareGPUDataForCommonQNode(QNode* vnode,const DSPOMDP* model, int ThreadID, RandomStreams& streams, const std::vector<int>& particleIDs );
+	static void PrepareGPUDataForCommonQNode(QNode* vnode,const DSPOMDP* model, int ThreadID, RandomStreams& streams, const std::vector<int>& particleIDs, int NumParticles );
 
 	double AverageInitLower() const;
 	double StderrInitLower() const;

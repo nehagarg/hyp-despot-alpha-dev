@@ -957,10 +957,12 @@ void DespotWithAlphaFunctionUpdate::UpdateSibling(Shared_VNode* vnode, Shared_VN
 	std::vector<double> vnode_lower_bound_vector;
 	ValuedAction vnode_valued_action;
 	vnode->lock();//lock v_node to read lower bound alpha vector
-	for (int i = 0; i < Globals::config.num_scenarios; i++)
+	vnode_lower_bound_vector = *(vnode->lower_bound_alpha_vector.value_array);
+	/*for (int i = 0; i < Globals::config.num_scenarios; i++)
 	{
+
 		vnode_lower_bound_vector.push_back((*vnode->lower_bound_alpha_vector.value_array)[i]);
-	}
+	}*/
 	vnode_valued_action = vnode->lower_bound_alpha_vector;
 	vnode->unlock();
 	for (int i = 0; i < Globals::config.num_scenarios; i++)
@@ -975,7 +977,8 @@ void DespotWithAlphaFunctionUpdate::UpdateSibling(Shared_VNode* vnode, Shared_VN
 		((VNode*)sibling_node)->lower_bound(qnode_lower_bound);
 		sibling_node->lower_bound_alpha_vector.action = vnode_valued_action.action;
 		sibling_node->lower_bound_alpha_vector.value = qnode_lower_bound;
-		sibling_node->lower_bound_alpha_vector_.insert(sibling_node->lower_bound_alpha_vector_.begin(),vnode_lower_bound_vector.begin(), vnode_lower_bound_vector.end() );
+		sibling_node->lower_bound_alpha_vector_ = vnode_lower_bound_vector;
+		//sibling_node->lower_bound_alpha_vector_.insert(sibling_node->lower_bound_alpha_vector_.begin(),vnode_lower_bound_vector.begin(), vnode_lower_bound_vector.end() );
 		sibling_node->lower_bound_alpha_vector.value_array = &(sibling_node->lower_bound_alpha_vector_);
 
 	}
@@ -992,10 +995,12 @@ void DespotWithAlphaFunctionUpdate::UpdateSibling(Shared_VNode* vnode, Shared_VN
 		vnode->unlock();
 		std::vector<double> vnode_common_parent_vnode_upper_bound_per_particle;
 		vnode->common_parent()->lock();
+		vnode_common_parent_vnode_upper_bound_per_particle = vnode->common_parent()->vnode_upper_bound_per_particle;
+		/*
 		 for (int i = 0; i < Globals::config.num_scenarios; i++)
 		 {
 			 vnode_common_parent_vnode_upper_bound_per_particle.push_back(vnode->common_parent()->vnode_upper_bound_per_particle[i]);
-		 }
+		 }*/
 		 vnode->common_parent()->unlock();
 		  /*
 		  std::cout << "Computing sawtooth" <<std::endl;
@@ -1093,7 +1098,8 @@ void DespotWithAlphaFunctionUpdate::UpdateSibling(Shared_VNode* vnode, Shared_VN
 		sibling_node->lower_bound(qnode_lower_bound);
                 sibling_node->lower_bound_alpha_vector.action = vnode->lower_bound_alpha_vector.action;
                 sibling_node->lower_bound_alpha_vector.value = qnode_lower_bound;
-                sibling_node->lower_bound_alpha_vector_.insert(sibling_node->lower_bound_alpha_vector_.begin(),vnode->lower_bound_alpha_vector.value_array->begin(), vnode->lower_bound_alpha_vector.value_array->end() );  
+                sibling_node->lower_bound_alpha_vector_ = *(vnode->lower_bound_alpha_vector.value_array);
+                //sibling_node->lower_bound_alpha_vector_.insert(sibling_node->lower_bound_alpha_vector_.begin(),vnode->lower_bound_alpha_vector.value_array->begin(), vnode->lower_bound_alpha_vector.value_array->end() );
                 sibling_node->lower_bound_alpha_vector.value_array = &(sibling_node->lower_bound_alpha_vector_);
                 //Estimate upper bound only if lower bound updated
 

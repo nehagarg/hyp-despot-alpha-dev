@@ -47,6 +47,8 @@ static Dvc_History** Dvc_history = NULL;
 
 
 static int MC_DataSize=0;
+static int Obs_Prob_offset = 0; //used by despot with alpha vector update
+static int Obs_ProbSize = 0; //used by despot with alpha vector update
 static void** Dvc_MC_Data = NULL;
 static void** Hst_MC_Data = NULL;
 
@@ -211,8 +213,10 @@ void DESPOT::PrepareGPUMemory(const DSPOMDP* model, int num_actions,
 		{
 			offset_obs_prob = offset_lb+num_actions * Globals::config.num_scenarios * sizeof(Dvc_ValuedAction);
 			if(offset_obs_prob%sizeof(float)!=0) offset_obs_prob=(offset_obs_prob/sizeof(float)+1)*sizeof(float);
+			Obs_Prob_offset = offset_obs_prob;
+			Obs_ProbSize = num_actions * Globals::config.num_scenarios * Globals::config.num_obs * sizeof(float);
 
-			MC_DataSize=offset_obs_prob+num_actions * Globals::config.num_scenarios * Globals::config.num_scenarios * sizeof(float);
+			MC_DataSize=offset_obs_prob+num_actions * Globals::config.num_scenarios * Globals::config.num_obs * sizeof(float);
 
 		}
 		else
@@ -266,7 +270,7 @@ void DESPOT::PrepareGPUMemory(const DSPOMDP* model, int num_actions,
 		if(Globals::config.track_alpha_vector)
 		{
 			HANDLE_ERROR(cudaMalloc((void** )&Dvc_particleIDs_long[i],
-									Globals::config.num_scenarios *num_actions* sizeof(int)));
+									((Globals::config.num_scenarios + Globals::config.num_obs + 2) *num_actions) * sizeof(int)));
 		}
 		else
 		{
@@ -1028,20 +1032,26 @@ _InitBounds_IntArrayObs(int total_num_scenarios, int num_particles,
 }
 
 __global__ void
-_CalObsProb_LongObs(int total_num_scenarios, int num_particles,
+_CalObsProb_LongObs(int total_num_scenarios, int num_actions,
 		Dvc_State* new_particles, const int* vnode_particleIDs, bool* term_all_a_p,
 		float* obs_prob_all_a_p_obs, OBS_TYPE* observations_all_a_p)
 {
-	int s_mult_o = num_particles*num_particles;
+
 	int action = blockIdx.x;
+	int num_particles = vnode_particleIDs[num_actions*(total_num_scenarios + Dvc_config->num_obs) + action];
+			int num_obs = vnode_particleIDs[num_actions*(total_num_scenarios + Dvc_config->num_obs + 1) + action];
+			int s_mult_o = num_particles*num_obs;
 		int s_mult_o_id = (blockIdx.y * blockDim.x + threadIdx.x) % (s_mult_o);
-		int obs_id = vnode_particleIDs[s_mult_o_id/num_particles];
-		int scenario_id = vnode_particleIDs[s_mult_o_id % num_particles];
+		int obs_id =  s_mult_o_id/num_particles;
+		int particle_id = s_mult_o_id % num_particles;
+
 		//int parent_PID = vnode_particleIDs[PID];
 		Dvc_State* current_particle = (Dvc_State*) ((int*) localParticles + 60 * threadIdx.x);
 
-		int particle_list_pos = action * total_num_scenarios + scenario_id;
-		int obs_list_pos = action * total_num_scenarios + obs_id;
+		int particle_list_pos = vnode_particleIDs[particle_id];
+		int obs_list_pos = vnode_particleIDs[num_actions*(total_num_scenarios) + obs_id];
+		int scenario_id = particle_list_pos % total_num_scenarios;
+
 
 		/*Copy particle from global memory to shared memory*/
 		if (threadIdx.y == 0) {
@@ -1067,27 +1077,33 @@ _CalObsProb_LongObs(int total_num_scenarios, int num_particles,
 
 		/*Prepare data for returning to host*/
 
-			int global_list_pos=(action * total_num_scenarios*total_num_scenarios) + (obs_list_pos*total_num_scenarios) + scenario_id;
+			int global_list_pos=(action * total_num_scenarios*Dvc_config->num_obs) + (obs_id*total_num_scenarios) + scenario_id;
 			obs_prob_all_a_p_obs[global_list_pos] = obs_prob;
 			}
 		}
 }
+
+
 __global__ void
-_CalObsProb_IntArrayObs(int total_num_scenarios, int num_particles,
+_CalObsProb_IntArrayObs(int total_num_scenarios, int num_actions,
 		Dvc_State* new_particles, const int* vnode_particleIDs, bool* term_all_a_p,
 		float* obs_prob_all_a_p_obs, int* observations_all_a_p,const int num_obs_elements,
 		int Shared_mem_per_particle)
 {
-	int s_mult_o = num_particles*num_particles;
+
 		int action = blockIdx.x;
+		int num_particles = vnode_particleIDs[num_actions*(total_num_scenarios + Dvc_config->num_obs) + action];
+		int num_obs = vnode_particleIDs[num_actions*(total_num_scenarios + Dvc_config->num_obs + 1) + action];
+		int s_mult_o = num_particles*num_obs;
 			int s_mult_o_id = (blockIdx.y * blockDim.x + threadIdx.x) % (s_mult_o);
-			int obs_id = vnode_particleIDs[s_mult_o_id/num_particles];
-			int scenario_id = vnode_particleIDs[s_mult_o_id % num_particles];
+			int obs_id =  s_mult_o_id/num_particles;
+			int particle_id = s_mult_o_id % num_particles;
 			//int parent_PID = vnode_particleIDs[PID];
 			Dvc_State* current_particle = (Dvc_State*) ((int*) localParticles + Shared_mem_per_particle* threadIdx.x);
 
-			int particle_list_pos = action * total_num_scenarios + scenario_id;
-			int obs_list_pos = action * total_num_scenarios + obs_id;
+			int particle_list_pos = vnode_particleIDs[particle_id];
+			int obs_list_pos = vnode_particleIDs[num_actions*(total_num_scenarios) + obs_id];
+			int scenario_id = particle_list_pos % total_num_scenarios;
 
 			/*Copy particle from global memory to shared memory*/
 			if (threadIdx.y == 0) {
@@ -1115,7 +1131,7 @@ _CalObsProb_IntArrayObs(int total_num_scenarios, int num_particles,
 
 			/*Prepare data for returning to host*/
 
-				int global_list_pos=(action * total_num_scenarios*total_num_scenarios) + (obs_id*total_num_scenarios) + scenario_id;
+				int global_list_pos=(action * total_num_scenarios*Dvc_config->num_obs) + (obs_id*total_num_scenarios) + scenario_id;
 				obs_prob_all_a_p_obs[global_list_pos] = obs_prob;
 				}
 			}
@@ -1179,7 +1195,7 @@ void DESPOT::PrepareGPUDataForNode(VNode* vnode,const DSPOMDP* model, int Thread
 #endif
 }
 
-void DESPOT::PrepareGPUDataForCommonQNode(QNode* qnode, const DSPOMDP* model, int ThreadID, RandomStreams& streams, const std::vector<int>& particleIDs )
+void DESPOT::PrepareGPUDataForCommonQNode(QNode* qnode, const DSPOMDP* model, int ThreadID, RandomStreams& streams, const std::vector<int>& particleIDs, int NumParticles )
 {
 #ifdef RECORD_TIME
 	auto start = Time::now();
@@ -1188,7 +1204,7 @@ void DESPOT::PrepareGPUDataForCommonQNode(QNode* qnode, const DSPOMDP* model, in
 	if(Globals::config.track_alpha_vector)
 
 	{
-		int NumParticles = particleIDs.size();
+		//int NumParticles = particleIDs.size();
 
 		/*Copy particle IDs in the new node to the ID list in device memory*/
 		/*Not needed with alpha vector update as expanded particles are not thrown*/
@@ -1239,6 +1255,73 @@ void DESPOT::PrepareGPUDataForCommonQNode(QNode* qnode, const DSPOMDP* model, in
 	double oldValue=CopyParticleTime.load();
 	CopyParticleTime.compare_exchange_weak(oldValue,oldValue+ Globals::ElapsedTime(start));
 #endif
+}
+
+void DESPOT::GPU_Cal_Obs_Prob(VNode* vnode, int ThreadID,
+				const DSPOMDP* model)
+{
+	int blocky;
+	dim3 GridDim;
+	dim3 ThreadDim;
+	int NumActions = model->NumActions();
+	int NumObs = Globals::config.num_obs;
+	int NumParticles=vnode->num_GPU_particles_;
+	if(NumParticles < NumObs)
+	{
+		NumObs = NumParticles;
+	}
+	int ParalllelisminStep = model->ParallelismInStep();
+	int Shared_mem_per_particle=CalSharedMemSize();
+
+	int threadx = 32;
+	if(Globals::config.track_alpha_vector)
+			{
+
+					int s_mult_o = NumParticles*NumObs;
+					blocky = (s_mult_o % threadx == 0) ?
+										s_mult_o / threadx : s_mult_o / threadx + 1;
+						GridDim.x = NumActions;
+						GridDim.y = blocky;
+						ThreadDim.x = threadx;
+						ThreadDim.y = 1; //model->ParallelismInStep(); Currently not using step parallelism for obs prob calculation
+					if(Obs_type==OBS_INT_ARRAY)
+					{
+						int num_Obs_element=num_Obs_element_in_GPU;
+						if(GPUDoPrint || DESPOT::Print_nodes){
+							printf("obs prob particle %d\n", vnode->GetGPUparticles() );
+						}
+						if (Globals::config.use_multi_thread_)
+							_CalObsProb_IntArrayObs<<<GridDim, ThreadDim, threadx * Shared_mem_per_particle * sizeof(int),
+									Globals::GetThreadCUDAStream(ThreadID)>>>(Globals::config.num_scenarios,
+									NumActions, Dvc_stepped_particles_all_a[ThreadID],
+									Dvc_particleIDs_long[ThreadID], Dvc_term_all_a_and_p[ThreadID], Dvc_obs_prob_all_a_p_obs[ThreadID],
+									Dvc_obs_int_all_a_and_p[ThreadID], num_Obs_element, Shared_mem_per_particle);
+						else
+							_CalObsProb_IntArrayObs<<<GridDim, ThreadDim, threadx * Shared_mem_per_particle * sizeof(int)>>>(
+									Globals::config.num_scenarios, NumActions,
+									Dvc_stepped_particles_all_a[ThreadID],
+									Dvc_particleIDs_long[ThreadID], Dvc_term_all_a_and_p[ThreadID], Dvc_obs_prob_all_a_p_obs[ThreadID],
+									Dvc_obs_int_all_a_and_p[ThreadID] ,num_Obs_element,Shared_mem_per_particle);
+					}
+					else
+					{
+						if (Globals::config.use_multi_thread_)
+							_CalObsProb_LongObs<<<GridDim, ThreadDim, threadx * Shared_mem_per_particle * sizeof(int),
+									Globals::GetThreadCUDAStream(ThreadID)>>>(Globals::config.num_scenarios,
+									NumActions, Dvc_stepped_particles_all_a[ThreadID],
+									Dvc_particleIDs_long[ThreadID], Dvc_term_all_a_and_p[ThreadID], Dvc_obs_prob_all_a_p_obs[ThreadID],
+									Dvc_obs_all_a_and_p[ThreadID]);
+						else
+							_CalObsProb_LongObs<<<GridDim, ThreadDim, threadx * Shared_mem_per_particle * sizeof(int)>>>(
+									Globals::config.num_scenarios, NumActions,
+									Dvc_stepped_particles_all_a[ThreadID],
+									Dvc_particleIDs_long[ThreadID], Dvc_term_all_a_and_p[ThreadID], Dvc_obs_prob_all_a_p_obs[ThreadID],
+									Dvc_obs_all_a_and_p[ThreadID]);
+					}
+
+			}
+
+
 }
 void DESPOT::MCSimulation(VNode* vnode, int ThreadID,
 		const DSPOMDP* model, RandomStreams& streams,History& history, bool Do_rollout)
@@ -1531,60 +1614,17 @@ void DESPOT::MCSimulation(VNode* vnode, int ThreadID,
 		InitBoundTime.compare_exchange_weak(oldValue,oldValue + Globals::ElapsedTime(start));
 		start = Time::now();
 	#endif
+
+
+
 		if(Globals::config.track_alpha_vector)
 		{
-
-			if(Do_rollout)
-			{
-				int s_mult_o = NumParticles*NumParticles;
-				blocky = (s_mult_o % threadx == 0) ?
-									s_mult_o / threadx : s_mult_o / threadx + 1;
-					GridDim.x = NumActions;
-					GridDim.y = blocky;
-					ThreadDim.x = threadx;
-					ThreadDim.y = 1; //model->ParallelismInStep(); Currently not using step parallelism for obs prob calculation
-				if(Obs_type==OBS_INT_ARRAY)
-				{
-					int num_Obs_element=num_Obs_element_in_GPU;
-					if(GPUDoPrint || DESPOT::Print_nodes){
-						printf("obs prob particle %d\n", vnode->GetGPUparticles() );
-					}
-					if (Globals::config.use_multi_thread_)
-						_CalObsProb_IntArrayObs<<<GridDim, ThreadDim, threadx * Shared_mem_per_particle * sizeof(int),
-								Globals::GetThreadCUDAStream(ThreadID)>>>(Globals::config.num_scenarios,
-								NumParticles, Dvc_stepped_particles_all_a[ThreadID],
-								Dvc_particleIDs_long[ThreadID], Dvc_term_all_a_and_p[ThreadID], Dvc_obs_prob_all_a_p_obs[ThreadID],
-								Dvc_obs_int_all_a_and_p[ThreadID], num_Obs_element, Shared_mem_per_particle);
-					else
-						_CalObsProb_IntArrayObs<<<GridDim, ThreadDim, threadx * Shared_mem_per_particle * sizeof(int)>>>(
-								Globals::config.num_scenarios, NumParticles,
-								Dvc_stepped_particles_all_a[ThreadID],
-								Dvc_particleIDs_long[ThreadID], Dvc_term_all_a_and_p[ThreadID], Dvc_obs_prob_all_a_p_obs[ThreadID],
-								Dvc_obs_int_all_a_and_p[ThreadID] ,num_Obs_element,Shared_mem_per_particle);
-				}
-				else
-				{
-					if (Globals::config.use_multi_thread_)
-						_CalObsProb_LongObs<<<GridDim, ThreadDim, threadx * Shared_mem_per_particle * sizeof(int),
-								Globals::GetThreadCUDAStream(ThreadID)>>>(Globals::config.num_scenarios,
-								NumParticles, Dvc_stepped_particles_all_a[ThreadID],
-								Dvc_particleIDs_long[ThreadID], Dvc_term_all_a_and_p[ThreadID], Dvc_obs_prob_all_a_p_obs[ThreadID],
-								Dvc_obs_all_a_and_p[ThreadID]);
-					else
-						_CalObsProb_LongObs<<<GridDim, ThreadDim, threadx * Shared_mem_per_particle * sizeof(int)>>>(
-								Globals::config.num_scenarios, NumParticles,
-								Dvc_stepped_particles_all_a[ThreadID],
-								Dvc_particleIDs_long[ThreadID], Dvc_term_all_a_and_p[ThreadID], Dvc_obs_prob_all_a_p_obs[ThreadID],
-								Dvc_obs_all_a_and_p[ThreadID]);
-				}
-			}
+			ReadBackData(ThreadID, 0, Obs_Prob_offset);
 		}
-
-
-
-
-		ReadBackData(ThreadID);
-
+		else
+		{
+			ReadBackData(ThreadID, 0, MC_DataSize);
+		}
 	#ifdef RECORD_TIME
 		oldValue=DataBackTime.load();
 		DataBackTime.compare_exchange_weak(oldValue,oldValue+ Globals::ElapsedTime(start));
@@ -1656,6 +1696,10 @@ void DESPOT::GPU_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
 	{
 		/*Expand common QNode*/
 		std::vector<int> particleIds_all_a;
+		std::vector<std::vector<int>> obs_ids_all_a;
+		std::vector<std::map<OBS_TYPE, std::vector<int> >> partitions_all_a;
+		particleIds_all_a.reserve((Globals::config.num_scenarios + Globals::config.num_obs + 2)*num_actions);
+		int num_particles_all_a = 0;
 		logd << "Num particles " << NumParticles << "[";
 		/*for (int i = 0; i < NumParticles; i++) {
 		    logd << particleIDs[i] << "," ;
@@ -1693,7 +1737,7 @@ void DESPOT::GPU_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
 			}
 			double step_reward = 0;
 			std::map<OBS_TYPE, std::vector<int> > partitions;
-			std::map<OBS_TYPE, VNode*>& children = qnode->children();
+			partitions_all_a.push_back(partitions);
 			for (int i = 0; i < NumParticles; i++) {
 			    
 				int parent_PID = particleIDs[i]; // parent_PID corresponds to scenario id
@@ -1765,9 +1809,43 @@ void DESPOT::GPU_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
 
 			qnode->step_reward = step_reward;
 			common_qnode->num_GPU_particles_ = common_qnode->particleIDs_.size();
-			VNode* residual_vnode;
-			logd << "Particles survived " << common_qnode->particleIDs_.size()  << std::endl;
 
+			logd << "Particles survived " << common_qnode->particleIDs_.size()  << std::endl;
+		} // First Loop close over actions
+		num_particles_all_a = particleIds_all_a.size();
+		while(particleIds_all_a.size() < NumActions*Globals::config.num_scenarios)
+		{
+			particleIds_all_a.push_back(0);
+		}
+		if(num_particles_all_a > 0)
+			{
+			for (int action = 0; action < NumActions; action++) {
+				for (std::map<OBS_TYPE, std::vector<int> >::iterator it = partitions_all_a[action].begin();
+							it != partitions_all_a[action].end(); it++) {
+					particleIds_all_a.push_back(action * Globals::config.num_scenarios
+													+ it->second[0]);
+				}
+			} // Second loop close over actions
+			while(particleIds_all_a.size() < NumActions*(Globals::config.num_scenarios + Globals::config.num_obs))
+					{
+						particleIds_all_a.push_back(0);
+					}
+			for (int action = 0; action < NumActions; action++)
+			{
+				particleIds_all_a.push_back(vnode->Child(action)->particleIDs_.size());
+			}
+			for (int action = 0; action < NumActions; action++)
+			{
+				particleIds_all_a.push_back(partitions_all_a[action].size());
+			}
+			DESPOT::PrepareGPUDataForCommonQNode(vnode->common_parent_, model, ThreadID, streams, particleIds_all_a);
+		}
+		//TODO call obs prob computation and init bound computation
+		for (int action = 0; action < NumActions; action++) {
+			QNode* qnode = vnode->Child(action);
+			QNode* common_qnode = qnode;
+			std::map<OBS_TYPE, VNode*>& children = qnode->children();
+			VNode* residual_vnode;
 			if(common_qnode->particleIDs_.size() > 0)
 			{
 				if (Globals::config.use_multi_thread_)
@@ -1791,11 +1869,11 @@ void DESPOT::GPU_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
 				residual_vnode->num_GPU_particles_ = common_qnode->particleIDs_.size();
 
 			}
-
 			//Create child nodes
-	        double max_prob_sum = 0.0;
-		for (std::map<OBS_TYPE, std::vector<int> >::iterator it = partitions.begin();
-			it != partitions.end(); it++) {
+
+	        //std::map iterator is ordered. So obs order would be the same
+		for (std::map<OBS_TYPE, std::vector<int> >::iterator it = partitions_all_a[action].begin();
+			it != partitions_all_a[action].end(); it++) {
 			OBS_TYPE obs = it->first;
 	                //int observation_particle_size_ = partitions[obs].size();
 			VNode* child_vnode;
@@ -1822,11 +1900,50 @@ void DESPOT::GPU_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
 	                {
 	                    child_vnode->extra_node = true;
 	                }
+			if(common_qnode->default_move.value_array == NULL)
+						{
+							common_qnode->default_lower_bound_alpha_vector.resize(Globals::config.num_scenarios, 0);
+							common_qnode->default_upper_bound_alpha_vector.resize(Globals::config.num_scenarios, 0);
+
+
+							for(int i = 0; i < common_qnode->particleIDs_.size(); i++)
+							{
+								int scenario_id = common_qnode->particleIDs_[i];
+								common_qnode->default_lower_bound_alpha_vector[scenario_id] = Hst_lb_all_a_p[ThreadID][action* NumScenarios + scenario_id].value;
+								common_qnode->default_upper_bound_alpha_vector[scenario_id] = Hst_ub_all_a_p[ThreadID][action* NumScenarios + scenario_id];
+							}
+							int first_particle = action* NumScenarios
+											+ common_qnode->particleIDs_[0];
+							common_qnode->default_move = ValuedAction(
+											Hst_lb_all_a_p[ThreadID][first_particle].action,0.0);
+							common_qnode->default_move.value_array = (&(common_qnode->default_lower_bound_alpha_vector));
+							if(Globals::config.use_sawtooth_upper_bound)
+							{
+								common_qnode->vnode_upper_bound_per_particle = common_qnode->default_upper_bound_alpha_vector;
+
+							}
+
+						}
+		}
+		} // Third loop over actions
+
+		ReadBackData(ThreadID, Obs_Prob_offset, Obs_ProbSize);
+		for (int action = 0; action < NumActions; action++) {
+			QNode* qnode = vnode->Child(action);
+			QNode* common_qnode = qnode;
+			std::map<OBS_TYPE, VNode*>& children = qnode->children();
+			VNode* residual_vnode = children[Globals::RESIDUAL_OBS];
+			 double max_prob_sum = 0.0;
+			 int obs_id = 0;
+			for (std::map<OBS_TYPE, std::vector<int> >::iterator it = partitions_all_a[action].begin();
+						it != partitions_all_a[action].end(); it++) {
+				OBS_TYPE obs = it->first;
+				VNode* child_vnode = children[obs];
 			double total_weight = 0;
 	                for(int i = 0; i < common_qnode->particleIDs_.size();i++)
 	                {
 	                	int scenario_id = common_qnode->particleIDs_[i];
-	                    double prob = Hst_obs_prob_all_a_p_obs[ThreadID][action * NumScenarios*NumScenarios + (it->second[0]*NumScenarios) + scenario_id];
+	                    double prob = Hst_obs_prob_all_a_p_obs[ThreadID][action * NumScenarios*Globals::config.num_obs + (obs_id*NumScenarios) + scenario_id];
 	                    //int scenario_id = common_qnode->particles_[i]->scenario_id;
 	                    //prob = model->ObsProb(obs, *common_qnode->particles_[i], qnode->edge());
 
@@ -1847,6 +1964,7 @@ void DESPOT::GPU_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
 
 
 	                }
+	                obs_id++;
 	                child_vnode->prob_o_given_b = total_weight;
 	                //std::cout << "Max prob sum " << max_prob_sum << std::endl;
 	                for(int i = 0; i < common_qnode->particleIDs_.size(); i++)
@@ -1864,30 +1982,7 @@ void DESPOT::GPU_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
 
 	        //Update upper bound lower bound
 			history.Add(qnode->edge(), obs);
-			if(common_qnode->default_move.value_array == NULL)
-			{
-				common_qnode->default_lower_bound_alpha_vector.resize(Globals::config.num_scenarios, 0);
-				common_qnode->default_upper_bound_alpha_vector.resize(Globals::config.num_scenarios, 0);
 
-
-				for(int i = 0; i < common_qnode->particleIDs_.size(); i++)
-				{
-					int scenario_id = common_qnode->particleIDs_[i];
-					common_qnode->default_lower_bound_alpha_vector[scenario_id] = Hst_lb_all_a_p[ThreadID][action* NumScenarios + scenario_id].value;
-					common_qnode->default_upper_bound_alpha_vector[scenario_id] = Hst_ub_all_a_p[ThreadID][action* NumScenarios + scenario_id];
-				}
-				int first_particle = action* NumScenarios
-								+ common_qnode->particleIDs_[0];
-				common_qnode->default_move = ValuedAction(
-								Hst_lb_all_a_p[ThreadID][first_particle].action,0.0);
-				common_qnode->default_move.value_array = (&(common_qnode->default_lower_bound_alpha_vector));
-				if(Globals::config.use_sawtooth_upper_bound)
-				{
-					common_qnode->vnode_upper_bound_per_particle = common_qnode->default_upper_bound_alpha_vector;
-
-				}
-
-			}
 			DESPOT::InitBounds(child_vnode, lb, ub, streams, history);
 			history.RemoveLast();
 	        //Init bounds using data from GPU
@@ -1965,11 +2060,8 @@ void DESPOT::GPU_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
 	        }
 
 
-		}//Loop over actions
-		if(particleIds_all_a.size() > 0)
-		{
-			DESPOT::PrepareGPUDataForCommonQNode(vnode->common_parent_, model, ThreadID, streams, particleIds_all_a);
-		}
+		}//Fourth Loop over actions
+
 	}
 	else
 	{
@@ -2190,19 +2282,19 @@ int DESPOT::CalSharedMemSize() {
 	return Shared_mem_per_particle;
 }
 
-void DESPOT::ReadBackData(int ThreadID) {
+void DESPOT::ReadBackData(int ThreadID, int offset, int size) {
 	if (Globals::config.use_multi_thread_) {
 		HANDLE_ERROR(
-				cudaMemcpyAsync(Hst_MC_Data[ThreadID], Dvc_MC_Data[ThreadID],
-						MC_DataSize, cudaMemcpyDeviceToHost,
+				cudaMemcpyAsync(Hst_MC_Data[ThreadID] + offset, Dvc_MC_Data[ThreadID] + offset,
+						size, cudaMemcpyDeviceToHost,
 						Globals::GetThreadCUDAStream(ThreadID)));
 
 		logd << "Hst_MC_Data[ThreadID]" << Hst_MC_Data[ThreadID] <<"Dvc_MC_Data[ThreadID]" << Dvc_MC_Data[ThreadID] << endl;
 		HANDLE_ERROR(cudaStreamSynchronize(Globals::GetThreadCUDAStream(ThreadID)));
 	} else {
 		HANDLE_ERROR(
-				cudaMemcpy(Hst_MC_Data[ThreadID], Dvc_MC_Data[ThreadID],
-						MC_DataSize, cudaMemcpyDeviceToHost));
+				cudaMemcpy(Hst_MC_Data[ThreadID] + offset, Dvc_MC_Data[ThreadID] + offset,
+						size, cudaMemcpyDeviceToHost));
 		HANDLE_ERROR(cudaDeviceSynchronize());
 	}
 }
@@ -2290,7 +2382,15 @@ void DESPOT::GPU_InitBounds(VNode* vnode, ScenarioLowerBound* lower_bound,
 					Dvc_history[ThreadID], vnode->depth(),
 					history.Size());
 	}
-	ReadBackData(ThreadID);
+	if(Globals::config.track_alpha_vector)
+			{
+				ReadBackData(ThreadID, 0, Obs_Prob_offset);
+			}
+			else
+			{
+				ReadBackData(ThreadID, 0, MC_DataSize);
+			}
+	//ReadBackData(ThreadID);
 
 	double vnode_lower_bound = 0;
 	double vnode_upper_bound = 0;
