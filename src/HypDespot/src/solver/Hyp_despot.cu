@@ -1698,7 +1698,7 @@ void DESPOT::GPU_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
 		std::vector<int> particleIds_all_a;
 		std::vector<std::vector<int>> obs_ids_all_a;
 		std::vector<std::map<OBS_TYPE, std::vector<int> >> partitions_all_a;
-		particleIds_all_a.reserve((Globals::config.num_scenarios + Globals::config.num_obs + 2)*num_actions);
+		particleIds_all_a.reserve((Globals::config.num_scenarios + Globals::config.num_obs + 2)*NumActions);
 		int num_particles_all_a = 0;
 		logd << "Num particles " << NumParticles << "[";
 		/*for (int i = 0; i < NumParticles; i++) {
@@ -1838,7 +1838,7 @@ void DESPOT::GPU_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
 			{
 				particleIds_all_a.push_back(partitions_all_a[action].size());
 			}
-			DESPOT::PrepareGPUDataForCommonQNode(vnode->common_parent_, model, ThreadID, streams, particleIds_all_a);
+			DESPOT::PrepareGPUDataForCommonQNode(vnode->common_parent_, model, ThreadID, streams, particleIds_all_a, num_particles_all_a);
 		}
 		//TODO call obs prob computation and init bound computation
 		for (int action = 0; action < NumActions; action++) {
