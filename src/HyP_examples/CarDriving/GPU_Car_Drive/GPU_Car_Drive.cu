@@ -351,7 +351,7 @@ Dvc_State* PedPomdp::AllocGPUParticles(int numParticles, MEMORY_MODE mode, Dvc_S
 		{
 			if(Globals::config.track_alpha_vector)
 			{
-				cudaHostAlloc(&Hst_temp_IDs[i],numParticles*NumActions()*sizeof(int),0);
+				cudaHostAlloc(&Hst_temp_IDs[i],(2+ Globals::config.num_scenarios + Globals::config.num_obs)*NumActions()*sizeof(int),0);
 			}
 			else
 			{

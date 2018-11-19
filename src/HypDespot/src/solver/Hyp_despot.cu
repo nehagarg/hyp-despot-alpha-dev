@@ -1839,6 +1839,7 @@ void DESPOT::GPU_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
 				particleIds_all_a.push_back(partitions_all_a[action].size());
 			}
 			DESPOT::PrepareGPUDataForCommonQNode(vnode->common_parent_, model, ThreadID, streams, particleIds_all_a, num_particles_all_a);
+			GPU_Cal_Obs_Prob(vnode, ThreadID, model);
 		}
 		//TODO call obs prob computation and init bound computation
 		for (int action = 0; action < NumActions; action++) {
