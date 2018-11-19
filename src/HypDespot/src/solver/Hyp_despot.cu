@@ -1813,12 +1813,13 @@ void DESPOT::GPU_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
 			logd << "Particles survived " << common_qnode->particleIDs_.size()  << std::endl;
 		} // First Loop close over actions
 		num_particles_all_a = particleIds_all_a.size();
-		while(particleIds_all_a.size() < NumActions*Globals::config.num_scenarios)
-		{
-			particleIds_all_a.push_back(0);
-		}
+
 		if(num_particles_all_a > 0)
 			{
+			while(particleIds_all_a.size() < NumActions*Globals::config.num_scenarios)
+					{
+						particleIds_all_a.push_back(0);
+					}
 			for (int action = 0; action < NumActions; action++) {
 				for (std::map<OBS_TYPE, std::vector<int> >::iterator it = partitions_all_a[action].begin();
 							it != partitions_all_a[action].end(); it++) {
@@ -1840,7 +1841,7 @@ void DESPOT::GPU_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
 			}
 			DESPOT::PrepareGPUDataForCommonQNode(vnode->common_parent_, model, ThreadID, streams, particleIds_all_a, num_particles_all_a);
 			GPU_Cal_Obs_Prob(vnode, ThreadID, model);
-		}
+
 		//TODO call obs prob computation and init bound computation
 		for (int action = 0; action < NumActions; action++) {
 			QNode* qnode = vnode->Child(action);
@@ -1929,17 +1930,22 @@ void DESPOT::GPU_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
 		} // Third loop over actions
 
 		ReadBackData(ThreadID, Obs_Prob_offset, Obs_ProbSize);
+
 		for (int action = 0; action < NumActions; action++) {
 			QNode* qnode = vnode->Child(action);
 			QNode* common_qnode = qnode;
 			std::map<OBS_TYPE, VNode*>& children = qnode->children();
-			VNode* residual_vnode = children[Globals::RESIDUAL_OBS];
+			VNode* residual_vnode;
+			if(common_qnode->particleIDs_.size() > 0)
+			{
+				residual_vnode = children[Globals::RESIDUAL_OBS];
+			}
 			 double max_prob_sum = 0.0;
 			 int obs_id = 0;
 			for (std::map<OBS_TYPE, std::vector<int> >::iterator it = partitions_all_a[action].begin();
 						it != partitions_all_a[action].end(); it++) {
 				OBS_TYPE obs = it->first;
-				VNode* child_vnode = children[obs];
+				VNode* child_vnode = qnode->Child(obs);
 			double total_weight = 0;
 	                for(int i = 0; i < common_qnode->particleIDs_.size();i++)
 	                {
@@ -2062,6 +2068,7 @@ void DESPOT::GPU_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
 
 
 		}//Fourth Loop over actions
+			}
 
 	}
 	else
