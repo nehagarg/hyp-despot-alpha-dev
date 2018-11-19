@@ -1051,7 +1051,7 @@ _CalObsProb_LongObs(int total_num_scenarios, int num_particles,
 			else
 				printf("CalObsProb kernel: DvcModelCopyToShared_ has not been defined!\n");
 		}
-		__syncthreads();
+		//__syncthreads();
 
 		/*Calculate obs prob for stepped particle*/
 
@@ -1097,7 +1097,7 @@ _CalObsProb_IntArrayObs(int total_num_scenarios, int num_particles,
 				else
 					printf("CalObsProb kernel: DvcModelCopyToShared_ has not been defined!\n");
 			}
-			__syncthreads();
+			//__syncthreads();
 
 			/*Calculate obs prob for stepped particle*/
 
@@ -1542,7 +1542,7 @@ void DESPOT::MCSimulation(VNode* vnode, int ThreadID,
 					GridDim.x = NumActions;
 					GridDim.y = blocky;
 					ThreadDim.x = threadx;
-					ThreadDim.y = model->ParallelismInStep();
+					ThreadDim.y = 1; //model->ParallelismInStep(); Currently not using step parallelism for obs prob calculation
 				if(Obs_type==OBS_INT_ARRAY)
 				{
 					int num_Obs_element=num_Obs_element_in_GPU;
