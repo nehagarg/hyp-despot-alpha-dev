@@ -17,7 +17,7 @@ DEVICE int Dvc_PedPomdpDoNothingPolicy::Action(
 				Dvc_History& history)
 {
 
-	int size = history.Size();
+	/*int size = history.Size();
 	int num_acc = 0;
 	int num_dec = 0;
 	for(int i = 0; i < size; i++)
@@ -49,8 +49,8 @@ DEVICE int Dvc_PedPomdpDoNothingPolicy::Action(
 		{
 			return 0;
 		}
-	}
-	//return 2;
+	}*/
+	return 2;
 	//For despot with alpha vector update action cannot depend on observation
 	//const Dvc_PomdpState &state=static_cast<const Dvc_PomdpState&>(particles[0]);
 	//float carvel = state.car.vel;
