@@ -1041,6 +1041,13 @@ _CalObsProb_LongObs(int total_num_scenarios, int num_actions,
 	int num_particles = vnode_particleIDs[num_actions*(total_num_scenarios + Dvc_config->num_obs) + action];
 			int num_obs = vnode_particleIDs[num_actions*(total_num_scenarios + Dvc_config->num_obs + 1) + action];
 			int s_mult_o = num_particles*num_obs;
+			if (threadIdx.y == 0 && (blockIdx.y * blockDim.x + threadIdx.x) < s_mult_o) {
+				int particle_id_offset = 0;
+				for(int i = 0; i < action; i++)
+				{
+					particle_id_offset = particle_id_offset + vnode_particleIDs[num_actions*(total_num_scenarios + Dvc_config->num_obs) + i];
+				}
+
 		int s_mult_o_id = (blockIdx.y * blockDim.x + threadIdx.x) % (s_mult_o);
 		int obs_id =  s_mult_o_id/num_particles;
 		int particle_id = s_mult_o_id % num_particles;
@@ -1048,8 +1055,8 @@ _CalObsProb_LongObs(int total_num_scenarios, int num_actions,
 		//int parent_PID = vnode_particleIDs[PID];
 		Dvc_State* current_particle = (Dvc_State*) ((int*) localParticles + 60 * threadIdx.x);
 
-		int particle_list_pos = vnode_particleIDs[particle_id];
-		int obs_list_pos = vnode_particleIDs[num_actions*(total_num_scenarios) + obs_id];
+		int particle_list_pos = vnode_particleIDs[particle_id + particle_id_offset];
+		int obs_list_pos = vnode_particleIDs[num_actions*(total_num_scenarios) + (action*Dvc_config->num_obs) + obs_id];
 		int scenario_id = particle_list_pos % total_num_scenarios;
 
 
@@ -1069,7 +1076,7 @@ _CalObsProb_LongObs(int total_num_scenarios, int num_actions,
 
 
 		float obs_prob;
-		if (threadIdx.y == 0 && (blockIdx.y * blockDim.x + threadIdx.x) < s_mult_o) {
+
 			if(term_all_a_p[particle_list_pos] == false  && term_all_a_p[obs_list_pos] == false)
 			{
 			obs_prob = DvcModelObsProb_(observations_all_a_p[obs_list_pos], *current_particle, action);
@@ -1095,14 +1102,22 @@ _CalObsProb_IntArrayObs(int total_num_scenarios, int num_actions,
 		int num_particles = vnode_particleIDs[num_actions*(total_num_scenarios + Dvc_config->num_obs) + action];
 		int num_obs = vnode_particleIDs[num_actions*(total_num_scenarios + Dvc_config->num_obs + 1) + action];
 		int s_mult_o = num_particles*num_obs;
+		if (threadIdx.y == 0 && (blockIdx.y * blockDim.x + threadIdx.x) < s_mult_o) {
+
+			int particle_id_offset = 0;
+			for(int i = 0; i < action; i++)
+			{
+				particle_id_offset = particle_id_offset + vnode_particleIDs[num_actions*(total_num_scenarios + Dvc_config->num_obs) + i];
+			}
+
 			int s_mult_o_id = (blockIdx.y * blockDim.x + threadIdx.x) % (s_mult_o);
 			int obs_id =  s_mult_o_id/num_particles;
 			int particle_id = s_mult_o_id % num_particles;
 			//int parent_PID = vnode_particleIDs[PID];
 			Dvc_State* current_particle = (Dvc_State*) ((int*) localParticles + Shared_mem_per_particle* threadIdx.x);
 
-			int particle_list_pos = vnode_particleIDs[particle_id];
-			int obs_list_pos = vnode_particleIDs[num_actions*(total_num_scenarios) + obs_id];
+			int particle_list_pos = vnode_particleIDs[particle_id + particle_id_offset];
+			int obs_list_pos = vnode_particleIDs[num_actions*(total_num_scenarios) + (action*Dvc_config->num_obs) + obs_id];
 			int scenario_id = particle_list_pos % total_num_scenarios;
 
 			/*Copy particle from global memory to shared memory*/
@@ -1118,7 +1133,7 @@ _CalObsProb_IntArrayObs(int total_num_scenarios, int num_actions,
 			/*Calculate obs prob for stepped particle*/
 
 			float obs_prob;
-			if (threadIdx.y == 0 && (blockIdx.y * blockDim.x + threadIdx.x) < s_mult_o) {
+
 				if(term_all_a_p[particle_list_pos] == false  && term_all_a_p[obs_list_pos] == false)
 				{
 				int Intobs[200]; //not compiling with num_obs_elements
@@ -1826,11 +1841,14 @@ void DESPOT::GPU_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
 					particleIds_all_a.push_back(action * Globals::config.num_scenarios
 													+ it->second[0]);
 				}
-			} // Second loop close over actions
-			while(particleIds_all_a.size() < NumActions*(Globals::config.num_scenarios + Globals::config.num_obs))
+				int expected_size = (NumActions*Globals::config.num_scenarios) + ((action+1)*Globals::config.num_obs);
+				while(particleIds_all_a.size() < expected_size)
 					{
 						particleIds_all_a.push_back(0);
 					}
+
+			} // Second loop close over actions
+
 			for (int action = 0; action < NumActions; action++)
 			{
 				particleIds_all_a.push_back(vnode->Child(action)->particleIDs_.size());
