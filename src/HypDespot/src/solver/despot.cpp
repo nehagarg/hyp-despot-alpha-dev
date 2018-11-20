@@ -227,8 +227,8 @@ Shared_VNode* DESPOT::Trial(Shared_VNode* root, RandomStreams& streams,
 		Shared_QNode* qstar;
 		Shared_VNode* next;
 		try {
-			//lock_guard < mutex > lck(cur->GetMutex());
-			if (!cur->IsLeaf()) {
+			lock_guard < mutex > lck(cur->GetMutex());
+			if (!((VNode*)cur)->IsLeaf()) {
 				qstar = SelectBestUpperBoundNode(cur);
 				//Globals::Global_print_down(this_thread::get_id(), qstar, ((VNode*)cur)->depth()+1);
 				if (qstar)
@@ -961,6 +961,7 @@ ValuedAction DESPOT::Search() {
 
 	root_ = ConstructTree(particles, streams, lower_bound_, upper_bound_,
 	                      model_, history_, Globals::config.time_per_move, &statistics_);
+	//root_->PrintTree();
 	logi << "[DESPOT::Search] Time for tree construction: "
 	     << (get_time_second() - start) << "s" << endl;
 	start = get_time_second();
