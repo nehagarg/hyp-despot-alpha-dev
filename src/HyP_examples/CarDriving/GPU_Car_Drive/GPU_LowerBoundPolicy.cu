@@ -17,7 +17,40 @@ DEVICE int Dvc_PedPomdpDoNothingPolicy::Action(
 				Dvc_History& history)
 {
 
-	return 2;
+	int size = history.Size();
+	int num_acc = 0;
+	int num_dec = 0;
+	for(int i = 0; i < size; i++)
+	{
+		ACT_TYPE action = history.Action(i);
+		if(action == 1) num_acc++;
+		if(action == 2) num_dec++;
+
+	}
+
+	if(num_acc > num_dec)
+	{
+		return 2;
+	}
+	else
+	{
+		if(num_acc == num_dec)
+		{
+			if(num_acc == 0)
+			{
+				return 0;
+			}
+			else
+			{
+				return 2; //Try to decelerate once more to account for decelaration failure
+			}
+		}
+		else
+		{
+			return 0;
+		}
+	}
+	//return 2;
 	//For despot with alpha vector update action cannot depend on observation
 	//const Dvc_PomdpState &state=static_cast<const Dvc_PomdpState&>(particles[0]);
 	//float carvel = state.car.vel;
