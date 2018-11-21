@@ -50,11 +50,20 @@ DEVICE int Dvc_PedPomdpDoNothingPolicy::Action(
 			return 0;
 		}
 	}*/
-	return 2;
+	//return 2;
 	//For despot with alpha vector update action cannot depend on observation
 	//const Dvc_PomdpState &state=static_cast<const Dvc_PomdpState&>(particles[0]);
-	//float carvel = state.car.vel;
-	//if (carvel >= 0.001) return 2;
+	float carvel = history.carvel;
+	if (carvel >= 0.001)
+		{
+		history.carvel = carvel  - (Dvc_ModelParams::AccSpeed/freq);
+
+		return 2;
+		}
+	else
+	{
+		return 0;
+	}
 	//return -1;
 }
 DEVICE int Dvc_PedPomdpSmartPolicy::Action(

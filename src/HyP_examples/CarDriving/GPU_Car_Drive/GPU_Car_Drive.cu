@@ -861,6 +861,12 @@ DEVICE Dvc_State* Dvc_PedPomdp::Dvc_Get(Dvc_State* particles, int pos) {
 	return particle_i;
 }
 
+DEVICE float Dvc_PedPomdp::Dvc_GetCarVel(Dvc_State* particles, int pos) {
+	Dvc_PomdpState* particle_i= static_cast<Dvc_PomdpState*>(particles)+pos;
+
+	return particle_i->car.vel;
+}
+
 DEVICE Dvc_ValuedAction Dvc_PedPomdp::Dvc_GetBestAction() {
 	return Dvc_ValuedAction(0,
 			Dvc_ModelParams::CRASH_PENALTY * (Dvc_ModelParams::VEL_MAX*Dvc_ModelParams::VEL_MAX + Dvc_ModelParams::REWARD_BASE_CRASH_VEL));

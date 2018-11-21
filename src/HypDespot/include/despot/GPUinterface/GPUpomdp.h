@@ -137,6 +137,7 @@ DEVICE extern void (*DvcModelCopyToShared_)(Dvc_State*, const Dvc_State*, int po
 DEVICE extern Dvc_State* (*DvcModelGet_)(Dvc_State* , int );
 DEVICE extern Dvc_ValuedAction (*DvcModelGetBestAction_)();
 DEVICE extern float (*DvcModelGetMaxReward_)();
+DEVICE extern float (*DvcModelGetCarVel_)(Dvc_State* , int );
 
 } // namespace despot
 

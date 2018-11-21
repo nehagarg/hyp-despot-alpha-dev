@@ -99,6 +99,7 @@ public:
 
 	DEVICE Dvc_State* Allocate(int state_id, double weight) const;
 	DEVICE static Dvc_State* Dvc_Get(Dvc_State* particles, int pos);
+	DEVICE static float Dvc_GetCarVel(Dvc_State* particles, int pos);
 	DEVICE static Dvc_State* Dvc_Alloc( int num);
 	DEVICE static Dvc_State* Dvc_Copy(const Dvc_State* particle, int pos);
 	DEVICE static void Dvc_Copy_NoAlloc(Dvc_State* des, const Dvc_State* src, int pos, bool offset_des = true);

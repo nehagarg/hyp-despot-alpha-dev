@@ -64,6 +64,7 @@ public:
 	ACT_TYPE* actions_;
 	OBS_TYPE* observations_;
 	int currentSize_;
+	float carvel; //only used in ped pomdp. Should be moved somewhere else later
 };
 
 } // namespace despot

@@ -952,15 +952,18 @@ _InitBounds_IntArrayObs(int total_num_scenarios, int num_particles,
 		int PID = (blockIdx.y * blockDim.x + threadIdx.x) % num_particles;
 		Dvc_State* current_particle = NULL;
 		int parent_PID;
+		int first_particle_id = 0;
 		if(Dvc_config->track_alpha_vector)
 		{
 			if(num_particles == total_num_scenarios)
 			{
 				parent_PID = PID;
+				first_particle_id = 0;
 			}
 			else
 			{
 				parent_PID = vnode_particleIDs[PID];
+				first_particle_id = vnode_particleIDs[0];
 			}
 		}
 		else
@@ -971,6 +974,7 @@ _InitBounds_IntArrayObs(int total_num_scenarios, int num_particles,
 		current_particle = (Dvc_State*) ((int*) localParticles + Shared_mem_per_particle * threadIdx.x);
 
 		int global_list_pos = action * total_num_scenarios + parent_PID;
+		int global_first_particle_pos = action * total_num_scenarios + first_particle_id;
 
 		/*Copy particle from global memory to shared memory*/
 		if (threadIdx.y == 0) {
@@ -982,9 +986,19 @@ _InitBounds_IntArrayObs(int total_num_scenarios, int num_particles,
 		}
 		__syncthreads();
 
+
 		//Do roll-out using the updated particle
 		Dvc_History local_history;
 		local_history.currentSize_ = hist_size;
+		if(Dvc_config->track_alpha_vector)
+		{
+			if(DvcModelGetCarVel_)
+			{
+				local_history.car_vel = DvcModelGetCarVel_(new_particles, first_particle_id);
+
+			}
+
+		}
 		local_history.actions_ = history->actions_;
 		local_history.observations_ = history->observations_;
 

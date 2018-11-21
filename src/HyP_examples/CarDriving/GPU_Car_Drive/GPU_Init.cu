@@ -42,6 +42,7 @@ __global__ void PassPedPomdpFunctionPointers(Dvc_PedPomdp* model)
 	//DvcModelGetBestAction_=&(model->Dvc_GetBestAction);
 	DvcModelGetMaxReward_=&(model->Dvc_GetMaxReward);
 	DvcModelNumActions_ = &(model->NumActions);
+	DvcModelGetCarVel_ = &(model->Dvc_GetCarVel);
 }
 
 __global__ void PassPedPomdpParams(	double _in_front_angle_cos, double _freq,

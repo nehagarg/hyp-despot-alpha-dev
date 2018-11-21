@@ -13,6 +13,7 @@ DEVICE float (*DvcModelObsProbIntObs_)(int*, Dvc_State&, ACT_TYPE)=NULL;
 DEVICE Dvc_ValuedAction (*DvcModelGetBestAction_)()=NULL;
 DEVICE int (*DvcModelNumActions_)() = NULL;
 DEVICE float (*DvcModelGetMaxReward_)()=NULL;
+DEVICE float (*DvcModelGetCarVel_)(Dvc_State* , int)=NULL; //Specific to car driving
 
 
 
