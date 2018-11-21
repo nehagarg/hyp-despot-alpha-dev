@@ -994,7 +994,7 @@ _InitBounds_IntArrayObs(int total_num_scenarios, int num_particles,
 		{
 			if(DvcModelGetCarVel_)
 			{
-				local_history.car_vel = DvcModelGetCarVel_(new_particles, first_particle_id);
+				local_history.carvel = DvcModelGetCarVel_(new_particles, first_particle_id);
 
 			}
 
