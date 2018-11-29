@@ -241,7 +241,7 @@ class CarDriveData:
 			output.write( 'collision % per step' + '\n')
 			output.write( str(float(self.collision_count)/float(self.total_step)) + ' ' )
 			output.write( str(binom.std(self.total_step, float(self.collision_count)/float(self.total_step), loc=0)/float(self.total_step)) + '\n')
-			output.write( 'collision % per meter:' + '\n)
+			output.write( 'collision % per meter:' + '\n')
 			output.write( str(float(self.collision_count)/float(sum(self.dis_trav))) + ' ')
 			output.write( str(binom.std(sum(self.dis_trav), float(self.collision_count)/float(sum(self.dis_trav)), loc=0)/float(sum(self.dis_trav))) + '\n' )
 		
