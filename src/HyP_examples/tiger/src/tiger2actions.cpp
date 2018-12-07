@@ -78,6 +78,7 @@ bool Tiger2actions::Step(State& s, double random_num, int action, double& reward
             
         {
 
+	  double prob_tiger_right = 0.0;
             if (action == Tiger::LISTEN){
             
             	reward = -1;
@@ -91,10 +92,10 @@ bool Tiger2actions::Step(State& s, double random_num, int action, double& reward
             	reward = -1.2;
 				prob_tiger_right = 0.5  +(Tiger2actions::LISTEN2_MEAN);
             }
-            double prob_bucket_double = rand_num * Tiger2actions::OBS_SCALE;
-			int prob_bucket = (int)prob_bucket_double;
-			double remaining_prob = prob_bucket_double - prob_bucket;
-			double prob_tiger_right = prob_tiger_right + (Tiger2actions::LISTEN_VARIANCE*(double)prob_bucket / (double)Tiger2actions::OBS_SCALE);
+            double prob_bucket_double = random_num * Tiger2actions::OBS_SCALE;
+	    int prob_bucket = (int)prob_bucket_double;
+	    double remaining_prob = prob_bucket_double - prob_bucket;
+	    prob_tiger_right = prob_tiger_right + (Tiger2actions::LISTEN_VARIANCE*(double)prob_bucket / (double)Tiger2actions::OBS_SCALE);
 
             if(remaining_prob > prob_tiger_right)
             {
@@ -105,7 +106,7 @@ bool Tiger2actions::Step(State& s, double random_num, int action, double& reward
             	prob_tiger_right = 1-prob_tiger_right;
             }
             //double real_obs = (random_num*(upper_limit-lower_limit)) + lower_limit;
-            obs = int(prob_tiger_right*Tiger2actions::OBS_SCALE);
+            obs = int(prob_tiger_right*Tiger2actions::OBS_SCALE*10);
         }
         
 	return terminal;
@@ -117,7 +118,7 @@ double Tiger2actions::ObsProb(OBS_TYPE obs, const State& s, int a) const {
 	if (a < Tiger::LISTEN)
 		return obs == 2*Tiger2actions::OBS_SCALE;
 
-        double obs_prob = (1.0*obs)/Tiger2actions::OBS_SCALE;
+        double obs_prob = (1.0*obs)/(Tiger2actions::OBS_SCALE*10);
 	return state.tiger_position == Tiger::LEFT ? (1-obs_prob):obs_prob;
 }
 
