@@ -419,7 +419,11 @@ void BaseUncNavigation::LineRobPos(UncNavigationState* startState, int start_lin
 }
 
 Belief* BaseUncNavigation::InitialBelief(const State* start, string type) const {
-	int N = 10000; //Globals::config.num_scenarios*10;
+	int N = Globals::config.num_scenarios*10;
+	if (N < 10000)
+	{
+		N = 10000;
+	}
 
 	vector<State*> particles(N);
 	if(FIX_SCENARIO==1)
