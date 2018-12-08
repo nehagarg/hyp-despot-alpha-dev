@@ -25,6 +25,51 @@ const string NavCompass::CompassString[] = { "North", "East","South", "West",
 PolicyGraph* policy_graph = NULL;
 
 
+
+/* ==============================================================================
+ * UncNavigationState class
+ * ==============================================================================*/
+
+UncNavigationState::UncNavigationState()
+{
+	sizeX_=0;
+	sizeY_=0;
+	rob.x=-1;rob.y=-1;
+	cells=NULL;
+}
+UncNavigationState::UncNavigationState(int _state_id)
+{
+	sizeX_=0;sizeY_=0;
+	rob.x=-1;rob.y=-1;
+	goal.x=-1;goal.y=-1;
+	cells=NULL;
+	state_id=_state_id;
+}
+UncNavigationState::UncNavigationState(int sizeX, int sizeY)
+{
+	cells=NULL;
+	InitCells(sizeX,sizeY);
+	rob.x=-1;rob.y=-1;
+	goal.x=-1;goal.y=-1;
+}
+
+UncNavigationState::UncNavigationState(const UncNavigationState& src)
+{
+	cells=NULL;
+	Assign(src);
+	//rob.x=src.rob.x; rob.y=src.rob.y;
+	//goal=src.goal;
+	//InitCells(src.sizeX_,src.sizeY_);
+	//sizeX_=src.sizeX_;sizeY_=src.sizeY_;
+	//cells=new bool[sizeX_*sizeY_];
+
+	//memcpy((void*)cells,(const void*)src.cells, sizeX_*sizeY_*sizeof(bool));
+}
+
+string UncNavigationState::text() const {
+	return "id = " + to_string(state_id);
+}
+
 UncNavigationBelief::UncNavigationBelief(vector<State*> particles, const DSPOMDP* model, Belief* prior , bool split ) :
 		ParticleBelief(particles, model, prior, split)
 {
@@ -78,51 +123,6 @@ void UncNavigationBelief::Update(ACT_TYPE action, OBS_TYPE obs)
 	}
 	ParticleBelief::Update(action, obs);
 }
-/* ==============================================================================
- * UncNavigationState class
- * ==============================================================================*/
-
-UncNavigationState::UncNavigationState()
-{
-	sizeX_=0;
-	sizeY_=0;
-	rob.x=-1;rob.y=-1;
-	cells=NULL;
-}
-UncNavigationState::UncNavigationState(int _state_id)
-{
-	sizeX_=0;sizeY_=0;
-	rob.x=-1;rob.y=-1;
-	goal.x=-1;goal.y=-1;
-	cells=NULL;
-	state_id=_state_id;
-}
-UncNavigationState::UncNavigationState(int sizeX, int sizeY)
-{
-	cells=NULL;
-	InitCells(sizeX,sizeY);
-	rob.x=-1;rob.y=-1;
-	goal.x=-1;goal.y=-1;
-}
-
-UncNavigationState::UncNavigationState(const UncNavigationState& src)
-{
-	cells=NULL;
-	Assign(src);
-	//rob.x=src.rob.x; rob.y=src.rob.y;
-	//goal=src.goal;
-	//InitCells(src.sizeX_,src.sizeY_);
-	//sizeX_=src.sizeX_;sizeY_=src.sizeY_;
-	//cells=new bool[sizeX_*sizeY_];
-
-	//memcpy((void*)cells,(const void*)src.cells, sizeX_*sizeY_*sizeof(bool));
-}
-
-string UncNavigationState::text() const {
-	return "id = " + to_string(state_id);
-}
-
-
 
 BaseUncNavigation::BaseUncNavigation(int size, int obstacles) :
 	size_(size),

@@ -26,12 +26,7 @@ struct NavCompass {
 
 #define GOAL_REWARD 20
 
-class UncNavigationBelief: public ParticleBelief {
-public:
-	UncNavigationBelief(std::vector<State*> particles, const DSPOMDP* model,
-			Belief* prior = NULL, bool split = true);
-	void Update(ACT_TYPE action, OBS_TYPE obs);
-};
+
 class UncNavigationState: public State {
 public:
 	UncNavigationState();
@@ -150,6 +145,13 @@ public:
 	}
 
 	~UncNavigationState();
+};
+
+class UncNavigationBelief: public ParticleBelief {
+public:
+	UncNavigationBelief(std::vector<State*> particles, const DSPOMDP* model,
+			Belief* prior = NULL, bool split = true);
+	void Update(ACT_TYPE action, OBS_TYPE obs);
 };
 
 /* =============================================================================
