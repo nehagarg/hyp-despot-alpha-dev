@@ -7,6 +7,7 @@
 #include <despot/util/coord.h>
 #include <despot/util/grid.h>
 #include <despot/interface/policy_graph.h>
+#include <despot/core/particle_belief.h>
 
 namespace despot {
 #define OBS_NOISE 0.03f
