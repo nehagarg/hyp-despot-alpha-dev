@@ -474,9 +474,11 @@ void BaseUncNavigation::LineRobPos(UncNavigationState* startState, int start_lin
 
 Belief* BaseUncNavigation::InitialBelief(const State* start, string type) const {
 	int N = Globals::config.num_scenarios*10;
-	if (N < 10000)
+	int N_min = 50000;
+
+	if (N < N_min)
 	{
-		N = 10000;
+		N = N_min;
 	}
 
 	vector<State*> particles(N);
@@ -505,8 +507,14 @@ Belief* BaseUncNavigation::InitialBelief(const State* start, string type) const 
 	}
 
 	NewRound=true;
-	return new UncNavigationBelief(particles, this);
-	//return new ParticleBelief(particles, this);
+	if(use_special_belief)
+	{
+		return new UncNavigationBelief(particles, this);
+	}
+	else
+	{
+		return new ParticleBelief(particles, this);
+	}
 }
 
 class UncNavigationParticleUpperBound1: public ParticleUpperBound {

@@ -149,10 +149,12 @@ public:
   DSPOMDP* InitializeModel(option::Option* options) {
 
 	  DSPOMDP* model = NULL;
+	  bool use_special_beleif = false;
 	  if (options[E_PARAMS_FILE]) {
-		  cerr << "Map file is not supported" << endl;
-		  exit(0);
-	  } else {
+		  //cerr << "Map file is not supported" << endl;
+		  //exit(0);
+		  use_special_beleif = true;
+	  }
 		  int size = 7, number = 8;
 		  if (options[E_SIZE])
 			  size = atoi(options[E_SIZE].arg);
@@ -169,7 +171,7 @@ public:
 		  }
 
 		  model = new UncNavigation(size, number);
-	  }
+		  ((UncNavigation*)model)->use_special_belief = use_special_beleif;
 
 	  if (Globals::config.useGPU)
 		  model->InitGPUModel();

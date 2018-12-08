@@ -209,7 +209,7 @@ public:
 		E_NORTH_EAST = 4,
 		E_NORTH_WEST = 7,
 	};
-
+	bool use_special_belief;
 
 public:
 	BaseUncNavigation(std::string map);
