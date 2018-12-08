@@ -24,6 +24,60 @@ const string NavCompass::CompassString[] = { "North", "East","South", "West",
 
 PolicyGraph* policy_graph = NULL;
 
+
+UncNavigationBelief::UncNavigationBelief(vector<State*> particles, const DSPOMDP* model, Belief* prior , bool split ) :
+		ParticleBelief(particles, model, prior, split)
+{
+
+}
+void UncNavigationBelief::Update(ACT_TYPE action, OBS_TYPE obs)
+{
+	int num_particles = particles_.size();
+	int N = num_particles/100;
+	if(N < 1)
+	{
+		N = 1;
+	}
+	vector<State*> new_particles = Sample(N);
+	int obss[8];
+	int obs_North=(obs%16)/8;
+	int obs_East=((obs%16)-obs_North*8)/4;
+	int obs_South=((obs%16)-obs_North*8-obs_East*4)/2;
+	int obs_West=((obs%16)-obs_North*8-obs_East*4-obs_South*2);
+	int obs_North_East=obs/(int)std::pow(2.0,7);
+	int obs_South_East=(obs-obs_North_East*(int)std::pow(2.0,7))/(int)std::pow(2.0,6);
+	int obs_South_West=(obs-obs_North_East*(int)std::pow(2.0,7)-obs_South_East*(int)std::pow(2.0,6))/(int)std::pow(2.0,5);
+	int obs_North_West=(obs-obs_North_East*(int)std::pow(2.0,7)-obs_South_East*(int)std::pow(2.0,6)-obs_South_West*(int)std::pow(2.0,5))/(int)std::pow(2.0,4);
+	obss[NavCompass::NORTH] = obs_North;
+	obss[NavCompass::EAST] = obs_East;
+	obss[NavCompass::SOUTH] = obs_South;
+	obss[NavCompass::WEST] = obs_West;
+	obss[NavCompass::NORTHEAST] = obs_North_East;
+	obss[NavCompass::SOUTHEAST] = obs_South_East;
+	obss[NavCompass::SOUTHWEST] = obs_South_West;
+	obss[NavCompass::NORTHWEST] = obs_North_West;
+	//Push some particles consistent with obs into belief
+	for (int i = 0; i <new_particles.size(); i++) {
+		new_particles[i]->weight = 1.0/(N + num_particles);
+		UncNavigationState* nav_state = static_cast<UncNavigationState*>(new_particles[i]);
+		particles_.push_back(nav_state);
+
+		for(int j = 0; j < 8; j++) //iterate over directions
+		{
+
+
+				Coord  pos = nav_state->rob+NavCompass::DIRECTIONS[j];
+				if(nav_state->Inside(pos))
+				{
+					nav_state->GridOpen(pos)= obss[j];
+				}
+
+		}
+
+
+	}
+	ParticleBelief::Update(action, obs);
+}
 /* ==============================================================================
  * UncNavigationState class
  * ==============================================================================*/
@@ -451,8 +505,8 @@ Belief* BaseUncNavigation::InitialBelief(const State* start, string type) const 
 	}
 
 	NewRound=true;
-
-	return new ParticleBelief(particles, this);
+	return new UncNavigationBelief(particles, this);
+	//return new ParticleBelief(particles, this);
 }
 
 class UncNavigationParticleUpperBound1: public ParticleUpperBound {
