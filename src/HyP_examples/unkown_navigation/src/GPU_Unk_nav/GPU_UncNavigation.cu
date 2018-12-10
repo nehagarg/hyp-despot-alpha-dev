@@ -245,9 +245,6 @@ DEVICE void Dvc_UncNavigation::Dvc_Free(Dvc_State* particle) {
 DEVICE int Dvc_UncNavigation::Dvc_NumObservations() { // one dummy terminal state
 	return 256;
 }
-Dvc_State* UncNavigation::GetPointerToParticleList(int offset,  Dvc_State* full_list) const
-{
-	return static_cast<Dvc_UncNavigationState*>(full_list)+ offset;
-}
+
 
 } // namespace despot

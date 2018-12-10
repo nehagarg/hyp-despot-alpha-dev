@@ -348,4 +348,9 @@ void UncNavigation::PrintObs(const State& state, OBS_TYPE observation,
 	}
 }
 
+Dvc_State* UncNavigation::GetPointerToParticleList(int offset,  Dvc_State* full_list) const
+{
+	return static_cast<Dvc_UncNavigationState*>(full_list)+ offset;
+}
+
 } // namespace despot
