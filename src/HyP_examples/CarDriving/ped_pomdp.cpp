@@ -31,7 +31,7 @@ public:
 		auto& carpos = ped_pomdp_->world_model->path[state->car.pos];
 		double carvel = state->car.vel;
 
-		if(carvel >= 0.001) //Car moving
+		if((carvel >= 0.001) || (!ModelParams::USE_ZERO_VEL_CORRECTION)) //Car moving
 		{
 
 			// Find mininum num of steps for car-pedestrian collision
@@ -50,7 +50,7 @@ public:
 
 		double move_penalty = ped_pomdp_->MovementPenalty(*state);
 
-		// Case 1, no pedestrian: Constant car speed or zero car speed
+		// Case 1, no pedestrian: Constant car speed or zero car speed or no zero vel correction
 		double value = move_penalty / (1 - Globals::Discount());
 		// Case 2, with pedestrians: Constant car speed, head-on collision with nearest neighbor
 		if (min_step != numeric_limits<int>::max()) {
@@ -135,6 +135,10 @@ PedPomdp::PedPomdp(std::string params_file) :
 			 else if (key == "noise_goal_angle")
 			 {
 					 is >> ModelParams::NOISE_GOAL_ANGLE;
+			 }
+			 else if (key == "USE_ZERO_VEL_CORRECTION")
+			 {
+				 is >> ModelParams::USE_ZERO_VEL_CORRECTION;
 			 }
 
 

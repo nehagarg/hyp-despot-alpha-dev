@@ -48,7 +48,7 @@ public:
 		int min_step = archaeopteryx::util::numeric_limits<int>::max();
 		auto& carpos = path->way_points_[state->car.pos];
 		float carvel = state->car.vel;
-		if(carvel >= 0.001) //Car moving
+		if((carvel >= 0.001) || (!Dvc_ModelParams::USE_ZERO_VEL_CORRECTION)) //Car moving
 		{
 			// Find mininum num of steps for car-pedestrian collision
 			for (int i=0; i<state->num; i++) {
@@ -66,7 +66,7 @@ public:
 		float value = Dvc_ModelParams::REWARD_FACTOR_VEL *
 							(state->car.vel - Dvc_ModelParams::VEL_MAX) / Dvc_ModelParams::VEL_MAX;
 
-		// Case 1, no pedestrian: Constant car speed or zero car speed
+		// Case 1, no pedestrian: Constant car speed or zero car speed zero car speed or no zero vel correction
 		value = value / (1 - Dvc_Globals::Dvc_Discount(Dvc_config));
 		// Case 2, with pedestrians: Constant car speed, head-on collision with nearest neighbor
 		if (min_step != archaeopteryx::util::numeric_limits<int>::max()) {

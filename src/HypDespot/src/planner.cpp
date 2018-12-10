@@ -78,7 +78,7 @@ int Planner::RunPlanning(int argc, char *argv[]) {
 			search_solver, num_runs, world_type, belief_type, time_limit);
 	if(options==NULL)
 		return 0;
-
+	std::cout "Solver is " << solver_type << std::endl;
 	if(Globals::config.useGPU)
 	{
 		//Set the track_alpha_vector befor Prepare GPU

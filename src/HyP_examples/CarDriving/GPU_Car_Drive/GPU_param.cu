@@ -13,7 +13,7 @@ namespace Dvc_ModelParams {
     DEVICE double BELIEF_SMOOTHING;
     DEVICE double NOISE_ROBVEL;
     DEVICE double COLLISION_DISTANCE;
-
+    DEVICE bool USE_ZERO_VEL_CORRECTION;
     DEVICE double IN_FRONT_ANGLE_DEG;
 
     DEVICE double LASER_RANGE;

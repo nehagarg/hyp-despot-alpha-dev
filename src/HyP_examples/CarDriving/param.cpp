@@ -11,7 +11,7 @@ namespace ModelParams {
     double COLLISION_DISTANCE = 1.5;
 	double IN_FRONT_ANGLE_DEG = 181;
     int DRIVING_PLACE = 0;
-
+    bool USE_ZERO_VEL_CORRECTION = true;
 	double VEL_MAX=1.5;
 
 	double LASER_RANGE = 8.0;

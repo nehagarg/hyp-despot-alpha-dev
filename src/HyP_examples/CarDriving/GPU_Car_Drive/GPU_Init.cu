@@ -68,7 +68,8 @@ __global__ void PassPedPomdpParams(	double _in_front_angle_cos, double _freq,
 		bool debug,
 		double control_freq,
 		double AccSpeed,
-		double GOAL_REWARD)
+		double GOAL_REWARD,
+		bool USE_ZERO_VEL_CORRECTION)
 {
 	in_front_angle_cos=_in_front_angle_cos;
 	freq=_freq;
@@ -98,6 +99,7 @@ __global__ void PassPedPomdpParams(	double _in_front_angle_cos, double _freq,
 	Dvc_ModelParams::control_freq =  control_freq ;
 	Dvc_ModelParams::AccSpeed =  AccSpeed ;
 	Dvc_ModelParams::GOAL_REWARD = GOAL_REWARD  ;
+	Dvc_ModelParams::USE_ZERO_VEL_CORRECTION = USE_ZERO_VEL_CORRECTION;
 	printf("pass model to gpu\n");
 	 
 }
@@ -156,7 +158,8 @@ void PedPomdp::InitGPUModel(){
 		ModelParams::debug,
 		ModelParams::control_freq,
 		ModelParams::AccSpeed,
-		ModelParams::GOAL_REWARD);
+		ModelParams::GOAL_REWARD,
+		ModelParams::USE_ZERO_VEL_CORRECTION);
 	
 	HANDLE_ERROR(cudaDeviceSynchronize());
 

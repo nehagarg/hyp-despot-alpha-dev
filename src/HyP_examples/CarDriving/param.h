@@ -18,6 +18,7 @@ namespace ModelParams {
 	extern double BELIEF_SMOOTHING;
 	extern double NOISE_ROBVEL;
 	extern double COLLISION_DISTANCE;
+	extern bool USE_ZERO_VEL_CORRECTION;
 
 	extern double IN_FRONT_ANGLE_DEG;
 

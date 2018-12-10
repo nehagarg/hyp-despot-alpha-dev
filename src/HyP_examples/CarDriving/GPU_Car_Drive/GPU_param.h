@@ -19,7 +19,7 @@ namespace Dvc_ModelParams {
     DEVICE extern double BELIEF_SMOOTHING;
     DEVICE extern double NOISE_ROBVEL;
     DEVICE extern double COLLISION_DISTANCE;
-
+    DEVICE extern bool USE_ZERO_VEL_CORRECTION;
     DEVICE extern double IN_FRONT_ANGLE_DEG;
 
     DEVICE extern double LASER_RANGE;
