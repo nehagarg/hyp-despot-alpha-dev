@@ -369,7 +369,15 @@ Dvc_State* BaseUncNavigation::AllocGPUParticles(int numParticles, MEMORY_MODE mo
 		tempHostID=new int*[num_threads];
 		for(int i=0;i<num_threads;i++)
 		{
-			cudaHostAlloc(&tempHostID[i],numParticles*sizeof(int),0);
+			if(Globals::config.track_alpha_vector)
+			{
+				cudaHostAlloc(&tempHostID[i],(2+ Globals::config.num_scenarios + Globals::config.num_obs)*NumActions()*sizeof(int),0);
+			}
+			else
+			{
+				cudaHostAlloc(&tempHostID[i],numParticles*sizeof(int),0);
+			}
+			//cudaHostAlloc(&tempHostID[i],numParticles*sizeof(int),0);
 		}
 
 		temp_weight=new float*[num_threads];
