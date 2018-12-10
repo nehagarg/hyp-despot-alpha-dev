@@ -19,6 +19,8 @@ DSPOMDP* DrivingController::InitializeModel(option::Option* options) {
 	 DSPOMDP* model = !options[E_PARAMS_FILE] ?
 	      new PedPomdp() : new PedPomdp(options[E_PARAMS_FILE].arg);
 	 DESPOT::num_Obs_element_in_GPU=1+ModelParams::N_PED_IN*2+2;
+	 std::cout << "Use zero car vel correction : " << ModelParams::USE_ZERO_VEL_CORRECTION << std::endl;
+	 std::cout << "Num peds for planning : " << ModelParams::N_PED_IN << std::endl;
 	//DSPOMDP* model = new PedPomdp();
 	static_cast<PedPomdp*>(model)->world_model=&Simulator::worldModel;
 
@@ -169,3 +171,9 @@ int main(int argc, char* argv[]) {
 	DespotWithAlphaFunctionUpdate::PedPomdpProb = true;
   return DrivingController().RunPlanning(argc, argv);
 }
+
+
+// ./devel/lib/hyp_despot/hyp_despot_CarDriving -s 200 -t 0.5 --nobs 25 -n 500 --max-policy-simlen 6 -v 3 --GPUID 1 --solver=BTDESPOTALPHAST --econst 0.95 --oeconst 0.01 -l DONOTHING -d 10 > ../tools/Release_21Nov_updated_gpu_do_nothing/HypDespot_Car_Driving_Results_BTDESPOTALPHAST/DoNothing/t05/n500/nobs25/d10/trial_7192.log
+//./devel/lib/hyp_despot/hyp_despot_CarDriving -s 200 -t 0.5 -n 1000 --max-policy-simlen 90 -v 3 --GPUID 0 > ../tools/Release_9Nov/HypDespot_Car_Driving_Results_DESPOT/SMART_sim-length-90_zero_carvel_correction/t05/n1000/trial_{}.log
+// rsync -avz neha@unicorn4.d2.comp.nus.edu.sg:/data/neha/WORK_FOLDER/AdaCompNUS/catkin_ws/src/Hyp_despot/tools ./
+//seq 500 | xargs -i echo "./devel/lib/hyp_despot/hyp_despot_danger_tag  -v 3 -m ../src/HyP_examples/tag/config_files/danger_tag/openSingleR14x14-movementError6.txt -l DANGERTAG -t 15 -n 50  --solver=BTDESPOTALPHAST --GPU 0 --CPU 0 > ../tools/HypDespot_Danger_Tag_Results_BTDESPOTALPHAST/openSingleR14x14-movementError6/Release_9Nov/t15_n50/trial_{}.log 2>&1" | bash
