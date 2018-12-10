@@ -308,7 +308,7 @@ public:
 	void CalGateObstacles(int line_pos, int num_gates,int num_opens,UncNavigationState* nav_state=NULL) const;
 	void FreeObstacles() const;
 
-	Dvc_State* GetPointerToParticleList(int offset, Dvc_State* full_list) const;
+	//Dvc_State* GetPointerToParticleList(int offset, Dvc_State* full_list) const;
 };
 
 extern PolicyGraph* policy_graph;

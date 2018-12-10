@@ -1,6 +1,7 @@
 #include "UncNavigation.h"
 #include <despot/GPUcore/thread_globals.h>
 #include <despot/solver/despot.h>
+#include "GPU_base_unc_navigation.h"
 using namespace std;
 
 namespace despot {
