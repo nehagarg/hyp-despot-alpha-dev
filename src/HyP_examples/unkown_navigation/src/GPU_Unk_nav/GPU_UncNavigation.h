@@ -68,6 +68,7 @@ public:
 	DEVICE static bool Dvc_Step(Dvc_State& state, float rand_num, int action, float& reward,
 		OBS_TYPE& obs);
 
+	DEVICE static float Dvc_ObsProb(OBS_TYPE& obs, Dvc_State& state, int action);
 	DEVICE static int Dvc_NumObservations();
 
 	DEVICE Dvc_State* Allocate(int state_id, double weight) const;
@@ -78,7 +79,7 @@ public:
 	DEVICE static void Dvc_Free(Dvc_State* particle);
 
 	DEVICE static Dvc_ValuedAction Dvc_GetBestAction() {
-		return Dvc_ValuedAction(E_STAY, -0.1);
+		return Dvc_ValuedAction(E_STAY, -0.2);
 	}
 
 	DEVICE static float Dvc_GetMaxReward() {return GOAL_REWARD;}

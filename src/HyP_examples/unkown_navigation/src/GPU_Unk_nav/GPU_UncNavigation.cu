@@ -107,6 +107,93 @@ DEVICE bool Dvc_UncNavigation::Dvc_Step(Dvc_State& state, float rand_num, int ac
 	return terminal;
 }
 
+DEVICE float Dvc_UncNavigation::Dvc_ObsProb(OBS_TYPE& obs, Dvc_State& state, int action)
+{
+		float prob=1;
+		Dvc_UncNavigationState nav_state(static_cast<const Dvc_UncNavigationState&>(state));
+
+		int obs_North=(obs%16)/8;
+		int obs_East=((obs%16)-obs_North*8)/4;
+		int obs_South=((obs%16)-obs_North*8-obs_East*4)/2;
+		int obs_West=((obs%16)-obs_North*8-obs_East*4-obs_South*2);
+		int obs_North_East=obs/(int)pow(2.0,7.0);
+		int obs_South_East=(obs-obs_North_East*(int)pow(2.0,7.0))/(int)pow(2.0,6.0);
+		int obs_South_West=(obs-obs_North_East*(int)pow(2.0,7.0)-obs_South_East*(int)pow(2.0,6.0))/(int)pow(2.0,5.0);
+		int obs_North_West=(obs-obs_North_East*(int)pow(2.0,7.0)-obs_South_East*(int)pow(2.0,6.0)-obs_South_West*(int)pow(2.0,5.0))/(int)pow(2.0,4.0);
+
+		//PrintObs(state, obs,cout);
+		//logi<<"Refracted as:"<< obs_North << obs_East <<obs_South<<obs_West<<endl;
+
+		int truth_North,truth_East,truth_South,truth_West;
+		int truth_NE, truth_SE, truth_SW, truth_NW;
+		truth_North=nav_state.Grid(nav_state.rob.x, nav_state.rob.y + 1);
+		truth_East=nav_state.Grid(nav_state.rob.x + 1, nav_state.rob.y );
+		truth_South=nav_state.Grid(nav_state.rob.x,  nav_state.rob.y -1);
+		truth_West=nav_state.Grid(nav_state.rob.x - 1, nav_state.rob.y );
+		truth_NE=nav_state.Grid(nav_state.rob.x + 1,nav_state.rob.y +1);
+		truth_SE=nav_state.Grid(nav_state.rob.x + 1,nav_state.rob.y -1);
+		truth_SW=nav_state.Grid(nav_state.rob.x - 1,nav_state.rob.y -1);
+		truth_NW=nav_state.Grid(nav_state.rob.x - 1,nav_state.rob.y +1);
+
+		float Noise=OBS_NOISE;
+		if(obs_North==truth_North)
+			prob*=1-Noise;
+		else{
+			prob*=Noise;
+			//if(DESPOT::Debug_mode)
+			//	cout<<"Obs noise: N"<<endl;
+		}
+		if(obs_East==truth_East)
+			prob*=1-Noise;
+		else{
+			prob*=Noise;
+			//if(DESPOT::Debug_mode)
+			//	cout<<"Obs noise: E"<<endl;
+		}
+		if(obs_South==truth_South)
+			prob*=1-Noise;
+		else{
+			prob*=Noise;
+			//if(DESPOT::Debug_mode)
+			//	cout<<"Obs noise: S"<<endl;
+		}
+		if(obs_West==truth_West)
+			prob*=1-Noise;
+		else{
+			prob*=Noise;
+			//if(DESPOT::Debug_mode)
+			//	cout<<"Obs noise: W"<<endl;
+		}
+		if(obs_North_East==truth_NE)
+			prob*=1-Noise;
+		else{
+			prob*=Noise;
+			//if(DESPOT::Debug_mode)
+			//	cout<<"Obs noise: NE"<<endl;
+		}
+		if(obs_South_East==truth_SE)
+			prob*=1-Noise;
+		else{
+			prob*=Noise;
+			//if(DESPOT::Debug_mode)
+			//	cout<<"Obs noise:SE"<<endl;
+		}
+		if(obs_South_West==truth_SW)
+			prob*=1-Noise;
+		else{
+			prob*=Noise;
+			//if(DESPOT::Debug_mode)
+			//	cout<<"Obs noise: SW"<<endl;
+		}
+		if(obs_North_West==truth_NW)
+			prob*=1-Noise;
+		else{
+			prob*=Noise;
+			//if(DESPOT::Debug_mode)
+			//	cout<<"Obs noise: NW"<<endl;
+		}
+		return prob;
+}
 
 DEVICE Dvc_State* Dvc_UncNavigation::Allocate(int state_id, double weight) const {
 	//Dvc_UncNavigationState* state = Dvc_memory_pool_.Allocate();
@@ -158,6 +245,9 @@ DEVICE void Dvc_UncNavigation::Dvc_Free(Dvc_State* particle) {
 DEVICE int Dvc_UncNavigation::Dvc_NumObservations() { // one dummy terminal state
 	return 256;
 }
-
+Dvc_State* UncNavigation::GetPointerToParticleList(int offset,  Dvc_State* full_list) const
+{
+	return static_cast<Dvc_UncNavigationState*>(full_list)+ offset;
+}
 
 } // namespace despot

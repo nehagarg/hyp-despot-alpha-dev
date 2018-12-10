@@ -38,6 +38,7 @@ __global__ void PassModelFuncs(Dvc_UncNavigation* model)
 	DvcModelGetBestAction_=&(model->Dvc_GetBestAction);
 	DvcModelGetMaxReward_=&(model->Dvc_GetMaxReward);
 	DvcModelNumActions_ = &(model->NumActions);
+	DvcModelObsProb_ = &(model->Dvc_ObsProb);
 }
 
 void UncNavigation::InitGPUModel(){

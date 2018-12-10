@@ -240,7 +240,7 @@ public:
 		std::string particle_bound_name = "DEFAULT") const;
 
 	inline ValuedAction GetBestAction() const {
-		return ValuedAction(E_STAY, -0.1);
+		return ValuedAction(E_STAY, -0.2);
 	}
 	ScenarioLowerBound* CreateScenarioLowerBound(std::string name = "DEFAULT",
 		std::string particle_bound_name = "DEFAULT") const;
@@ -308,7 +308,7 @@ public:
 	void CalGateObstacles(int line_pos, int num_gates,int num_opens,UncNavigationState* nav_state=NULL) const;
 	void FreeObstacles() const;
 
-
+	Dvc_State* GetPointerToParticleList(int offset, Dvc_State* full_list) const;
 };
 
 extern PolicyGraph* policy_graph;
