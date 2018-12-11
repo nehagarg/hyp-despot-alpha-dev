@@ -212,7 +212,7 @@ double UncNavigation::ObsProb(OBS_TYPE obs, const State& state, int action) cons
 	int obs_South_East=((my_obs % 16)-obs_North_East*8)/4;
 	int obs_South_West=((my_obs % 16)-obs_North_East*8-obs_South_East*4)/2;
 	int obs_North_West=((my_obs % 16)-obs_North_East*8-obs_South_East*4-obs_South_West*2);
-	int obs_North2; obs_East2, obs_South2, obs_West2, obs_North_East2, obs_South_East2, obs_South_West2, obs_North_West2;
+	int obs_North2, obs_East2, obs_South2, obs_West2, obs_North_East2, obs_South_East2, obs_South_West2, obs_North_West2;
 
 	if(UncNavigation::num_obs_bits > 8)
 	{

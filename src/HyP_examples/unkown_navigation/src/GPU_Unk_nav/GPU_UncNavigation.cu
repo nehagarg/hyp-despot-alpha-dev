@@ -57,7 +57,7 @@ DEVICE bool Dvc_UncNavigation::Dvc_Step(Dvc_State& state, float rand_num, int ac
 	OBS_TYPE obs_i=0;
 
 	unsigned long long int Temp=INIT_QUICKRANDSEED;
-	for(dir=0;dir<Dvc_UncNavigation::num_obs_bits;dir++)
+	for(dir=0;dir<num_obs_bits;dir++)
 	{
 		switch(dir)
 		{
@@ -154,9 +154,9 @@ DEVICE float Dvc_UncNavigation::Dvc_ObsProb(OBS_TYPE& obs, Dvc_State& state, int
 		int obs_South_East=((my_obs % 16)-obs_North_East*8)/4;
 		int obs_South_West=((my_obs % 16)-obs_North_East*8-obs_South_East*4)/2;
 		int obs_North_West=((my_obs % 16)-obs_North_East*8-obs_South_East*4-obs_South_West*2);
-		int obs_North2; obs_East2, obs_South2, obs_West2, obs_North_East2, obs_South_East2, obs_South_West2, obs_North_West2;
+		int obs_North2, obs_East2, obs_South2, obs_West2, obs_North_East2, obs_South_East2, obs_South_West2, obs_North_West2;
 
-		if(Dvc_UncNavigation::num_obs_bits > 8)
+		if(num_obs_bits > 8)
 		{
 			my_obs = my_obs/16;
 			obs_North2=(my_obs%16)/8;
@@ -184,7 +184,7 @@ DEVICE float Dvc_UncNavigation::Dvc_ObsProb(OBS_TYPE& obs, Dvc_State& state, int
 		truth_SE=nav_state.Grid(nav_state.rob.x + 1,nav_state.rob.y -1);
 		truth_SW=nav_state.Grid(nav_state.rob.x - 1,nav_state.rob.y -1);
 		truth_NW=nav_state.Grid(nav_state.rob.x - 1,nav_state.rob.y +1);
-		if(Dvc_UncNavigation::num_obs_bits > 8)
+		if(num_obs_bits > 8)
 		{
 			truth_North2=nav_state.Grid(nav_state.rob.x, nav_state.rob.y + 2);
 			truth_East2=nav_state.Grid(nav_state.rob.x + 2, nav_state.rob.y );
@@ -252,7 +252,7 @@ DEVICE float Dvc_UncNavigation::Dvc_ObsProb(OBS_TYPE& obs, Dvc_State& state, int
 			//if(DESPOT::Debug_mode)
 			//	cout<<"Obs noise: NW"<<endl;
 		}
-		if(Dvc_UncNavigation::num_obs_bits > 8)
+		if(num_obs_bits > 8)
 		{
 
 			prob = prob*100000; //As we are calculating likelihood, multiplying probability with a constant so that it does not become very small
@@ -363,7 +363,7 @@ DEVICE void Dvc_UncNavigation::Dvc_Free(Dvc_State* particle) {
 	delete static_cast<Dvc_UncNavigationState*>(particle);
 }
 
-DEVICE int Dvc_UncNavigation::Dvc_NumObservations() { // one dummy terminal state
+DEVICE int Dvc_UncNavigation::Dvc_NumObservations(int num_obs_bits) { // one dummy terminal state
 	return (int)pow(2.0, 1.0*num_obs_bits);
 }
 

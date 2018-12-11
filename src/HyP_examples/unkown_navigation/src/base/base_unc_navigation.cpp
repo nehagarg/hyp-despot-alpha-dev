@@ -85,7 +85,7 @@ void UncNavigationBelief::Update(ACT_TYPE action, OBS_TYPE obs)
 	}
 	vector<State*> new_particles = Sample(N);
 	std::vector<int> obss;
-	obss.resize(UncNavigation::num_obs_bits);
+	obss.resize(BaseUncNavigation::num_obs_bits);
 	OBS_TYPE my_obs = obs;
 	int obs_North=(my_obs%16)/8;
 	int obs_East=((my_obs%16)-obs_North*8)/4;
@@ -96,7 +96,7 @@ void UncNavigationBelief::Update(ACT_TYPE action, OBS_TYPE obs)
 	int obs_South_East=((my_obs % 16)-obs_North_East*8)/4;
 	int obs_South_West=((my_obs % 16)-obs_North_East*8-obs_South_East*4)/2;
 	int obs_North_West=((my_obs % 16)-obs_North_East*8-obs_South_East*4-obs_South_West*2);
-	int obs_North2; obs_East2, obs_South2, obs_West2, obs_North_East2, obs_South_East2, obs_South_West2, obs_North_West2;
+	int obs_North2, obs_East2, obs_South2, obs_West2, obs_North_East2, obs_South_East2, obs_South_West2, obs_North_West2;
 	obss[NavCompass::NORTH] = obs_North;
 	obss[NavCompass::EAST] = obs_East;
 	obss[NavCompass::SOUTH] = obs_South;
@@ -105,7 +105,7 @@ void UncNavigationBelief::Update(ACT_TYPE action, OBS_TYPE obs)
 	obss[NavCompass::SOUTHEAST] = obs_South_East;
 	obss[NavCompass::SOUTHWEST] = obs_South_West;
 	obss[NavCompass::NORTHWEST] = obs_North_West;
-	if(UncNavigation::num_obs_bits > 8)
+	if(BaseUncNavigation::num_obs_bits > 8)
 	{
 		my_obs = my_obs/16;
 		obs_North2=(my_obs%16)/8;
@@ -137,11 +137,15 @@ void UncNavigationBelief::Update(ACT_TYPE action, OBS_TYPE obs)
 		UncNavigationState* nav_state = static_cast<UncNavigationState*>(new_particles[i]);
 		particles_.push_back(nav_state);
 
-		for(int j = 0; j < UncNavigation::num_obs_bits; j++) //iterate over directions
+		for(int j = 0; j < BaseUncNavigation::num_obs_bits; j++) //iterate over directions
 		{
 
 
-				Coord  pos = nav_state->rob+((1+(j/8))*NavCompass::DIRECTIONS[j%8]);
+				Coord  pos = nav_state->rob+NavCompass::DIRECTIONS[j%8];
+				if(j >=8)
+				  {
+				    pos = pos + NavCompass::DIRECTIONS[j%8];
+				  }
 				if(nav_state->Inside(pos))
 				{
 					nav_state->GridOpen(pos)= obss[j];
