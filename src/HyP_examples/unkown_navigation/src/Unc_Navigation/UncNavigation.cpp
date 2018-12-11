@@ -378,7 +378,8 @@ double UncNavigation::ObsProb(OBS_TYPE obs, const State& state, int action) cons
 
 void UncNavigation::PrintObs(const State& state, OBS_TYPE observation,
 	ostream& out) const {
-	switch (observation%16) {
+	OBS_TYPE my_obs = observation;
+	switch (my_obs%16) {
 	case E_FN_FE_FS_FW:
 		out << "N0 E0 S0 W0" << " ";
 		break;
@@ -428,56 +429,165 @@ void UncNavigation::PrintObs(const State& state, OBS_TYPE observation,
 		out << "N1 E1 S1 W1" << " ";
 		break;
 	}
-	switch (observation/16) {
+	my_obs = my_obs/16;
+	switch (obs % 16) {
 	case E_FN_FE_FS_FW:
-		out << "NE0 SE0 SW0 NW0" << endl;
+		out << "NE0 SE0 SW0 NW0" << " ";
 		break;
 	case E_FN_FE_FS_OW:
-		out << "NE0 SE0 SW0 NW1" << endl;
+		out << "NE0 SE0 SW0 NW1" << " ";
 		break;
 	case E_FN_FE_OS_FW:
-		out << "NE0 SE0 SW1 NW0" << endl;
+		out << "NE0 SE0 SW1 NW0" << " ";
 		break;
 	case E_FN_FE_OS_OW:
-		out << "NE0 SE0 SW1 NW1" << endl;
+		out << "NE0 SE0 SW1 NW1" << " ";
 		break;
 	case E_FN_OE_FS_FW:
-		out << "NE0 SE1 SW0 NW0" << endl;
+		out << "NE0 SE1 SW0 NW0" << " ";
 		break;
 	case E_FN_OE_FS_OW:
-		out << "NE0 SE1 SW0 NW1" << endl;
+		out << "NE0 SE1 SW0 NW1" << " ";
 		break;
 	case E_FN_OE_OS_FW:
-		out << "NE0 SE1 SW1 NW0" << endl;
+		out << "NE0 SE1 SW1 NW0" << " ";
 		break;
 	case E_FN_OE_OS_OW:
-		out << "NE0 SE1 SW1 NW1" << endl;
+		out << "NE0 SE1 SW1 NW1" << " ";
 		break;
 	case E_ON_FE_FS_FW:
-		out << "NE1 SE0 SW0 NW0" << endl;
+		out << "NE1 SE0 SW0 NW0" << " ";
 		break;
 	case E_ON_FE_FS_OW:
-		out << "NE1 SE0 SW0 NW1" << endl;
+		out << "NE1 SE0 SW0 NW1" << " ";
 		break;
 	case E_ON_FE_OS_FW:
-		out << "NE1 SE0 SW1 NW0" << endl;
+		out << "NE1 SE0 SW1 NW0" << " ";
 		break;
 	case E_ON_FE_OS_OW:
-		out << "NE1 SE0 SW1 NW1" << endl;
+		out << "NE1 SE0 SW1 NW1" << " ";
 		break;
 	case E_ON_OE_FS_FW:
-		out << "NE1 SE1 SW0 NW0" << endl;
+		out << "NE1 SE1 SW0 NW0" << " ";
 		break;
 	case E_ON_OE_FS_OW:
-		out << "NE1 SE1 SW0 NW1" << endl;
+		out << "NE1 SE1 SW0 NW1" << " ";
 		break;
 	case E_ON_OE_OS_FW:
-		out << "NE1 SE1 SW1 NW0" << endl;
+		out << "NE1 SE1 SW1 NW0" << " ";
 		break;
 	case E_ON_OE_OS_OW:
-		out << "NE1 SE1 SW1 NW1" << endl;
+		out << "NE1 SE1 SW1 NW1" << " ";
 		break;
 	}
+	if(UncNavigation::num_obs_bits > 8)
+	{
+		out << "|";
+		my_obs = my_obs/16;
+		switch (my_obs%16) {
+		case E_FN_FE_FS_FW:
+			out << "N0 E0 S0 W0" << " ";
+			break;
+		case E_FN_FE_FS_OW:
+			out << "N0 E0 S0 W1" << " ";
+			break;
+		case E_FN_FE_OS_FW:
+			out << "N0 E0 S1 W0" << " ";
+			break;
+		case E_FN_FE_OS_OW:
+			out << "N0 E0 S1 W1" << " ";
+			break;
+		case E_FN_OE_FS_FW:
+			out << "N0 E1 S0 W0" << " ";
+			break;
+		case E_FN_OE_FS_OW:
+			out << "N0 E1 S0 W1" << " ";
+			break;
+		case E_FN_OE_OS_FW:
+			out << "N0 E1 S1 W0" << " ";
+			break;
+		case E_FN_OE_OS_OW:
+			out << "N0 E1 S1 W1" << " ";
+			break;
+		case E_ON_FE_FS_FW:
+			out << "N1 E0 S0 W0" << " ";
+			break;
+		case E_ON_FE_FS_OW:
+			out << "N1 E0 S0 W1" << " ";
+			break;
+		case E_ON_FE_OS_FW:
+			out << "N1 E0 S1 W0" << " ";
+			break;
+		case E_ON_FE_OS_OW:
+			out << "N1 E0 S1 W1" << " ";
+			break;
+		case E_ON_OE_FS_FW:
+			out << "N1 E1 S0 W0" << " ";
+			break;
+		case E_ON_OE_FS_OW:
+			out << "N1 E1 S0 W1" << " ";
+			break;
+		case E_ON_OE_OS_FW:
+			out << "N1 E1 S1 W0" << " ";
+			break;
+		case E_ON_OE_OS_OW:
+			out << "N1 E1 S1 W1" << " ";
+			break;
+		}
+		my_obs = my_obs/16;
+		switch (obs % 16) {
+		case E_FN_FE_FS_FW:
+			out << "NE0 SE0 SW0 NW0" << " ";
+			break;
+		case E_FN_FE_FS_OW:
+			out << "NE0 SE0 SW0 NW1" << " ";
+			break;
+		case E_FN_FE_OS_FW:
+			out << "NE0 SE0 SW1 NW0" << " ";
+			break;
+		case E_FN_FE_OS_OW:
+			out << "NE0 SE0 SW1 NW1" << " ";
+			break;
+		case E_FN_OE_FS_FW:
+			out << "NE0 SE1 SW0 NW0" << " ";
+			break;
+		case E_FN_OE_FS_OW:
+			out << "NE0 SE1 SW0 NW1" << " ";
+			break;
+		case E_FN_OE_OS_FW:
+			out << "NE0 SE1 SW1 NW0" << " ";
+			break;
+		case E_FN_OE_OS_OW:
+			out << "NE0 SE1 SW1 NW1" << " ";
+			break;
+		case E_ON_FE_FS_FW:
+			out << "NE1 SE0 SW0 NW0" << " ";
+			break;
+		case E_ON_FE_FS_OW:
+			out << "NE1 SE0 SW0 NW1" << " ";
+			break;
+		case E_ON_FE_OS_FW:
+			out << "NE1 SE0 SW1 NW0" << " ";
+			break;
+		case E_ON_FE_OS_OW:
+			out << "NE1 SE0 SW1 NW1" << " ";
+			break;
+		case E_ON_OE_FS_FW:
+			out << "NE1 SE1 SW0 NW0" << " ";
+			break;
+		case E_ON_OE_FS_OW:
+			out << "NE1 SE1 SW0 NW1" << " ";
+			break;
+		case E_ON_OE_OS_FW:
+			out << "NE1 SE1 SW1 NW0" << " ";
+			break;
+		case E_ON_OE_OS_OW:
+			out << "NE1 SE1 SW1 NW1" << " ";
+			break;
+		}
+
+	}
+	out << endl;
 }
 
 Dvc_State* UncNavigation::GetPointerToParticleList(int offset,  Dvc_State* full_list) const
