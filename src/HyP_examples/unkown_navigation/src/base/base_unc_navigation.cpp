@@ -77,6 +77,8 @@ UncNavigationBelief::UncNavigationBelief(vector<State*> particles, const DSPOMDP
 }
 void UncNavigationBelief::Update(ACT_TYPE action, OBS_TYPE obs)
 {
+	ParticleBelief::Update(action, obs); //Update before so that particles are stepped
+	//Then add new synced particles
 	int num_particles = particles_.size();
 	int N = num_particles/100;
 	if(N < 1)
@@ -155,7 +157,15 @@ void UncNavigationBelief::Update(ACT_TYPE action, OBS_TYPE obs)
 
 
 	}
-	ParticleBelief::Update(action, obs);
+
+	//Make weight sum to 1
+	double total_weight = 1.0 + (1.0*num_particles/(N + num_particles))
+	for (int i = 0; i < particles_.size(); i++) {
+			State* particle = particles_[i];
+			particle->weight /= total_weight;
+
+		}
+
 }
 
 BaseUncNavigation::BaseUncNavigation(int size, int obstacles) :
