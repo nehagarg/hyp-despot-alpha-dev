@@ -430,7 +430,7 @@ void UncNavigation::PrintObs(const State& state, OBS_TYPE observation,
 		break;
 	}
 	my_obs = my_obs/16;
-	switch (obs % 16) {
+	switch (my_obs % 16) {
 	case E_FN_FE_FS_FW:
 		out << "NE0 SE0 SW0 NW0" << " ";
 		break;
@@ -535,7 +535,7 @@ void UncNavigation::PrintObs(const State& state, OBS_TYPE observation,
 			break;
 		}
 		my_obs = my_obs/16;
-		switch (obs % 16) {
+		switch (my_obs % 16) {
 		case E_FN_FE_FS_FW:
 			out << "NE0 SE0 SW0 NW0" << " ";
 			break;
