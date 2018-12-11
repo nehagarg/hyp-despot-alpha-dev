@@ -4,11 +4,12 @@
 #include <base_unc_navigation.h>
 #include <despot/GPUutil/GPUrandom.h>
 
-DEVICE int num_obs_bits = 8;
+
 using namespace std;
 
 namespace despot {
 
+DEVICE int num_obs_bits = 8;
 DEVICE Dvc_UncNavigation::Dvc_UncNavigation()
 
 {
