@@ -24,7 +24,7 @@ const string NavCompass::CompassString[] = { "North", "East","South", "West",
 
 PolicyGraph* policy_graph = NULL;
 
-
+int BaseUncNavigation::num_obs_bits = 8;
 
 /* ==============================================================================
  * UncNavigationState class
