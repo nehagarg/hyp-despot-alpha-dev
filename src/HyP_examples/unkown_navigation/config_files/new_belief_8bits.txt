@@ -1,2 +1,2 @@
-use_special_belief = 0
+use_special_belief = 1
 num_obs_bits = 8
