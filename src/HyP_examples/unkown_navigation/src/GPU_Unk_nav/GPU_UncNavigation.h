@@ -85,6 +85,7 @@ public:
 	DEVICE static float Dvc_GetMaxReward() {return GOAL_REWARD;}
 
 	DEVICE static int NumActions(){return 9;}
+	static int num_obs_bits;
 
 
 };

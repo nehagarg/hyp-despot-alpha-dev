@@ -165,6 +165,7 @@ protected:
 	int size_, num_obstacles_;// size of map, number of obstacles
 	double half_efficiency_distance_;
 
+
 	mutable MemoryPool<UncNavigationState> memory_pool_;
 
 	std::vector<UncNavigationState*> states_;
@@ -210,6 +211,7 @@ public:
 		E_NORTH_WEST = 7,
 	};
 	bool use_special_belief;
+	static int num_obs_bits;
 
 public:
 	BaseUncNavigation(std::string map);

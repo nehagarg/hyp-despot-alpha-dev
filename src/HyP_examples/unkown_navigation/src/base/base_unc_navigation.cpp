@@ -84,15 +84,19 @@ void UncNavigationBelief::Update(ACT_TYPE action, OBS_TYPE obs)
 		N = 1;
 	}
 	vector<State*> new_particles = Sample(N);
-	int obss[8];
-	int obs_North=(obs%16)/8;
-	int obs_East=((obs%16)-obs_North*8)/4;
-	int obs_South=((obs%16)-obs_North*8-obs_East*4)/2;
-	int obs_West=((obs%16)-obs_North*8-obs_East*4-obs_South*2);
-	int obs_North_East=obs/(int)std::pow(2.0,7);
-	int obs_South_East=(obs-obs_North_East*(int)std::pow(2.0,7))/(int)std::pow(2.0,6);
-	int obs_South_West=(obs-obs_North_East*(int)std::pow(2.0,7)-obs_South_East*(int)std::pow(2.0,6))/(int)std::pow(2.0,5);
-	int obs_North_West=(obs-obs_North_East*(int)std::pow(2.0,7)-obs_South_East*(int)std::pow(2.0,6)-obs_South_West*(int)std::pow(2.0,5))/(int)std::pow(2.0,4);
+	std::vector<int> obss;
+	obss.resize(UncNavigation::num_obs_bits);
+	OBS_TYPE my_obs = obs;
+	int obs_North=(my_obs%16)/8;
+	int obs_East=((my_obs%16)-obs_North*8)/4;
+	int obs_South=((my_obs%16)-obs_North*8-obs_East*4)/2;
+	int obs_West=((my_obs%16)-obs_North*8-obs_East*4-obs_South*2);
+	my_obs = my_obs/16;
+	int obs_North_East= (my_obs%16)/8;
+	int obs_South_East=((my_obs % 16)-obs_North_East*8)/4;
+	int obs_South_West=((my_obs % 16)-obs_North_East*8-obs_South_East*4)/2;
+	int obs_North_West=((my_obs % 16)-obs_North_East*8-obs_South_East*4-obs_South_West*2);
+	int obs_North2; obs_East2, obs_South2, obs_West2, obs_North_East2, obs_South_East2, obs_South_West2, obs_North_West2;
 	obss[NavCompass::NORTH] = obs_North;
 	obss[NavCompass::EAST] = obs_East;
 	obss[NavCompass::SOUTH] = obs_South;
@@ -101,17 +105,43 @@ void UncNavigationBelief::Update(ACT_TYPE action, OBS_TYPE obs)
 	obss[NavCompass::SOUTHEAST] = obs_South_East;
 	obss[NavCompass::SOUTHWEST] = obs_South_West;
 	obss[NavCompass::NORTHWEST] = obs_North_West;
+	if(UncNavigation::num_obs_bits > 8)
+	{
+		my_obs = my_obs/16;
+		obs_North2=(my_obs%16)/8;
+		obs_East2=((my_obs%16)-obs_North2*8)/4;
+		obs_South2=((my_obs%16)-obs_North2*8-obs_East2*4)/2;
+		obs_West2=((my_obs%16)-obs_North2*8-obs_East2*4-obs_South2*2);
+		my_obs = my_obs/16;
+		obs_North_East2= (my_obs%16)/8;
+		obs_South_East2=((my_obs % 16)-obs_North_East2*8)/4;
+		obs_South_West2=((my_obs % 16)-obs_North_East2*8-obs_South_East2*4)/2;
+		obs_North_West2=((my_obs % 16)-obs_North_East2*8-obs_South_East2*4-obs_South_West2*2);
+		obss[8+ NavCompass::NORTH] = obs_North2;
+		obss[8 + NavCompass::EAST] = obs_East2;
+		obss[8 + NavCompass::SOUTH] = obs_South2;
+		obss[8+ NavCompass::WEST] = obs_West2;
+		obss[8+ NavCompass::NORTHEAST] = obs_North_East2;
+		obss[8+ NavCompass::SOUTHEAST] = obs_South_East2;
+		obss[8+ NavCompass::SOUTHWEST] = obs_South_West2;
+		obss[8+ NavCompass::NORTHWEST] = obs_North_West2;
+	}
+
+
+
+
+
 	//Push some particles consistent with obs into belief
 	for (int i = 0; i <new_particles.size(); i++) {
 		new_particles[i]->weight = 1.0/(N + num_particles);
 		UncNavigationState* nav_state = static_cast<UncNavigationState*>(new_particles[i]);
 		particles_.push_back(nav_state);
 
-		for(int j = 0; j < 8; j++) //iterate over directions
+		for(int j = 0; j < UncNavigation::num_obs_bits; j++) //iterate over directions
 		{
 
 
-				Coord  pos = nav_state->rob+NavCompass::DIRECTIONS[j];
+				Coord  pos = nav_state->rob+((1+(j/8))*NavCompass::DIRECTIONS[j%8]);
 				if(nav_state->Inside(pos))
 				{
 					nav_state->GridOpen(pos)= obss[j];
@@ -129,6 +159,7 @@ BaseUncNavigation::BaseUncNavigation(int size, int obstacles) :
 	num_obstacles_(obstacles) 
 {
 	cout<<__FUNCTION__<<endl;
+	//num_obs_bits = 8;
 }
 
 
@@ -896,7 +927,7 @@ int BaseUncNavigation::NumActiveParticles() const {
 }
 
 int BaseUncNavigation::NumObservations() const { // one dummy terminal state
-	return 256;
+	return (int)std::pow(2.0, num_obs_bits);
 }
 
 

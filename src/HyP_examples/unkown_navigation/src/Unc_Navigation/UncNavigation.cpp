@@ -94,7 +94,7 @@ bool UncNavigation::Step(State& state, double rand_num, int action, double& rewa
 		QuickRandom::SetSeed(INIT_QUICKRANDSEED, 0);
 	}
 
-	for(int dir=0;dir<8;dir++)
+	for(int dir=0;dir<UncNavigation::num_obs_bits;dir++)
 	{
 		switch(dir)
 		{
@@ -130,6 +130,38 @@ bool UncNavigation::Step(State& state, double rand_num, int action, double& rewa
 			rand_num=QuickRandom::RandGeneration(rand_num);
 			obs_i=(rand_num<1-OBS_NOISE)?nav_state.Grid(nav_state.rob.x+1,nav_state.rob.y+1):!nav_state.Grid(nav_state.rob.x+1,nav_state.rob.y+1);
 			break;
+		case 11:
+			rand_num=QuickRandom::RandGeneration(rand_num);
+			obs_i=(rand_num<1-OBS_NOISE)?nav_state.Grid(nav_state.rob.x,nav_state.rob.y+2):!nav_state.Grid(nav_state.rob.x,nav_state.rob.y+2);
+			break;
+		case 10:
+			rand_num=QuickRandom::RandGeneration(rand_num);
+			obs_i=(rand_num<1-OBS_NOISE)?nav_state.Grid(nav_state.rob.x+2,nav_state.rob.y):!nav_state.Grid(nav_state.rob.x+2,nav_state.rob.y);
+			break;
+		case 9:
+			rand_num=QuickRandom::RandGeneration(rand_num);
+			obs_i=(rand_num<1-OBS_NOISE)?nav_state.Grid(nav_state.rob.x,nav_state.rob.y-2):!nav_state.Grid(nav_state.rob.x,nav_state.rob.y-2);
+			break;
+		case 8:
+			rand_num=QuickRandom::RandGeneration(rand_num);
+			obs_i=(rand_num<1-OBS_NOISE)?nav_state.Grid(nav_state.rob.x-2,nav_state.rob.y):!nav_state.Grid(nav_state.rob.x-2,nav_state.rob.y);
+			break;
+		case 12:
+			rand_num=QuickRandom::RandGeneration(rand_num);
+			obs_i=(rand_num<1-OBS_NOISE)?nav_state.Grid(nav_state.rob.x-2,nav_state.rob.y+2):!nav_state.Grid(nav_state.rob.x-2,nav_state.rob.y+2);
+			break;
+		case 13:
+			rand_num=QuickRandom::RandGeneration(rand_num);
+			obs_i=(rand_num<1-OBS_NOISE)?nav_state.Grid(nav_state.rob.x-2,nav_state.rob.y-2):!nav_state.Grid(nav_state.rob.x-2,nav_state.rob.y-2);
+			break;
+		case 14:
+			rand_num=QuickRandom::RandGeneration(rand_num);
+			obs_i=(rand_num<1-OBS_NOISE)?nav_state.Grid(nav_state.rob.x+2,nav_state.rob.y-2):!nav_state.Grid(nav_state.rob.x+2,nav_state.rob.y-2);
+			break;
+		case 15:
+			rand_num=QuickRandom::RandGeneration(rand_num);
+			obs_i=(rand_num<1-OBS_NOISE)?nav_state.Grid(nav_state.rob.x+2,nav_state.rob.y+2):!nav_state.Grid(nav_state.rob.x+2,nav_state.rob.y+2);
+			break;
 		}
 		obs=(obs|(obs_i<<dir));
 
@@ -162,20 +194,46 @@ double UncNavigation::ObsProb(OBS_TYPE obs, const State& state, int action) cons
 	double prob=1;
 	UncNavigationState nav_state(static_cast<const UncNavigationState&>(state));
 
-	int obs_North=(obs%16)/8;
-	int obs_East=((obs%16)-obs_North*8)/4;
-	int obs_South=((obs%16)-obs_North*8-obs_East*4)/2;
-	int obs_West=((obs%16)-obs_North*8-obs_East*4-obs_South*2);
-	int obs_North_East=obs/(int)std::pow(2.0,7);
-	int obs_South_East=(obs-obs_North_East*(int)std::pow(2.0,7))/(int)std::pow(2.0,6);
-	int obs_South_West=(obs-obs_North_East*(int)std::pow(2.0,7)-obs_South_East*(int)std::pow(2.0,6))/(int)std::pow(2.0,5);
-	int obs_North_West=(obs-obs_North_East*(int)std::pow(2.0,7)-obs_South_East*(int)std::pow(2.0,6)-obs_South_West*(int)std::pow(2.0,5))/(int)std::pow(2.0,4);
+	//int obs_North=(obs%16)/8;
+	//int obs_East=((obs%16)-obs_North*8)/4;
+	//int obs_South=((obs%16)-obs_North*8-obs_East*4)/2;
+	//int obs_West=((obs%16)-obs_North*8-obs_East*4-obs_South*2);
+	//int obs_North_East=obs/(int)std::pow(2.0,7);
+	//int obs_South_East=(obs-obs_North_East*(int)std::pow(2.0,7))/(int)std::pow(2.0,6);
+	//int obs_South_West=(obs-obs_North_East*(int)std::pow(2.0,7)-obs_South_East*(int)std::pow(2.0,6))/(int)std::pow(2.0,5);
+	//int obs_North_West=(obs-obs_North_East*(int)std::pow(2.0,7)-obs_South_East*(int)std::pow(2.0,6)-obs_South_West*(int)std::pow(2.0,5))/(int)std::pow(2.0,4);
+	OBS_TYPE my_obs = obs;
+	int obs_North=(my_obs%16)/8;
+	int obs_East=((my_obs%16)-obs_North*8)/4;
+	int obs_South=((my_obs%16)-obs_North*8-obs_East*4)/2;
+	int obs_West=((my_obs%16)-obs_North*8-obs_East*4-obs_South*2);
+	my_obs = my_obs/16;
+	int obs_North_East= (my_obs%16)/8;
+	int obs_South_East=((my_obs % 16)-obs_North_East*8)/4;
+	int obs_South_West=((my_obs % 16)-obs_North_East*8-obs_South_East*4)/2;
+	int obs_North_West=((my_obs % 16)-obs_North_East*8-obs_South_East*4-obs_South_West*2);
+	int obs_North2; obs_East2, obs_South2, obs_West2, obs_North_East2, obs_South_East2, obs_South_West2, obs_North_West2;
 
+	if(UncNavigation::num_obs_bits > 8)
+	{
+		my_obs = my_obs/16;
+		obs_North2=(my_obs%16)/8;
+		obs_East2=((my_obs%16)-obs_North2*8)/4;
+		obs_South2=((my_obs%16)-obs_North2*8-obs_East2*4)/2;
+		obs_West2=((my_obs%16)-obs_North2*8-obs_East2*4-obs_South2*2);
+		my_obs = my_obs/16;
+		obs_North_East2= (my_obs%16)/8;
+		obs_South_East2=((my_obs % 16)-obs_North_East2*8)/4;
+		obs_South_West2=((my_obs % 16)-obs_North_East2*8-obs_South_East2*4)/2;
+		obs_North_West2=((my_obs % 16)-obs_North_East2*8-obs_South_East2*4-obs_South_West2*2);
+	}
 	//PrintObs(state, obs,cout);
 	//logi<<"Refracted as:"<< obs_North << obs_East <<obs_South<<obs_West<<endl;
 
 	int truth_North,truth_East,truth_South,truth_West;
 	int truth_NE, truth_SE, truth_SW, truth_NW;
+	int truth_North2,truth_East2,truth_South2,truth_West2;
+	int truth_NE2, truth_SE2, truth_SW2, truth_NW2;
 	truth_North=nav_state.Grid(nav_state.rob+NavCompass::DIRECTIONS[E_NORTH]);
 	truth_East=nav_state.Grid(nav_state.rob+NavCompass::DIRECTIONS[E_EAST]);
 	truth_South=nav_state.Grid(nav_state.rob+NavCompass::DIRECTIONS[E_SOUTH]);
@@ -184,7 +242,17 @@ double UncNavigation::ObsProb(OBS_TYPE obs, const State& state, int action) cons
 	truth_SE=nav_state.Grid(nav_state.rob+NavCompass::DIRECTIONS[E_SOUTH_EAST]);
 	truth_SW=nav_state.Grid(nav_state.rob+NavCompass::DIRECTIONS[E_SOUTH_WEST]);
 	truth_NW=nav_state.Grid(nav_state.rob+NavCompass::DIRECTIONS[E_NORTH_WEST]);
-
+	if(UncNavigation::num_obs_bits > 8)
+	{
+		truth_North2=nav_state.Grid(nav_state.rob.x, nav_state.rob.y + 2);
+		truth_East2=nav_state.Grid(nav_state.rob.x + 2, nav_state.rob.y );
+		truth_South2=nav_state.Grid(nav_state.rob.x,  nav_state.rob.y -2);
+		truth_West2=nav_state.Grid(nav_state.rob.x - 2, nav_state.rob.y );
+		truth_NE2=nav_state.Grid(nav_state.rob.x + 2,nav_state.rob.y +2);
+		truth_SE2=nav_state.Grid(nav_state.rob.x + 2,nav_state.rob.y -2);
+		truth_SW2=nav_state.Grid(nav_state.rob.x - 2,nav_state.rob.y -2);
+		truth_NW2=nav_state.Grid(nav_state.rob.x - 2,nav_state.rob.y +2);
+	}
 	float Noise=OBS_NOISE;
 	if(obs_North==truth_North)
 		prob*=1-Noise;
@@ -242,6 +310,69 @@ double UncNavigation::ObsProb(OBS_TYPE obs, const State& state, int action) cons
 		if(DESPOT::Debug_mode)
 			cout<<"Obs noise: NW"<<endl;
 	}
+
+
+	if(UncNavigation::num_obs_bits > 8)
+		{
+
+			prob = prob*100000; //As we are calculating likelihood, multiplying probability with a constant so that it does not become very small
+			if(obs_North2==truth_North2)
+				prob*=1-Noise;
+			else{
+				prob*=Noise;
+				if(DESPOT::Debug_mode)
+					cout<<"Obs noise: N2"<<endl;
+			}
+			if(obs_East2==truth_East2)
+				prob*=1-Noise;
+			else{
+				prob*=Noise;
+				if(DESPOT::Debug_mode)
+					cout<<"Obs noise: E2"<<endl;
+			}
+			if(obs_South2==truth_South2)
+				prob*=1-Noise;
+			else{
+				prob*=Noise;
+				if(DESPOT::Debug_mode)
+					cout<<"Obs noise: S2"<<endl;
+			}
+			if(obs_West2==truth_West2)
+				prob*=1-Noise;
+			else{
+				prob*=Noise;
+				if(DESPOT::Debug_mode)
+					cout<<"Obs noise: W2"<<endl;
+			}
+			if(obs_North_East2==truth_NE2)
+				prob*=1-Noise;
+			else{
+				prob*=Noise;
+				if(DESPOT::Debug_mode)
+					cout<<"Obs noise: NE2"<<endl;
+			}
+			if(obs_South_East2==truth_SE2)
+				prob*=1-Noise;
+			else{
+				prob*=Noise;
+				if(DESPOT::Debug_mode)
+					cout<<"Obs noise:SE2"<<endl;
+			}
+			if(obs_South_West2==truth_SW2)
+				prob*=1-Noise;
+			else{
+				prob*=Noise;
+				if(DESPOT::Debug_mode)
+					cout<<"Obs noise: SW2"<<endl;
+			}
+			if(obs_North_West2==truth_NW2)
+				prob*=1-Noise;
+			else{
+				prob*=Noise;
+				if(DESPOT::Debug_mode)
+					cout<<"Obs noise: NW2"<<endl;
+			}
+		}
 	return prob;
 }
 
