@@ -129,12 +129,12 @@ DEVICE bool Dvc_UncNavigation::Dvc_Step(Dvc_State& state, float rand_num, int ac
 		obs=(obs|(obs_i<<dir));
 	}
 
-	if(obs>=Dvc_NumObservations())
+	if(obs>=Dvc_NumObservations(num_obs_bits))
 		printf("Wrong obs %d", obs);
 
 	if(threadIdx.y==0)
 	{
-		if(terminal){reward=0;obs=Dvc_NumObservations()-1;}
+		if(terminal){reward=0;obs=Dvc_NumObservations(num_obs_bits)-1;}
 	}
 	return terminal;
 }

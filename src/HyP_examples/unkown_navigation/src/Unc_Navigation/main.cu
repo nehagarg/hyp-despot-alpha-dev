@@ -39,7 +39,7 @@ __global__ void PassModelFuncs(Dvc_UncNavigation* model, int num_obs_bits)
 	DvcModelGetMaxReward_=&(model->Dvc_GetMaxReward);
 	DvcModelNumActions_ = &(model->NumActions);
 	DvcModelObsProb_ = &(model->Dvc_ObsProb);
-	Dvc_UncNavigation::num_obs_bits = num_obs_bits;
+	model->num_obs_bits = num_obs_bits;
 }
 
 void UncNavigation::InitGPUModel(){
