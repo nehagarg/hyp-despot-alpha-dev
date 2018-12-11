@@ -863,39 +863,7 @@ void BaseUncNavigation::ClearBeliefMap(float**& Beliefmap) const
 void BaseUncNavigation::PrintBelief(const Belief& belief, ostream& out) const {
 	const vector<State*>& particles =
 		static_cast<const ParticleBelief&>(belief).particles();
-	out << "Robot position belief:";
-	float** Beliefmap;float** ObsBeliefmap;
-	AllocBeliefMap(Beliefmap);AllocBeliefMap(ObsBeliefmap);
-	float GateState[3];
-
-	memset((void*)GateState, 0 , 3*sizeof(float));
-	for (int i = 0; i < particles.size(); i++) {
-
-		const UncNavigationState* navstate = static_cast<const UncNavigationState*>(particles[i]);
-
-		GateState[0]+=((int)navstate->Grid(navstate->GateWest()))*navstate->weight;
-		GateState[1]+=((int)navstate->Grid(navstate->GateNorth()))*navstate->weight;
-		GateState[2]+=((int)navstate->Grid(navstate->GateEast()))*navstate->weight;
-
-		for (int x=0; x<size_; x++)
-			for (int y=0; y<size_; y++)
-			{
-				if(navstate->rob.x==x && navstate->rob.y==y)
-					Beliefmap[x][y]+=navstate->weight;
-				Coord pos(x,y);
-				ObsBeliefmap[x][y]+=((int)navstate->Grid(pos))*navstate->weight;
-					//out << "Weight=" << particles[i]->weight<<endl;
-			}
-	}
-
-	PrintBeliefMap(Beliefmap,out);
-	out << "Map belief:";
-	PrintBeliefMap(ObsBeliefmap,out);
-	out << "Gate obstacle belief:"<<endl;
-	for (int i=0;i<3;i++)
-		out<<GateState[i]<<" ";
-	out<<endl;
-	ClearBeliefMap(Beliefmap);ClearBeliefMap(ObsBeliefmap);
+	PrintParticles(particles, out);
 }
 
 void BaseUncNavigation::PrintAction(int action, ostream& out) const {
@@ -982,6 +950,39 @@ void BaseUncNavigation::DecY(UncNavigationState* state) const {
 
 void BaseUncNavigation::PrintParticles(const std::vector<State*> particles, std::ostream& out) const
 {
+	out << "Robot position belief:";
+		float** Beliefmap;float** ObsBeliefmap;
+		AllocBeliefMap(Beliefmap);AllocBeliefMap(ObsBeliefmap);
+		float GateState[3];
+
+		memset((void*)GateState, 0 , 3*sizeof(float));
+		for (int i = 0; i < particles.size(); i++) {
+
+			const UncNavigationState* navstate = static_cast<const UncNavigationState*>(particles[i]);
+
+			GateState[0]+=((int)navstate->Grid(navstate->GateWest()))*navstate->weight;
+			GateState[1]+=((int)navstate->Grid(navstate->GateNorth()))*navstate->weight;
+			GateState[2]+=((int)navstate->Grid(navstate->GateEast()))*navstate->weight;
+
+			for (int x=0; x<size_; x++)
+				for (int y=0; y<size_; y++)
+				{
+					if(navstate->rob.x==x && navstate->rob.y==y)
+						Beliefmap[x][y]+=navstate->weight;
+					Coord pos(x,y);
+					ObsBeliefmap[x][y]+=((int)navstate->Grid(pos))*navstate->weight;
+						//out << "Weight=" << particles[i]->weight<<endl;
+				}
+		}
+
+		PrintBeliefMap(Beliefmap,out);
+		out << "Map belief:";
+		PrintBeliefMap(ObsBeliefmap,out);
+		out << "Gate obstacle belief:"<<endl;
+		for (int i=0;i<3;i++)
+			out<<GateState[i]<<" ";
+		out<<endl;
+		ClearBeliefMap(Beliefmap);ClearBeliefMap(ObsBeliefmap);
 }
 
 } // namespace despot
