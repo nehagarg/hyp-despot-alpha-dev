@@ -159,7 +159,7 @@ void UncNavigationBelief::Update(ACT_TYPE action, OBS_TYPE obs)
 	}
 
 	//Make weight sum to 1
-	double total_weight = 1.0 + (1.0*num_particles/(N + num_particles))
+	double total_weight = 1.0 + (1.0*num_particles/(N + num_particles));
 	for (int i = 0; i < particles_.size(); i++) {
 			State* particle = particles_[i];
 			particle->weight /= total_weight;
