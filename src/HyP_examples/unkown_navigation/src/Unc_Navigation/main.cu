@@ -29,7 +29,7 @@ static Dvc_UncNavigationParticleUpperBound1* upperbound=NULL;
 
 PolicyGraph* GetPolicyGraph(){return policy_graph;}
 
-__global__ void PassModelFuncs(Dvc_UncNavigation* model, int num_obs_bits)
+__global__ void PassModelFuncs(Dvc_UncNavigation* model, int num_obs_bits_)
 {
 	DvcModelStep_=&(model->Dvc_Step);
 	DvcModelCopyNoAlloc_=&(model->Dvc_Copy_NoAlloc);
@@ -39,7 +39,7 @@ __global__ void PassModelFuncs(Dvc_UncNavigation* model, int num_obs_bits)
 	DvcModelGetMaxReward_=&(model->Dvc_GetMaxReward);
 	DvcModelNumActions_ = &(model->NumActions);
 	DvcModelObsProb_ = &(model->Dvc_ObsProb);
-	model->num_obs_bits = num_obs_bits;
+	num_obs_bits = num_obs_bits_;
 }
 
 void UncNavigation::InitGPUModel(){

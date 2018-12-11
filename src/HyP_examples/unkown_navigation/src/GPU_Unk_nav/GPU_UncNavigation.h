@@ -69,7 +69,7 @@ public:
 		OBS_TYPE& obs);
 
 	DEVICE static float Dvc_ObsProb(OBS_TYPE& obs, Dvc_State& state, int action);
-	DEVICE static int Dvc_NumObservations(int num_obs_bits);
+	DEVICE static int Dvc_NumObservations();
 
 	DEVICE Dvc_State* Allocate(int state_id, double weight) const;
 	DEVICE static Dvc_State* Dvc_Get(Dvc_State* particles, int pos);
@@ -85,10 +85,13 @@ public:
 	DEVICE static float Dvc_GetMaxReward() {return GOAL_REWARD;}
 
 	DEVICE static int NumActions(){return 9;}
-	int num_obs_bits;
+
 
 
 };
+
+//World model parameters from CPU
+DEVICE extern int num_obs_bits;
 
 } // namespace despot
 

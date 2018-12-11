@@ -4,6 +4,7 @@
 #include <base_unc_navigation.h>
 #include <despot/GPUutil/GPUrandom.h>
 
+DEVICE int num_obs_bits = 8;
 using namespace std;
 
 namespace despot {
@@ -129,12 +130,12 @@ DEVICE bool Dvc_UncNavigation::Dvc_Step(Dvc_State& state, float rand_num, int ac
 		obs=(obs|(obs_i<<dir));
 	}
 
-	if(obs>=Dvc_NumObservations(num_obs_bits))
+	if(obs>=Dvc_NumObservations())
 		printf("Wrong obs %d", obs);
 
 	if(threadIdx.y==0)
 	{
-		if(terminal){reward=0;obs=Dvc_NumObservations(num_obs_bits)-1;}
+		if(terminal){reward=0;obs=Dvc_NumObservations()-1;}
 	}
 	return terminal;
 }
@@ -363,7 +364,7 @@ DEVICE void Dvc_UncNavigation::Dvc_Free(Dvc_State* particle) {
 	delete static_cast<Dvc_UncNavigationState*>(particle);
 }
 
-DEVICE int Dvc_UncNavigation::Dvc_NumObservations(int num_obs_bits) { // one dummy terminal state
+DEVICE int Dvc_UncNavigation::Dvc_NumObservations() { // one dummy terminal state
 	return (int)pow(2.0, 1.0*num_obs_bits);
 }
 
