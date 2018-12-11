@@ -184,11 +184,12 @@ class CarDriveData:
 		print float(self.collision_count)/float(self.total_step),
 		print str(binom.std(self.total_step, float(self.collision_count)/float(self.total_step), loc=0)/float(self.total_step))
 		print 'collision % per meter:'
-		print float(self.collision_count)/float(sum(self.dis_trav)),
-		print str(binom.std(sum(self.dis_trav), float(self.collision_count)/float(sum(self.dis_trav)), loc=0)/float(sum(self.dis_trav)))
-		print 'Ave distance travelled per round:'
-		print '%.3f' % (numpy.mean(numpy.array(self.dis_trav))),
-		print str(stats.sem(self.dis_trav))
+                if(sum(self.dis_trav) > 0):
+		  print float(self.collision_count)/float(sum(self.dis_trav)),
+		  print str(binom.std(sum(self.dis_trav), float(self.collision_count)/float(sum(self.dis_trav)), loc=0)/float(sum(self.dis_trav)))
+		  print 'Ave distance travelled per round:'
+		  print '%.3f' % (numpy.mean(numpy.array(self.dis_trav))),
+		  print str(stats.sem(self.dis_trav))
 		print 'smoothness:'
 		print float(sum(self.dec_count))/self.num_finishedrounds,
 		print str(stats.sem(self.dec_count))
@@ -242,8 +243,9 @@ class CarDriveData:
 			output.write( str(float(self.collision_count)/float(self.total_step)) + ' ' )
 			output.write( str(binom.std(self.total_step, float(self.collision_count)/float(self.total_step), loc=0)/float(self.total_step)) + '\n')
 			output.write( 'collision % per meter:' + '\n')
-			output.write( str(float(self.collision_count)/float(sum(self.dis_trav))) + ' ')
-			output.write( str(binom.std(sum(self.dis_trav), float(self.collision_count)/float(sum(self.dis_trav)), loc=0)/float(sum(self.dis_trav))) + '\n' )
+                        if(sum(self.dis_trav) > 0):
+			  output.write( str(float(self.collision_count)/float(sum(self.dis_trav))) + ' ')
+			  output.write( str(binom.std(sum(self.dis_trav), float(self.collision_count)/float(sum(self.dis_trav)), loc=0)/float(sum(self.dis_trav))) + '\n' )
 		
 			#output.write( 'collision %'+'\n')
 			#output.write( str(float(self.collision_count)/float(self.num_finishedrounds))+'\n')
@@ -251,7 +253,8 @@ class CarDriveData:
 			output.write( '%.3f' % (sum(self.dis_trav)/self.num_finishedrounds)+' ')
 			output.write( str(stats.sem(self.dis_trav)) + '\n')
 			output.write( 'smoothness:'+'\n')
-			output.write( str(float(sum(self.dis_trav))/float(sum(self.dec_count)))+'\n')
+                        if(sum(self.dec_count) > 0):
+			  output.write( str(float(sum(self.dis_trav))/float(sum(self.dec_count)))+'\n')
 			output.write('dec count:' + '\n')
 			output.write( str(float(sum(self.dec_count))/self.num_finishedrounds) + ' ')
 			output.write( str(stats.sem(self.dec_count)) + '\n')
