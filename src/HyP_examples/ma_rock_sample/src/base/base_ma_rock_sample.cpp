@@ -899,10 +899,8 @@ void BaseMultiAgentRockSample::PrintState(const State& state, ostream& out) cons
 		out << "# ";
 	out << endl;
 }
-
-void BaseMultiAgentRockSample::PrintBelief(const Belief& belief, ostream& out) const {
-	const vector<State*>& particles =
-		static_cast<const ParticleBelief&>(belief).particles();
+void BaseMultiAgentRockSample::PrintParticles(const std::vector<State*> particles, std::ostream& out) const
+{
 
 	vector<double> rock_probs(num_rocks_);
 	vector<double> pos_probs(size_ * size_);
@@ -936,6 +934,11 @@ void BaseMultiAgentRockSample::PrintBelief(const Belief& belief, ostream& out) c
 			out << " " << IndexToCoord(i) << ":" << pos_probs1[i];
 	}
 	out << endl;
+}
+void BaseMultiAgentRockSample::PrintBelief(const Belief& belief, ostream& out) const {
+	const vector<State*>& particles =
+		static_cast<const ParticleBelief&>(belief).particles();
+	PrintParticles(particles, out);
 }
 
 void BaseMultiAgentRockSample::PrintAction(int action, ostream& out) const {
