@@ -442,8 +442,8 @@ void BaseMultiAgentRockSample::DestroyMemoryPool(MEMORY_MODE mode) const
 }
 
 
-void BaseMultiAgentRockSample::PrintParticles(const std::vector<State*> particles, std::ostream& out) const
+/*void BaseMultiAgentRockSample::PrintParticles(const std::vector<State*> particles, std::ostream& out) const
 {
-}
+}*/
 
 } // namespace despot
