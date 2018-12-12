@@ -150,7 +150,15 @@ void UncNavigationBelief::Update(ACT_TYPE action, OBS_TYPE obs)
 				  }
 				if(nav_state->Inside(pos))
 				{
-					nav_state->GridOpen(pos)= obss[j];
+					double change_prob = Random::RANDOM.NextDouble();
+					if(change_prob < OBS_NOISE)
+					{
+						nav_state->GridOpen(pos)= 1-obss[j];
+					}
+					else
+					{
+						nav_state->GridOpen(pos)= obss[j];
+					}
 				}
 
 		}
