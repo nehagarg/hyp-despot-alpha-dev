@@ -126,10 +126,15 @@ DEVICE void Dvc_RandomPolicy::Init(int num_actions, double* action_probs)
 
 DEVICE ACT_TYPE Dvc_RandomPolicy::Action(int scenarioID, const Dvc_State* particles,
 	Dvc_RandomStreams& streams, Dvc_History& history) {
+	int scnId = scenarioID;
+	if(Dvc_Globals::config->track_alpha_vector)
+	{
+		scnId = 0; //Output same action for all particles
+	}
 	if (DvcRandomPolicy_action_probs_!= NULL) {
-		return Dvc_random->GetCategory(DvcRandomPolicy_num_actions_,DvcRandomPolicy_action_probs_, Dvc_random->NextDouble(scenarioID));
+		return Dvc_random->GetCategory(DvcRandomPolicy_num_actions_,DvcRandomPolicy_action_probs_, Dvc_random->NextDouble(scnId));
 	} else {
-		return Dvc_random->NextInt(DvcRandomPolicy_num_actions_, scenarioID );
+		return Dvc_random->NextInt(DvcRandomPolicy_num_actions_, scnId );
 	}
 }
 
