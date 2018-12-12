@@ -127,7 +127,7 @@ DEVICE void Dvc_RandomPolicy::Init(int num_actions, double* action_probs)
 DEVICE ACT_TYPE Dvc_RandomPolicy::Action(int scenarioID, const Dvc_State* particles,
 	Dvc_RandomStreams& streams, Dvc_History& history) {
 	int scnId = scenarioID;
-	if(Dvc_Globals::config->track_alpha_vector)
+	if(Dvc_config->track_alpha_vector)
 	{
 		scnId = 0; //Output same action for all particles
 	}
