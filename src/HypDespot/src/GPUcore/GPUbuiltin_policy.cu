@@ -133,9 +133,9 @@ DEVICE ACT_TYPE Dvc_RandomPolicy::Action(int scenarioID, const Dvc_State* partic
 		scnId = 0; //Output same action for all particles
 	}*/
 	if (DvcRandomPolicy_action_probs_!= NULL) {
-		return Dvc_random->GetCategory(DvcRandomPolicy_num_actions_,DvcRandomPolicy_action_probs_, Dvc_random->NextDouble(scnId));
+		return Dvc_random->GetCategory(DvcRandomPolicy_num_actions_,DvcRandomPolicy_action_probs_, Dvc_random->NextDouble(scenarioID));
 	} else {
-		return Dvc_random->NextInt(DvcRandomPolicy_num_actions_, scnId );
+		return Dvc_random->NextInt(DvcRandomPolicy_num_actions_, scenarioID );
 	}
 }
 
