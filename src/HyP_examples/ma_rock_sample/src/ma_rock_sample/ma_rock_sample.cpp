@@ -147,7 +147,7 @@ double MultiAgentRockSample::ObsProb(OBS_TYPE obs, const State& state, int actio
 					rock_pos_[rock]);
 				double efficiency = (1 + pow(2, -distance / half_efficiency_distance_))
 					* 0.5;
-				int true_state = (GetRock(&rockstate, rock) & 1)
+				int true_state = (GetRock(&rockstate, rock) & 1);
 				for(int j = 0; j < num_obs_bits; j++)
 				{
 					int my_rob_obs = (rob_obs >> (2+j)) & 1;

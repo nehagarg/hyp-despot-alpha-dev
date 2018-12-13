@@ -802,7 +802,7 @@ public:
 		rs_model_(static_cast<const BaseMultiAgentRockSample*>(model)),
 		grid_(rs_model_->grid_) {
 	}
-	ValuedAction SingleParticleValue(MARockSampleState* rockstate) const {
+	ValuedAction SingleParticleValue(const MARockSampleState* rockstate) const {
 		double value=0;
 		for(int rid=0;rid<rs_model_->num_agents_; rid++)
 			{
@@ -830,7 +830,7 @@ public:
         	ValuedAction ans;
 		   for(int i = 0; i < particles.size(); i++)
 		   {
-			   MARockSampleState* state = static_cast< MARockSampleState*>(particles[i]);
+			   const MARockSampleState* state = static_cast< const MARockSampleState*>(particles[i]);
 			   ValuedAction single_particle_action = SingleParticleValue(state);
 			   if(i==0)
 			   {

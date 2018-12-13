@@ -2,7 +2,7 @@
 #include "base_ma_rock_sample.h"
 #include "ma_rock_sample.h"
 #include <bitset>
-
+#include <despot/GPUutil/GPUrandom.h>
 #include <despot/solver/Hyp_despot.h>
 
 #include <despot/GPUinterface/GPUupper_bound.h>
@@ -207,7 +207,7 @@ DEVICE bool Dvc_MultiAgentRockSample::Dvc_Step(Dvc_State& state, float rand_num,
 					rand_num=Dvc_QuickRandom::RandGeneration(&Temp, rand_num);
 				}
 				rob_obs = 4*rob_obs;
-				SetRobObs(obs, rob_obs, i);
+				SetRobObs(obs, rob_obs, rid);
 				//if (rand_num < efficiency)
 				//	SetRobObs(obs, GetRock(&rockstate, rock) & E_GOOD, rid);
 				//else
@@ -243,11 +243,11 @@ DEVICE float Dvc_MultiAgentRockSample::Dvc_ObsProb(OBS_TYPE& obs, Dvc_State& sta
 					prob *=0;
 				else{
 					int rock = agent_action - E_SAMPLE - 1;
-					double distance = Coord::EuclideanDistance(GetRobPos(&rockstate, i),
-						rock_pos_[rock]);
-					double efficiency = (1 + pow(2, -distance / ma_half_efficiency_distance_))
+					float distance = DvcCoord::EuclideanDistance(GetRobPos(&rockstate, i),
+						ma_rock_pos_[rock]);
+					float efficiency = (1 + pow(2, -distance / ma_half_efficiency_distance_))
 						* 0.5;
-					int true_state = (GetRock(&rockstate, rock) & 1)
+					int true_state = (GetRock(&rockstate, rock) & 1);
 					for(int j = 0; j < num_obs_bits; j++)
 					{
 						int my_rob_obs = (rob_obs >> (2+j)) & 1;
