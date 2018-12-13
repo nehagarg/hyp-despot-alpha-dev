@@ -1,0 +1,1 @@
+num_obs_bits = 10
