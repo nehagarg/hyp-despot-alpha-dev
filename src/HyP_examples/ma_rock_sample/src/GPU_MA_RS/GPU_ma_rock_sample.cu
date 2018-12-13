@@ -239,8 +239,8 @@ DEVICE float Dvc_MultiAgentRockSample::Dvc_ObsProb(OBS_TYPE& obs, Dvc_State& sta
 			if(GetRobPosIndex(&rockstate, i)!=ROB_TERMINAL_ID){
 				if (agent_action <= E_SAMPLE)
 					prob *= (rob_obs == E_NONE);
-				else if (rob_obs < 4) //Last 2 bits for E_NONE
-					prob *=0;
+				//else if (rob_obs < 4) //Last 2 bits for E_NONE
+				//	prob *=0;
 				else{
 					int rock = agent_action - E_SAMPLE - 1;
 					float distance = DvcCoord::EuclideanDistance(GetRobPos(&rockstate, i),

@@ -139,8 +139,8 @@ double MultiAgentRockSample::ObsProb(OBS_TYPE obs, const State& state, int actio
 		if(GetRobPosIndex(&rockstate, i)!=ROB_TERMINAL_ID){
 			if (agent_action <= E_SAMPLE)
 				prob *= (rob_obs == E_NONE);
-			else if (rob_obs < 4) //Last 2 bits for E_NONE
-				prob *=0;
+			//else if (rob_obs < 4) //Last 2 bits for E_NONE
+			//	prob *=0;
 			else{
 				int rock = agent_action - E_SAMPLE - 1;
 				double distance = Coord::EuclideanDistance(GetRobPos(&rockstate, i),
