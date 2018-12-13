@@ -33,6 +33,8 @@ public:
 	void DeleteGPUUpperBound(std::string name, std::string particle_bound_name);
 	void DeleteGPULowerBound(std::string name, std::string particle_bound_name);
 
+	Dvc_State* GetPointerToParticleList(int offset, Dvc_State* full_list) const;
+
 };
 
 } // namespace despot

@@ -15,7 +15,9 @@ PolicyGraph* policy_graph= NULL;
 /* ==============================================================================
  * MARockSampleState class
  * ==============================================================================*/
-
+int BaseMultiAgentRockSample::num_obs_bits = 1;
+int BaseMultiAgentRockSample::MAX_OBS_BIT = 3;
+int BaseMultiAgentRockSample::OBS_BIT_MASK = (1 << 3) -1;
 MARockSampleState::MARockSampleState() {
 	joint_pos=0;
 }
@@ -800,29 +802,45 @@ public:
 		rs_model_(static_cast<const BaseMultiAgentRockSample*>(model)),
 		grid_(rs_model_->grid_) {
 	}
-
+	ValuedAction SingleParticleValue(MARockSampleState* rockstate) const {
+		double value=0;
+		for(int rid=0;rid<rs_model_->num_agents_; rid++)
+			{
+				if(rs_model_->GetRobPosIndex(rockstate, rid)!=ROB_TERMINAL_ID){
+					value+=10 * Globals::Discount(grid_.xsize() - rs_model_->GetX(rockstate, rid) - 1);
+				}
+			}
+			/*if(FIX_SCENARIO==1 && CPUDoPrint){
+				cout<<"particle id "<<rockstate->scenario_id<<" lb "<<value/particles.size()<<endl;
+			}*/
+			return ValuedAction(Compass::EAST*rs_model_->RobNumAction()+Compass::EAST,value);
+	}
 	ValuedAction Value(const vector<State*>& particles, RandomStreams& streams,
 		History& history) const {
-		double value=0;
+
 		const MARockSampleState* rockstate =
 			static_cast<const MARockSampleState*>(particles[0]);
-		for(int rid=0;rid<rs_model_->num_agents_; rid++)
-		{
-			if(rs_model_->GetRobPosIndex(rockstate, rid)!=ROB_TERMINAL_ID){
-				value+=10 * State::Weight(particles)
-				* Globals::Discount(grid_.xsize() - rs_model_->GetX(rockstate, rid) - 1);
-			}
-		}
-		/*if(FIX_SCENARIO==1 && CPUDoPrint){
-			cout<<"particle id "<<rockstate->scenario_id<<" lb "<<value/particles.size()<<endl;
-		}*/
-		return ValuedAction(Compass::EAST*rs_model_->RobNumAction()+Compass::EAST,value);
+		ValuedAction single_particle_action = SingleParticleValue(rockstate);
+		return ValuedAction(single_particle_action.action, State::Weight(particles) * single_particle_action.value);
 	}
         
 
         ValuedAction Value(const std::vector<State*>& particles, RandomStreams& streams, History& history, std::vector<double>& alpha_vector_lower_bound) const
         {
-            cerr << __FUNCTION__ << " function hasn't been defined yet!" << endl;
+        	ValuedAction ans;
+		   for(int i = 0; i < particles.size(); i++)
+		   {
+			   MARockSampleState* state = static_cast< MARockSampleState*>(particles[i]);
+			   ValuedAction single_particle_action = SingleParticleValue(state);
+			   if(i==0)
+			   {
+				   ans = single_particle_action;
+			   }
+			   alpha_vector_lower_bound[particles[i]->scenario_id] = single_particle_action.value;
+		   }
+
+		   ans.value_array = &(alpha_vector_lower_bound);
+		   return ans;
         }
 
 };
@@ -1128,7 +1146,7 @@ const vector<State>& BaseMultiAgentRockSample::TransitionProbability(int s, int 
 }
 
 int BaseMultiAgentRockSample::NumObservations() const { // one dummy terminal state
-	return /*3*/num_agents_*MAX_OBS_BIT;
+	return /*3*/num_agents_*(1 + (1 << num_obs_bits ));
 }
 
 

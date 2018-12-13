@@ -17,6 +17,9 @@ DEVICE double ma_half_efficiency_distance_=NULL;
 DEVICE int* ma_grid_=NULL;/*A flattened pointer of a 2D map*/
 DEVICE DvcCoord* ma_rock_pos_=NULL;
 DEVICE int num_agents_=NULL;
+DEVICE int num_obs_bits = 1;
+DEVICE int MAX_OBS_BIT = 3;
+DEVICE int OBS_BIT_MASK = (1 << 3) -1;
 DEVICE Dvc_MultiAgentRockSample* ma_rs_model_=NULL;
 DEVICE int ma_Dvc_policy_size_=0;
 DEVICE Dvc_ValuedAction* ma_Dvc_policy_=NULL;
@@ -238,7 +241,15 @@ Dvc_State* BaseMultiAgentRockSample::AllocGPUParticles(int numParticles, MEMORY_
 		tempHostID=new int*[threadCount];
 		for(int i=0;i<threadCount;i++)
 		{
-			cudaHostAlloc(&tempHostID[i],numParticles*sizeof(int),0);
+			if(Globals::config.track_alpha_vector)
+			{
+				cudaHostAlloc(&tempHostID[i],(2+ Globals::config.num_scenarios + Globals::config.num_obs)*NumActions()*sizeof(int),0);
+			}
+			else
+			{
+				cudaHostAlloc(&tempHostID[i],numParticles*sizeof(int),0);
+			}
+			//cudaHostAlloc(&tempHostID[i],numParticles*sizeof(int),0);
 		}
 
 		Dvc_temp_weight=new float*[threadCount];

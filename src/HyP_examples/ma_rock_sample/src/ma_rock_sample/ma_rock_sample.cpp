@@ -1,7 +1,7 @@
 #include "ma_rock_sample.h"
 #include <string>
 #include <bitset>
-
+#include "GPU_base_ma_rock_sample.h"
 using namespace std;
 
 namespace despot {
@@ -30,6 +30,12 @@ bool MultiAgentRockSample::Step(State& state, double rand_num, int action, doubl
 	bool isterminal=true;
 
 	obs=0;
+	if (Globals::config.use_multi_thread_){
+		QuickRandom::SetSeed(INIT_QUICKRANDSEED, Globals::MapThread(this_thread::get_id()));
+	}
+	else{
+		QuickRandom::SetSeed(INIT_QUICKRANDSEED, 0);
+	}
 	//Update each of the robot
 	for(int i=0;i<num_agents_;i++)
 	{
@@ -93,10 +99,17 @@ bool MultiAgentRockSample::Step(State& state, double rand_num, int action, doubl
 					* 0.5;
 				//double efficiency=0.5;
 
-				if (rand_num < efficiency)
-					rob_obs= GetRock(&rockstate, rock) & E_GOOD;
-				else
-					rob_obs= !(GetRock(&rockstate, rock) & E_GOOD);
+				for(int j = 0; j < num_obs_bits; j++)
+				{int temp_rob_obs;
+
+					if (rand_num < efficiency)
+						temp_rob_obs= GetRock(&rockstate, rock) & E_GOOD;
+					else
+						temp_rob_obs= !(GetRock(&rockstate, rock) & E_GOOD);
+					rob_obs = (2*rob_obs + temp_rob_obs);
+					rand_num=QuickRandom::RandGeneration(rand_num);
+				}
+				rob_obs = 4*rob_obs;
 				SetRobObs(obs, rob_obs, i);
 			}
 
@@ -126,7 +139,7 @@ double MultiAgentRockSample::ObsProb(OBS_TYPE obs, const State& state, int actio
 		if(GetRobPosIndex(&rockstate, i)!=ROB_TERMINAL_ID){
 			if (agent_action <= E_SAMPLE)
 				prob *= (rob_obs == E_NONE);
-			else if (rob_obs != E_GOOD && rob_obs != E_BAD)
+			else if (rob_obs < 4) //Last 2 bits for E_NONE
 				prob *=0;
 			else{
 				int rock = agent_action - E_SAMPLE - 1;
@@ -134,9 +147,16 @@ double MultiAgentRockSample::ObsProb(OBS_TYPE obs, const State& state, int actio
 					rock_pos_[rock]);
 				double efficiency = (1 + pow(2, -distance / half_efficiency_distance_))
 					* 0.5;
-
-				prob*=
-					((GetRock(&rockstate, rock) & 1) == rob_obs) ? efficiency : (1 - efficiency);
+				int true_state = (GetRock(&rockstate, rock) & 1)
+				for(int j = 0; j < num_obs_bits; j++)
+				{
+					int my_rob_obs = (rob_obs >> (2+j)) & 1;
+					prob*= ( true_state== my_rob_obs) ? efficiency : (1 - efficiency);
+					if(j % 8 == 0)
+					{
+						prob = prob*1000; //Multiply by a constant to avoid prob becoming 0
+					}
+				}
 			}
 		}
 	}
@@ -149,19 +169,33 @@ void MultiAgentRockSample::PrintObs(const State& state, OBS_TYPE observation,
 		int agent_observation=GetRobObs(observation, i);
 		out << " Agent "<<i << ": ";
 
-		switch (agent_observation) {
-		case E_NONE:
-			out << "None" /*<< endl*/;
-			break;
-		case E_GOOD:
-			out << "Good" /*<< endl*/;
-			break;
-		case E_BAD:
-			out << "Bad" /*<< endl*/;
-			break;
+		if(agent_observation == E_NONE)
+		{
+			out << "None";
 		}
+		else
+		{
+			for(int j = 0; j < num_obs_bits; j++)
+			{
+				int my_rob_obs = (agent_observation >> (2+j)) & 1;
+				if(my_rob_obs == E_GOOD)
+				{
+					out << "G ";
+				}
+				if(my_rob_obs == E_BAD)
+				{
+					out << "B ";
+				}
+			}
+		}
+
 	}
 	out<<endl;
+}
+
+Dvc_State* MultiAgentRockSample::GetPointerToParticleList(int offset,  Dvc_State* full_list) const
+{
+	return static_cast<Dvc_MARockSampleState*>(full_list)+ offset;
 }
 
 } // namespace despot

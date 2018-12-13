@@ -132,7 +132,7 @@ DEVICE bool Dvc_MultiAgentRockSample::Dvc_Step(Dvc_State& state, float rand_num,
 	Dvc_MARockSampleState& rockstate = static_cast<Dvc_MARockSampleState&>(state);
 
 	__syncthreads();
-
+	unsigned long long int Temp=INIT_QUICKRANDSEED;
 	for(int rid=0;rid<num_agents_;rid++)
 	{
 		SetRobObs(obs, E_NONE, rid);
@@ -189,16 +189,29 @@ DEVICE bool Dvc_MultiAgentRockSample::Dvc_Step(Dvc_State& state, float rand_num,
 			}
 
 			if (rob_act > E_SAMPLE) { // Sense
+				int rob_obs = 0;
 				int rock = rob_act - E_SAMPLE - 1;
 				float distance = DvcCoord::EuclideanDistance(GetRobPos(&rockstate, rid),
 					ma_rock_pos_[rock]);
 				float efficiency = (1 + powf(2, -distance / ma_half_efficiency_distance_))
 					* 0.5;
 
-				if (rand_num < efficiency)
-					SetRobObs(obs, GetRock(&rockstate, rock) & E_GOOD, rid);
-				else
-					SetRobObs(obs, !(GetRock(&rockstate, rock) & E_GOOD), rid);
+				for(int j = 0; j < num_obs_bits; j++)
+				{int temp_rob_obs;
+
+					if (rand_num < efficiency)
+						temp_rob_obs= GetRock(&rockstate, rock) & E_GOOD;
+					else
+						temp_rob_obs= !(GetRock(&rockstate, rock) & E_GOOD);
+					rob_obs = (2*rob_obs + temp_rob_obs);
+					rand_num=Dvc_QuickRandom::RandGeneration(&Temp, rand_num);
+				}
+				rob_obs = 4*rob_obs;
+				SetRobObs(obs, rob_obs, i);
+				//if (rand_num < efficiency)
+				//	SetRobObs(obs, GetRock(&rockstate, rock) & E_GOOD, rid);
+				//else
+				//	SetRobObs(obs, !(GetRock(&rockstate, rock) & E_GOOD), rid);
 			}
 
 
@@ -214,7 +227,42 @@ DEVICE bool Dvc_MultiAgentRockSample::Dvc_Step(Dvc_State& state, float rand_num,
 
 	return terminal;
 }
+DEVICE float Dvc_MultiAgentRockSample::Dvc_ObsProb(OBS_TYPE& obs, Dvc_State& state, int action)
+{
+	float prob=1;
+	//calculate prob for each robot, multiply them together
+		for(int i=0;i<num_agents_;i++){
+			int agent_action=GetRobAction(action, i);
+			int rob_obs= GetRobObs(obs, i);
+			const Dvc_MARockSampleState& rockstate =
+				static_cast<const Dvc_MARockSampleState&>(state);
+			if(GetRobPosIndex(&rockstate, i)!=ROB_TERMINAL_ID){
+				if (agent_action <= E_SAMPLE)
+					prob *= (rob_obs == E_NONE);
+				else if (rob_obs < 4) //Last 2 bits for E_NONE
+					prob *=0;
+				else{
+					int rock = agent_action - E_SAMPLE - 1;
+					double distance = Coord::EuclideanDistance(GetRobPos(&rockstate, i),
+						rock_pos_[rock]);
+					double efficiency = (1 + pow(2, -distance / ma_half_efficiency_distance_))
+						* 0.5;
+					int true_state = (GetRock(&rockstate, rock) & 1)
+					for(int j = 0; j < num_obs_bits; j++)
+					{
+						int my_rob_obs = (rob_obs >> (2+j)) & 1;
+						prob*= ( true_state== my_rob_obs) ? efficiency : (1 - efficiency);
+						if(j % 8 == 0)
+						{
+							prob = prob*1000; //Multiply by a constant to avoid prob becoming 0
+						}
+					}
+				}
+			}
+		}
+		return prob;
 
+}
 DEVICE int Dvc_MultiAgentRockSample::NumActions()
 {
 	return pow((float)(ma_num_rocks_ + 5), num_agents_);
@@ -223,7 +271,7 @@ DEVICE int Dvc_MultiAgentRockSample::NumActions()
 
 DEVICE int Dvc_MultiAgentRockSample::Dvc_NumObservations()
 {
-	return /*3*/num_agents_*MAX_OBS_BIT;
+	return /*3*/num_agents_*(1 + (1 << num_obs_bits));
 }
 DEVICE Dvc_State* Dvc_MultiAgentRockSample::Dvc_Get(Dvc_State* particles, int pos)
 {

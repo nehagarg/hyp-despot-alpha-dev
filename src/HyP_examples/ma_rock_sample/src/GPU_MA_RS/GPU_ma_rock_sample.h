@@ -36,6 +36,7 @@ public:
 
 	DEVICE static bool Dvc_Step(Dvc_State& state, float rand_num, int action, float& reward,
 			OBS_TYPE& obs);
+	DEVICE static float Dvc_ObsProb(OBS_TYPE& obs, Dvc_State& state, int action);
 	DEVICE static int NumActions();
 	DEVICE static int Dvc_NumObservations();
 	DEVICE static Dvc_ValuedAction Dvc_GetBestAction() {
@@ -78,6 +79,10 @@ DEVICE extern Dvc_ValuedAction* ma_Dvc_policy_;
 
 DEVICE extern int num_agents_;
 DEVICE extern Dvc_MultiAgentRockSample* ma_rs_model_;
+DEVICE extern int num_obs_bits;
+DEVICE extern int MAX_OBS_BIT;
+DEVICE extern int OBS_BIT_MASK;
+
 } // namespace despot
 
 

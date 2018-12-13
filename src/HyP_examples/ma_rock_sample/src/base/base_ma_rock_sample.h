@@ -13,8 +13,8 @@
 #define ROB_TERMINAL_ID COORD_BIT_MASK
 #define MAX_ACTION_BIT 5
 #define ACTION_BIT_MASK ((1 << MAX_ACTION_BIT)-1)
-#define MAX_OBS_BIT 3
-#define OBS_BIT_MASK ((1 << MAX_OBS_BIT)-1)
+//#define MAX_OBS_BIT 3
+//#define OBS_BIT_MASK ((1 << MAX_OBS_BIT)-1)
 #define MAX_NUM_AGENTS 3
 
 
@@ -73,6 +73,9 @@ public:
 	int size_, num_rocks_, num_agents_;
 	Coord* start_poses_;
 	double half_efficiency_distance_;
+	static int num_obs_bits;
+	static int MAX_OBS_BIT;
+	static int OBS_BIT_MASK;
 
 	MARockSampleState* rock_state_;
 protected:

@@ -39,7 +39,7 @@ static DvcCoord* temp_rockpos;
 
 
 __global__ void MARSPassModelFuncs(Dvc_MultiAgentRockSample* model,int map_size,
-		int num_rocks, double half_efficiency_distance, int* grid, DvcCoord* rockpos, int num_agents)
+		int num_rocks, double half_efficiency_distance, int* grid, DvcCoord* rockpos, int num_agents, int num_obs_bits_)
 {
 	DvcModelStep_=&(model->Dvc_Step);
 	DvcModelCopyNoAlloc_=&(model->Dvc_Copy_NoAlloc);
@@ -50,6 +50,7 @@ __global__ void MARSPassModelFuncs(Dvc_MultiAgentRockSample* model,int map_size,
 
 	DvcModelGetMaxReward_=&(model->Dvc_GetMaxReward);
 	DvcModelNumActions_ = &(model->NumActions);
+	DvcModelObsProb_ = &(model->Dvc_ObsProb);
 
 	ma_rs_model_=model;
 	num_agents_=num_agents;
@@ -58,6 +59,9 @@ __global__ void MARSPassModelFuncs(Dvc_MultiAgentRockSample* model,int map_size,
 	ma_half_efficiency_distance_=half_efficiency_distance;
 	ma_grid_=grid;//A flattened pointer of a 2D map
 	ma_rock_pos_=rockpos;
+	num_obs_bits = num_obs_bits_;
+	MAX_OBS_BIT = num_obs_bits + 2; //Because E_NONE is 2
+	OBS_BIT_MASK = (1 << MAX_OBS_BIT) -1;
 }
 
 __global__ void RSPassPolicyGraph(int graph_size, int num_edges_per_node, int* action_nodes, int* obs_edges)
@@ -79,7 +83,7 @@ void MultiAgentRockSample::InitGPUModel(){
 	HANDLE_ERROR(cudaMemcpy(temp_rockpos, Hst->rock_pos_.data(), Hst->num_rocks_*sizeof(DvcCoord), cudaMemcpyHostToDevice));
 
 	MARSPassModelFuncs<<<1,1,1>>>(Dvc, Hst->size_, Hst->num_rocks_,Hst->half_efficiency_distance_,
-			tempGrid, temp_rockpos, Hst->num_agents_);
+			tempGrid, temp_rockpos, Hst->num_agents_, MultiAgentRockSample::num_obs_bits);
 
 	HANDLE_ERROR(cudaDeviceSynchronize());
 
@@ -209,10 +213,23 @@ public:
 	DSPOMDP* InitializeModel(option::Option* options) {
 
 		DSPOMDP* model = NULL;
+		int num_obs_bits = 1;
 		if (options[E_PARAMS_FILE]) {
-			cerr << "Map file is not supported" << endl;
-			exit(0);
-		} else {
+				  std::string params_file = options[E_PARAMS_FILE].arg;
+				  ifstream is(params_file.c_str(), ifstream::in);
+				  	string line, key, val;
+				  		while (is >> key >> val) {
+				  			if (key == "num_obs_bits")
+				  			 {
+				  				 is >> num_obs_bits;
+				  			 }
+
+
+				  		}
+				  //cerr << "Map file is not supported" << endl;
+				  //exit(0);
+				  //use_special_beleif = true;
+			  }
 			int size = 20, number = 20;
 			if (options[E_SIZE])
 				size = atoi(options[E_SIZE].arg);
@@ -232,9 +249,11 @@ public:
 			}
 
 			model = new MultiAgentRockSample(size, number);
+			MultiAgentRockSample::num_obs_bits = num_obs_bits;
+			MultiAgentRockSample::MAX_OBS_BIT = num_obs_bits + 2; //Because E_NONE is 2
+			MultiAgentRockSample::OBS_BIT_MASK = (1 << MultiAgentRockSample::MAX_OBS_BIT) -1;
 
 
-		}
 
 		if (Globals::config.useGPU)
 			model->InitGPUModel();
