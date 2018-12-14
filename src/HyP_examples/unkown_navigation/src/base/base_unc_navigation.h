@@ -10,7 +10,7 @@
 #include <despot/core/particle_belief.h>
 
 namespace despot {
-#define OBS_NOISE 0.03f
+//#define OBS_NOISE 0.03f
 #define STEP_NOISE 0.03f
 #define POLICY_GRAPH_SIZE 1000
 /* =============================================================================
@@ -212,6 +212,7 @@ public:
 	};
 	bool use_special_belief;
 	static int num_obs_bits;
+	static float OBS_NOISE;
 
 public:
 	BaseUncNavigation(std::string map);

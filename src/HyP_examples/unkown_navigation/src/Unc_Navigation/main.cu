@@ -29,7 +29,7 @@ static Dvc_UncNavigationParticleUpperBound1* upperbound=NULL;
 
 PolicyGraph* GetPolicyGraph(){return policy_graph;}
 
-__global__ void PassModelFuncs(Dvc_UncNavigation* model, int num_obs_bits_)
+__global__ void PassModelFuncs(Dvc_UncNavigation* model, int num_obs_bits_, float obs_noise)
 {
 	DvcModelStep_=&(model->Dvc_Step);
 	DvcModelCopyNoAlloc_=&(model->Dvc_Copy_NoAlloc);
@@ -40,13 +40,14 @@ __global__ void PassModelFuncs(Dvc_UncNavigation* model, int num_obs_bits_)
 	DvcModelNumActions_ = &(model->NumActions);
 	DvcModelObsProb_ = &(model->Dvc_ObsProb);
 	num_obs_bits = num_obs_bits_;
+	OBS_NOISE = obs_noise;
 }
 
 void UncNavigation::InitGPUModel(){
 	UncNavigation* Hst =static_cast<UncNavigation*>(this);
 
 	HANDLE_ERROR(cudaMalloc((void**)&Dvc, sizeof(Dvc_UncNavigation)));
-	PassModelFuncs<<<1,1,1>>>(Dvc, UncNavigation::num_obs_bits);
+	PassModelFuncs<<<1,1,1>>>(Dvc, UncNavigation::num_obs_bits, UncNavigation::OBS_NOISE);
 	HANDLE_ERROR(cudaDeviceSynchronize());
 }
 
@@ -153,6 +154,7 @@ public:
 	  DSPOMDP* model = NULL;
 	  bool use_special_beleif = false;
 	  int num_obs_bits = 8;
+	  float obs_noise = 0.03f;
 	  if (options[E_PARAMS_FILE]) {
 		  std::string params_file = options[E_PARAMS_FILE].arg;
 		  ifstream is(params_file.c_str(), ifstream::in);
@@ -166,6 +168,11 @@ public:
 		  			 {
 		  				 is >> num_obs_bits;
 		  			 }
+		  			else if (key == "obs_noise")
+					 {
+						 is >> obs_noise;
+					 }
+
 
 
 		  		}
@@ -175,6 +182,8 @@ public:
 	  }
 	  std::cout << "Use special belief : " << use_special_beleif << std::endl;
 	  std::cout << "Num obs bits : " << num_obs_bits << std::endl;
+	  std::cout << "Obs noise : " << obs_noise << std::endl;
+
 
 		  int size = 7, number = 8;
 		  if (options[E_SIZE])
@@ -194,6 +203,7 @@ public:
 		  model = new UncNavigation(size, number);
 		  ((UncNavigation*)model)->use_special_belief = use_special_beleif;
 		  UncNavigation::num_obs_bits = num_obs_bits;
+		  UncNavigation::OBS_NOISE = obs_noise;
 
 	  if (Globals::config.useGPU)
 		  model->InitGPUModel();

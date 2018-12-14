@@ -10,6 +10,7 @@ using namespace std;
 namespace despot {
 
 DEVICE int num_obs_bits = 8;
+DEVICE float OBS_NOISE = 0.03f;
 DEVICE Dvc_UncNavigation::Dvc_UncNavigation()
 
 {
