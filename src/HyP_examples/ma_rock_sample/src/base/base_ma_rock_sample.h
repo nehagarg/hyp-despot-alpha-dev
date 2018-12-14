@@ -76,6 +76,7 @@ public:
 	static int num_obs_bits;
 	static int MAX_OBS_BIT;
 	static int OBS_BIT_MASK;
+	static bool skew_good_rock_distribution;
 
 	MARockSampleState* rock_state_;
 protected:

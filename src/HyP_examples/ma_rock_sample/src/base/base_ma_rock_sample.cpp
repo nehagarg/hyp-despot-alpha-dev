@@ -18,6 +18,7 @@ PolicyGraph* policy_graph= NULL;
 int BaseMultiAgentRockSample::num_obs_bits = 1;
 int BaseMultiAgentRockSample::MAX_OBS_BIT = 3;
 int BaseMultiAgentRockSample::OBS_BIT_MASK = (1 << 3) -1;
+bool BaseMultiAgentRockSample::skew_good_rock_distribution = false;
 MARockSampleState::MARockSampleState() {
 	joint_pos=0;
 }
@@ -458,8 +459,33 @@ State* BaseMultiAgentRockSample::CreateStartState(string type) const {
 	}
 
 	for (int i = 0; i < num_rocks_; i++) {
-		if (Random::RANDOM.NextInt(2))
-			SetFlag(rock_state, i);
+		if(skew_good_rock_distribution)
+		{
+			int r = Random::RANDOM.NextInt(100);
+			if(rock_pos_[i].y > (size_/2))
+			{
+				if(r < 80)
+				{
+
+
+						SetFlag(rock_state, i);
+
+				}
+			}
+			else
+			{
+				if(r >= 80)
+				{
+					SetFlag(rock_state, i);
+				}
+			}
+
+		}
+		else
+		{
+			if (Random::RANDOM.NextInt(2))
+				SetFlag(rock_state, i);
+		}
 	}
 	return new MARockSampleState(rock_state, joint_pos);
 }

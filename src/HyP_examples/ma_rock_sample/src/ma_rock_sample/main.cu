@@ -215,6 +215,7 @@ public:
 		DSPOMDP* model = NULL;
 		int num_obs_bits = 1;
 		int num_agents = 2;
+		bool skew_distribution = false;
 		if (options[E_PARAMS_FILE]) {
 				  std::string params_file = options[E_PARAMS_FILE].arg;
 				  ifstream is(params_file.c_str(), ifstream::in);
@@ -227,6 +228,10 @@ public:
 				  			else if(key == "num_agents")
 				  			{
 				  				is >> num_agents;
+				  			}
+				  			else if(key == "skew_distribution")
+				  			{
+				  				is >> skew_distribution;
 				  			}
 
 
@@ -257,7 +262,7 @@ public:
 			MultiAgentRockSample::num_obs_bits = num_obs_bits;
 			MultiAgentRockSample::MAX_OBS_BIT = num_obs_bits + 2; //Because E_NONE is 2
 			MultiAgentRockSample::OBS_BIT_MASK = (1 << MultiAgentRockSample::MAX_OBS_BIT) -1;
-
+			MultiAgentRockSample::skew_good_rock_distribution = skew_distribution;
 
 
 		if (Globals::config.useGPU)
