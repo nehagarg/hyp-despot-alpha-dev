@@ -1379,11 +1379,18 @@ VNode* DESPOT::SelectBestWEUNode(QNode* qnode) {
 		VNode* vnode = it->second;
 
 		double weu;
+		double  true_weu;
 		if (Globals::config.use_multi_thread_)
+		{
 			weu = WEU(static_cast<Shared_VNode*>(vnode));
+			true_weu = WEU(vnode);
+		}
 		else
+		{
 			weu = WEU(vnode);
-		if (weu >= weustar) {
+			true_weu = weu;
+		}
+		if ((weu >= weustar) && (true_weu > 0)){ //Don't choose a node with zero weu
 			weustar = weu;
 			vstar = vnode->vstar;
 		}
