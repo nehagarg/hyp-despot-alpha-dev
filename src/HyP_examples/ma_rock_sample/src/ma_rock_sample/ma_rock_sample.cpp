@@ -15,8 +15,8 @@ MultiAgentRockSample::MultiAgentRockSample(string map) :
 	half_efficiency_distance_ = 20;
 }
 
-MultiAgentRockSample::MultiAgentRockSample(int size, int rocks) :
-	BaseMultiAgentRockSample(size, rocks) {
+MultiAgentRockSample::MultiAgentRockSample(int size, int rocks, int num_agents) :
+	BaseMultiAgentRockSample(size, rocks, num_agents) {
 	half_efficiency_distance_ = 20;
 
 }

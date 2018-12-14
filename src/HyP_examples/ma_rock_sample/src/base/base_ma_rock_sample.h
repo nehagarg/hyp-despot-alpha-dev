@@ -112,7 +112,7 @@ public:
 
 public:
 	BaseMultiAgentRockSample(std::string map);
-	BaseMultiAgentRockSample(int size, int rocks);
+	BaseMultiAgentRockSample(int size, int rocks, int num_agents = 2);
 
 	virtual bool Step(State& state, double rand_num, int action,
 		double& reward, OBS_TYPE& obs) const = 0;

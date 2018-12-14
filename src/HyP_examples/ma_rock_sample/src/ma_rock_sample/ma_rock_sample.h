@@ -16,7 +16,7 @@ namespace despot {
 class MultiAgentRockSample: public BaseMultiAgentRockSample {
 public:
 	MultiAgentRockSample(std::string map);
-	MultiAgentRockSample(int size, int rocks);
+	MultiAgentRockSample(int size, int rocks, int num_agents = 2);
 
 	bool Step(State& state, double rand_num, int action, double& reward,
 		OBS_TYPE& obs) const;

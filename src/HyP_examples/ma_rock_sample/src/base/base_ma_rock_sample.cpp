@@ -67,10 +67,11 @@ BaseMultiAgentRockSample::BaseMultiAgentRockSample(string map) {
 	InitStates();
 }
 
-BaseMultiAgentRockSample::BaseMultiAgentRockSample(int size, int rocks) :
+BaseMultiAgentRockSample::BaseMultiAgentRockSample(int size, int rocks, int num_agents) :
 	grid_(size, size),
 	size_(size),
-	num_rocks_(rocks) {
+	num_rocks_(rocks),
+	num_agents_(num_agents){
 
 	start_poses_=new Coord[MAX_NUM_AGENTS];
 	if (size == 4 && rocks == 4) {
@@ -106,10 +107,13 @@ BaseMultiAgentRockSample::BaseMultiAgentRockSample(int size, int rocks) :
 
 
 void BaseMultiAgentRockSample::InitGeneral() {
-	num_agents_=2;
+	//num_agents_=2;
 
 	start_poses_[0] = Coord(0, size_ / 2+1);
-	start_poses_[1] = Coord(0, size_ / 2-1);
+	if(num_agents_ > 1)
+	{
+		start_poses_[1] = Coord(0, size_ / 2-1);
+	}
 	grid_.SetAllValues(-1);
 
 	if(FIX_SCENARIO==0 || FIX_SCENARIO==2){
@@ -142,9 +146,12 @@ void BaseMultiAgentRockSample::Init_4_4() {
 	Coord rocks[] = { Coord(3, 1), Coord(2, 1), Coord(1, 3), Coord(1, 0) };
 
 	//start_pos_ = Coord(0, 2);
-	num_agents_=2;
+	//num_agents_=2;
 	start_poses_[0] = Coord(0, 2);
-	start_poses_[1] = Coord(0, 1);
+	if(num_agents_ > 1)
+	{
+		start_poses_[1] = Coord(0, 1);
+	}
 	grid_.SetAllValues(-1);
 	for (int i = 0; i < num_rocks_; ++i) {
 		grid_(rocks[i]) = i;
@@ -159,10 +166,13 @@ void BaseMultiAgentRockSample::Init_5_5() {
 		4, 1) };
 
 	//start_pos_ = Coord(0, 2);
-	num_agents_=2;
+	//num_agents_=2;
 
 	start_poses_[0] = Coord(0, 3);
+	if(num_agents_ > 1)
+	{
 	start_poses_[1] = Coord(0, 1);
+	}
 	grid_.SetAllValues(-1);
 	for (int i = 0; i < num_rocks_; ++i) {
 		grid_(rocks[i]) = i;
@@ -177,10 +187,13 @@ void BaseMultiAgentRockSample::Init_5_7() {
 		4, 2), Coord(0, 3), Coord(3, 4) };
 
 	//start_pos_ = Coord(0, 2);
-	num_agents_=2;
+	//num_agents_=2;
 
 	start_poses_[0] = Coord(0, 3);
-	start_poses_[1] = Coord(0, 1);
+	if(num_agents_ > 1)
+	{
+		start_poses_[1] = Coord(0, 1);
+	}
 	grid_.SetAllValues(-1);
 	for (int i = 0; i < num_rocks_; ++i) {
 		grid_(rocks[i]) = i;
@@ -196,10 +209,13 @@ void BaseMultiAgentRockSample::Init_7_8() {
 		2, 4), Coord(3, 4), Coord(5, 5), Coord(1, 6) };
 
 	//start_pos_ = Coord(0, 3);
-	num_agents_=2;
+	//num_agents_=2;
 
 	start_poses_[0] = Coord(0, 4);
-	start_poses_[1] = Coord(0, 2);
+	if(num_agents_ > 1)
+	{
+		start_poses_[1] = Coord(0, 2);
+	}
 	grid_.SetAllValues(-1);
 	for (int i = 0; i < num_rocks_; ++i) {
 		grid_(rocks[i]) = i;
@@ -339,10 +355,13 @@ void BaseMultiAgentRockSample::Init_11_11() {
 		Coord(9, 9) };
 
 	//start_pos_ = Coord(0, 5);
-	num_agents_=2;
+	//num_agents_=2;
 
 	start_poses_[0] = Coord(0, 6);
-	start_poses_[1] = Coord(0, 4);
+	if(num_agents_ > 1)
+	{
+		start_poses_[1] = Coord(0, 4);
+	}
 	grid_.SetAllValues(-1);
 	for (int i = 0; i < num_rocks_; ++i) {
 		grid_(rocks[i]) = i;
@@ -359,10 +378,14 @@ void BaseMultiAgentRockSample::Init_15_15() {
 		Coord(11, 12),Coord(12, 2),Coord(2, 6),Coord(6, 14),Coord(9, 11) };
 
 	//start_pos_ = Coord(0, 7);
-	num_agents_=2;
+	//num_agents_=2;
+
 
 	start_poses_[0] = Coord(0, 8);
+	if(num_agents_ > 1)
+	{
 	start_poses_[1] = Coord(0, 6);
+	}
 	grid_.SetAllValues(-1);
 	for (int i = 0; i < num_rocks_; ++i) {
 		grid_(rocks[i]) = i;
@@ -932,7 +955,10 @@ void BaseMultiAgentRockSample::PrintParticles(const std::vector<State*> particle
 				static_cast<const MARockSampleState*>(particle);
 		//cout<<"Print belief only support 2 robots !!!"<<endl;
 		pos_probs[GetRobPosIndex(rockstate, 0)] += particle->weight;
-		pos_probs1[GetRobPosIndex(rockstate, 1)] += particle->weight;
+		if(num_agents_ > 1)
+		{
+			pos_probs1[GetRobPosIndex(rockstate, 1)] += particle->weight;
+		}
 	}
 
 	out << "Rock belief:";
@@ -946,12 +972,15 @@ void BaseMultiAgentRockSample::PrintParticles(const std::vector<State*> particle
 			out << " " << IndexToCoord(i) << ":" << pos_probs[i];
 	}
 	out << endl;
-	out << "Robot 1 position belief:";
-	for (int i = 0; i < pos_probs1.size(); i++) {
-		if (pos_probs1[i] > 0)
-			out << " " << IndexToCoord(i) << ":" << pos_probs1[i];
+	if(num_agents_ > 1)
+	{
+		out << "Robot 1 position belief:";
+		for (int i = 0; i < pos_probs1.size(); i++) {
+			if (pos_probs1[i] > 0)
+				out << " " << IndexToCoord(i) << ":" << pos_probs1[i];
+		}
+		out << endl;
 	}
-	out << endl;
 }
 void BaseMultiAgentRockSample::PrintBelief(const Belief& belief, ostream& out) const {
 	const vector<State*>& particles =

@@ -214,6 +214,7 @@ public:
 
 		DSPOMDP* model = NULL;
 		int num_obs_bits = 1;
+		int num_agents = 2;
 		if (options[E_PARAMS_FILE]) {
 				  std::string params_file = options[E_PARAMS_FILE].arg;
 				  ifstream is(params_file.c_str(), ifstream::in);
@@ -223,6 +224,10 @@ public:
 				  			 {
 				  				 is >> num_obs_bits;
 				  			 }
+				  			else if(key == "num_agents")
+				  			{
+				  				is >> num_agents;
+				  			}
 
 
 				  		}
@@ -248,7 +253,7 @@ public:
 					number =15;
 			}
 
-			model = new MultiAgentRockSample(size, number);
+			model = new MultiAgentRockSample(size, number, num_agents);
 			MultiAgentRockSample::num_obs_bits = num_obs_bits;
 			MultiAgentRockSample::MAX_OBS_BIT = num_obs_bits + 2; //Because E_NONE is 2
 			MultiAgentRockSample::OBS_BIT_MASK = (1 << MultiAgentRockSample::MAX_OBS_BIT) -1;
