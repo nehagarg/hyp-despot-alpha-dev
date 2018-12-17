@@ -283,7 +283,7 @@ public:
 			{
 				MultiAgentRockSample::num_obs_bits = num_obs_bits;
 			}
-			MultiAgentRockSample::MAX_OBS_BIT = num_obs_bits + 2; //Because E_NONE is 2
+			MultiAgentRockSample::MAX_OBS_BIT = MultiAgentRockSample::num_obs_bits + 2; //Because E_NONE is 2
 			MultiAgentRockSample::OBS_BIT_MASK = (1 << MultiAgentRockSample::MAX_OBS_BIT) -1;
 			MultiAgentRockSample::skew_good_rock_distribution = skew_distribution;
 			std::cout << "Num obs bits " << MultiAgentRockSample::num_obs_bits << std::endl;

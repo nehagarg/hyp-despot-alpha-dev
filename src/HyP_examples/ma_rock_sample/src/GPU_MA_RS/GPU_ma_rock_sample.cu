@@ -223,7 +223,7 @@ DEVICE bool Dvc_MultiAgentRockSample::Dvc_Step(Dvc_State& state, float rand_num,
 						}
 
 						//double real_obs = (random_num*(upper_limit-lower_limit)) + lower_limit;
-						obs = int(prob_good*continuous_observation_scale/continuous_observation_interval);
+						rob_obs = int(prob_good*continuous_observation_scale/continuous_observation_interval);
 						SetRobObs(obs, rob_obs, rid);
 				}
 				else

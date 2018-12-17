@@ -127,8 +127,10 @@ bool MultiAgentRockSample::Step(State& state, double rand_num, int action, doubl
 						}
 
 						//double real_obs = (random_num*(upper_limit-lower_limit)) + lower_limit;
-						obs = int(prob_good*continuous_observation_scale/continuous_observation_interval);
-						SetRobObs(obs, rob_obs, i);
+						rob_obs = int(prob_good*continuous_observation_scale/continuous_observation_interval);
+						//std::cout << "Rob obs " << rob_obs << std::endl;
+						//SetRobObs(obs, rob_obs, i);
+						//std::cout << "Obs " << obs << std::endl;
 				}
 				else
 				{
@@ -146,6 +148,7 @@ bool MultiAgentRockSample::Step(State& state, double rand_num, int action, doubl
 					rob_obs = 4*rob_obs;
 				}
 				SetRobObs(obs, rob_obs, i);
+				//std::cout << "Obs " << obs << std::endl;
 			}
 
 			if (GetRobPosIndex(&rockstate, i)!=ROB_TERMINAL_ID) {
@@ -183,8 +186,10 @@ double MultiAgentRockSample::ObsProb(OBS_TYPE obs, const State& state, int actio
 				int true_state = (GetRock(&rockstate, rock) & 1);
 				if(use_continuous_observation)
 				{
+				  //std::cout << "Obs Prob obs = " << rob_obs << std::endl;
 					float obs_prob = (continuous_observation_interval*rob_obs)/(continuous_observation_scale);
 					prob *= (true_state == E_BAD ? (1-obs_prob):obs_prob);
+					//	std::cout << "Obs prob " << prob << std::endl;
 				}
 				else
 				{
