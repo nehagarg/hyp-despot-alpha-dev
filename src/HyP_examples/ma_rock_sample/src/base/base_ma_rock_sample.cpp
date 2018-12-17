@@ -1029,7 +1029,7 @@ void BaseMultiAgentRockSample::PrintAction(int action, ostream& out) const {
 		if (agent_action > E_SAMPLE)
 		{
 			int action_type = (agent_action - E_SAMPLE - 1)/num_rocks_;
-			out << "Check" << action_type << " " << (agent_action - E_SAMPLE - 1)/* << endl*/;
+			out << "Check" << action_type << " " << (agent_action - E_SAMPLE - 1) % num_rocks_/* << endl*/;
 		}
 	}
 	cout<<endl;
