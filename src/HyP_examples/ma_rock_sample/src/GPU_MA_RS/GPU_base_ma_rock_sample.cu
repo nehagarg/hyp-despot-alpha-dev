@@ -124,10 +124,15 @@ DEVICE DvcCoord Dvc_MultiAgentRockSample::GetRobPos(const Dvc_MARockSampleState*
 
 DEVICE int Dvc_MultiAgentRockSample::GetRobAction(int action, int rid)
 {
+	int rock_actions = ma_num_rocks_;
+	if(use_continuous_observation)
+	{
+		rock_actions = 2*ma_num_rocks_;
+	}
 	if(rid==0)
-		return action % (ma_num_rocks_+5);
+		return action % (rock_actions+5);
 	else if(rid>0)
-		return (action % (int)(pow((float)(ma_num_rocks_+5), rid+1))) /(int)(pow((float)(ma_num_rocks_+5), rid));
+		return (action % (int)(pow((float)(rock_actions+5), rid+1))) /(int)(pow((float)(rock_actions+5), rid));
 }
 
 DEVICE int Dvc_MultiAgentRockSample::GetRobObs(OBS_TYPE obs, int rid)
@@ -213,7 +218,7 @@ DEVICE Dvc_ValuedAction Dvc_MARockSampleEastScenarioLowerBound::Value(
 			value +=10 * Dvc_Globals::Dvc_Discount(Dvc_config,
 				ma_map_size_ - ma_rs_model_->GetX(rs_state, rid) - 1);
 		}
-		action += Dvc_Compass::EAST*(ma_num_rocks_+5)*rid;
+		action += Dvc_Compass::EAST*(ma_num_rocks_+5)*rid; // Should be change for multi agents with constinuous obs
 	}
 	return Dvc_ValuedAction(action,value);
 }
