@@ -207,13 +207,15 @@ DEVICE Dvc_ValuedAction Dvc_MARockSampleEastScenarioLowerBound::Value(
 	const Dvc_MARockSampleState* rs_state =
 			static_cast<const Dvc_MARockSampleState*>(particles);
 	float value=0;
+	int action = Dvc_Compass::EAST;
 	for(int rid=0; rid< num_agents_;rid++){
 		if(ma_rs_model_->GetRobPosIndex(rs_state, rid)!=ROB_TERMINAL_ID){
 			value +=10 * Dvc_Globals::Dvc_Discount(Dvc_config,
 				ma_map_size_ - ma_rs_model_->GetX(rs_state, rid) - 1);
 		}
+		action += Dvc_Compass::EAST*(ma_num_rocks_+5)*rid;
 	}
-	return Dvc_ValuedAction(Dvc_Compass::EAST*(ma_num_rocks_+5)+Dvc_Compass::EAST,value);
+	return Dvc_ValuedAction(action,value);
 }
 
 Dvc_State* BaseMultiAgentRockSample::AllocGPUParticles(int numParticles, MEMORY_MODE mode, Dvc_State*** particles_for_all_actions) const

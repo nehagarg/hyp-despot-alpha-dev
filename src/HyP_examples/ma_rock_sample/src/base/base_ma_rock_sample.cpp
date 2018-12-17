@@ -857,16 +857,18 @@ public:
 	}
 	ValuedAction SingleParticleValue(const MARockSampleState* rockstate) const {
 		double value=0;
+		int action = Compass::EAST;
 		for(int rid=0;rid<rs_model_->num_agents_; rid++)
 			{
 				if(rs_model_->GetRobPosIndex(rockstate, rid)!=ROB_TERMINAL_ID){
 					value+=10 * Globals::Discount(grid_.xsize() - rs_model_->GetX(rockstate, rid) - 1);
 				}
+				action += Compass::EAST *rs_model_->RobNumAction()*rid;
 			}
 			/*if(FIX_SCENARIO==1 && CPUDoPrint){
 				cout<<"particle id "<<rockstate->scenario_id<<" lb "<<value/particles.size()<<endl;
 			}*/
-			return ValuedAction(Compass::EAST*rs_model_->RobNumAction()+Compass::EAST,value);
+			return ValuedAction(action,value);
 	}
 	ValuedAction Value(const vector<State*>& particles, RandomStreams& streams,
 		History& history) const {
