@@ -115,7 +115,7 @@ bool MultiAgentRockSample::Step(State& state, double rand_num, int action, doubl
 					double prob_bucket_double = rand_num * continuous_observation_scale;
 					int prob_bucket = (int)prob_bucket_double;
 					double remaining_prob = prob_bucket_double - prob_bucket;
-					prob_good = efficiency + (continuous_observation_interval*(double)prob_bucket / (double)continuous_observation_scale);
+					float prob_good = efficiency + (continuous_observation_interval*(double)prob_bucket / (double)continuous_observation_scale);
 
 						if(remaining_prob > prob_good)
 						{

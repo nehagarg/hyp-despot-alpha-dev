@@ -190,10 +190,10 @@ DEVICE bool Dvc_MultiAgentRockSample::Dvc_Step(Dvc_State& state, float rand_num,
 
 			if (rob_act > E_SAMPLE) { // Sense
 				int rob_obs = 0;
-				int rock = (agent_action - E_SAMPLE - 1) % ma_num_rocks_;
+				int rock = (rob_act - E_SAMPLE - 1) % ma_num_rocks_;
 				float distance = DvcCoord::EuclideanDistance(GetRobPos(&rockstate, rid),
 					ma_rock_pos_[rock]);
-				int action_type = (agent_action - E_SAMPLE - 1)/ma_num_rocks_;
+				int action_type = (rob_act - E_SAMPLE - 1)/ma_num_rocks_;
 				reward = action_type*(-0.01);
 				double half_efficiency_distance = action_type > 0 ? ma_half_efficiency_distance_2_ : ma_half_efficiency_distance_;
 				float efficiency = (1 + pow(2, -distance / half_efficiency_distance))
@@ -211,7 +211,7 @@ DEVICE bool Dvc_MultiAgentRockSample::Dvc_Step(Dvc_State& state, float rand_num,
 					float prob_bucket_double = rand_num * continuous_observation_scale;
 					int prob_bucket = (int)prob_bucket_double;
 					float remaining_prob = prob_bucket_double - prob_bucket;
-					prob_good = efficiency + (continuous_observation_interval*(float)prob_bucket / (float)continuous_observation_scale);
+					float prob_good = efficiency + (continuous_observation_interval*(float)prob_bucket / (float)continuous_observation_scale);
 
 						if(remaining_prob > prob_good)
 						{
@@ -224,7 +224,7 @@ DEVICE bool Dvc_MultiAgentRockSample::Dvc_Step(Dvc_State& state, float rand_num,
 
 						//double real_obs = (random_num*(upper_limit-lower_limit)) + lower_limit;
 						obs = int(prob_good*continuous_observation_scale/continuous_observation_interval);
-						SetRobObs(obs, rob_obs, i);
+						SetRobObs(obs, rob_obs, rid);
 				}
 				else
 				{
