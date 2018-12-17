@@ -72,6 +72,7 @@ public:
 DEVICE extern int ma_map_size_;
 DEVICE extern int ma_num_rocks_;
 DEVICE extern double ma_half_efficiency_distance_;
+DEVICE extern double ma_half_efficiency_distance_2_;
 DEVICE extern int* ma_grid_;/*A flattened pointer of a 2D map*/
 DEVICE extern DvcCoord* ma_rock_pos_;
 DEVICE extern int ma_Dvc_policy_size_;
@@ -82,6 +83,10 @@ DEVICE extern Dvc_MultiAgentRockSample* ma_rs_model_;
 DEVICE extern int num_obs_bits;
 DEVICE extern int MAX_OBS_BIT;
 DEVICE extern int OBS_BIT_MASK;
+DEVICE extern bool use_continuous_observation;
+DEVICE extern float continuous_observation_interval;
+DEVICE extern int continuous_observation_scale;
+
 
 } // namespace despot
 

@@ -14,12 +14,18 @@ namespace despot {
 DEVICE int ma_map_size_=NULL;
 DEVICE int ma_num_rocks_=NULL;
 DEVICE double ma_half_efficiency_distance_=NULL;
+DEVICE double ma_half_efficiency_distance_2_=NULL;
 DEVICE int* ma_grid_=NULL;/*A flattened pointer of a 2D map*/
 DEVICE DvcCoord* ma_rock_pos_=NULL;
 DEVICE int num_agents_=NULL;
 DEVICE int num_obs_bits = 1;
 DEVICE int MAX_OBS_BIT = 3;
 DEVICE int OBS_BIT_MASK = (1 << 3) -1;
+DEVICE bool use_continuous_observation = false;
+DEVICE float continuous_observation_interval = 0.01;
+DEVICE int continuous_observation_scale = 100000;
+
+
 DEVICE Dvc_MultiAgentRockSample* ma_rs_model_=NULL;
 DEVICE int ma_Dvc_policy_size_=0;
 DEVICE Dvc_ValuedAction* ma_Dvc_policy_=NULL;

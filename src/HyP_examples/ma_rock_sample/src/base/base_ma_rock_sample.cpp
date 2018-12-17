@@ -19,6 +19,10 @@ int BaseMultiAgentRockSample::num_obs_bits = 1;
 int BaseMultiAgentRockSample::MAX_OBS_BIT = 3;
 int BaseMultiAgentRockSample::OBS_BIT_MASK = (1 << 3) -1;
 bool BaseMultiAgentRockSample::skew_good_rock_distribution = false;
+bool BaseMultiAgentRockSample::use_continuous_observation = false;
+float BaseMultiAgentRockSample::continuous_observation_interval = 0.01;
+int BaseMultiAgentRockSample::continuous_observation_scale = 100000;
+
 MARockSampleState::MARockSampleState() {
 	joint_pos=0;
 }
@@ -1023,7 +1027,10 @@ void BaseMultiAgentRockSample::PrintAction(int action, ostream& out) const {
 		if (agent_action == E_SAMPLE)
 			out << "Sample" /*<< endl*/;
 		if (agent_action > E_SAMPLE)
-			out << "Check " << (agent_action - E_SAMPLE - 1)/* << endl*/;
+		{
+			int action_type = (agent_action - E_SAMPLE - 1)/num_rocks_;
+			out << "Check" << action_type << " " << (agent_action - E_SAMPLE - 1)/* << endl*/;
+		}
 	}
 	cout<<endl;
 }

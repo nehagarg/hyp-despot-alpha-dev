@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <iostream>
 #include <ostream>
+#include <math.h>
 
 #include "../GPU_MA_RS/GPU_ma_rock_sample.h"
 #include "ma_rock_sample.h"
@@ -39,7 +40,8 @@ static DvcCoord* temp_rockpos;
 
 
 __global__ void MARSPassModelFuncs(Dvc_MultiAgentRockSample* model,int map_size,
-		int num_rocks, double half_efficiency_distance, int* grid, DvcCoord* rockpos, int num_agents, int num_obs_bits_)
+		int num_rocks, double half_efficiency_distance, int* grid, DvcCoord* rockpos, int num_agents, int num_obs_bits_,
+		double half_efficiency_distance2, bool use_continuous_obs, float continuous_obs_interval, int countinuous_obs_scale)
 {
 	DvcModelStep_=&(model->Dvc_Step);
 	DvcModelCopyNoAlloc_=&(model->Dvc_Copy_NoAlloc);
@@ -57,11 +59,15 @@ __global__ void MARSPassModelFuncs(Dvc_MultiAgentRockSample* model,int map_size,
 	ma_map_size_=map_size;
 	ma_num_rocks_=num_rocks;
 	ma_half_efficiency_distance_=half_efficiency_distance;
+	ma_half_efficiency_distance_2_ = half_efficiency_distance2;
 	ma_grid_=grid;//A flattened pointer of a 2D map
 	ma_rock_pos_=rockpos;
 	num_obs_bits = num_obs_bits_;
 	MAX_OBS_BIT = num_obs_bits + 2; //Because E_NONE is 2
 	OBS_BIT_MASK = (1 << MAX_OBS_BIT) -1;
+	use_continuous_observation = use_continuous_obs;
+	continuous_observation_interval = continuous_obs_interval;
+	continuous_observation_scale = countinuous_obs_scale;
 }
 
 __global__ void RSPassPolicyGraph(int graph_size, int num_edges_per_node, int* action_nodes, int* obs_edges)
@@ -83,7 +89,9 @@ void MultiAgentRockSample::InitGPUModel(){
 	HANDLE_ERROR(cudaMemcpy(temp_rockpos, Hst->rock_pos_.data(), Hst->num_rocks_*sizeof(DvcCoord), cudaMemcpyHostToDevice));
 
 	MARSPassModelFuncs<<<1,1,1>>>(Dvc, Hst->size_, Hst->num_rocks_,Hst->half_efficiency_distance_,
-			tempGrid, temp_rockpos, Hst->num_agents_, MultiAgentRockSample::num_obs_bits);
+			tempGrid, temp_rockpos, Hst->num_agents_, MultiAgentRockSample::num_obs_bits,
+			Hst->half_efficiency_distance_2_, MultiAgentRockSample::use_continuous_observation,
+			MultiAgentRockSample::continuous_observation_interval, MultiAgentRockSample::continuous_observation_scale);
 
 	HANDLE_ERROR(cudaDeviceSynchronize());
 
@@ -216,6 +224,8 @@ public:
 		int num_obs_bits = 1;
 		int num_agents = 2;
 		bool skew_distribution = false;
+		bool use_continuous_obs = false;
+
 		if (options[E_PARAMS_FILE]) {
 				  std::string params_file = options[E_PARAMS_FILE].arg;
 				  ifstream is(params_file.c_str(), ifstream::in);
@@ -233,6 +243,10 @@ public:
 				  			{
 				  				is >> skew_distribution;
 				  			}
+				  			else if(key == "use_continuous_obs")
+							{
+								is >> use_continuous_obs;
+							}
 
 
 				  		}
@@ -259,10 +273,20 @@ public:
 			}
 
 			model = new MultiAgentRockSample(size, number, num_agents);
-			MultiAgentRockSample::num_obs_bits = num_obs_bits;
+			MultiAgentRockSample::use_continuous_observation = use_continuous_obs;
+			if(MultiAgentRockSample::use_continuous_observation)
+			{
+				float obs_bits_float = log2(1.0*(float)MultiAgentRockSample::continuous_observation_scale/MultiAgentRockSample::continuous_observation_interval);
+				MultiAgentRockSample::num_obs_bits = (int)obs_bits_float + 1;
+			}
+			else
+			{
+				MultiAgentRockSample::num_obs_bits = num_obs_bits;
+			}
 			MultiAgentRockSample::MAX_OBS_BIT = num_obs_bits + 2; //Because E_NONE is 2
 			MultiAgentRockSample::OBS_BIT_MASK = (1 << MultiAgentRockSample::MAX_OBS_BIT) -1;
 			MultiAgentRockSample::skew_good_rock_distribution = skew_distribution;
+			std::cout << "Num obs bits " << MultiAgentRockSample::num_obs_bits << std::endl;
 
 
 		if (Globals::config.useGPU)

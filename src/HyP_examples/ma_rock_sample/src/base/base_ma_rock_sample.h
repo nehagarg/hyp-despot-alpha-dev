@@ -73,10 +73,14 @@ public:
 	int size_, num_rocks_, num_agents_;
 	Coord* start_poses_;
 	double half_efficiency_distance_;
+	double half_efficiency_distance_2_;
 	static int num_obs_bits;
 	static int MAX_OBS_BIT;
 	static int OBS_BIT_MASK;
 	static bool skew_good_rock_distribution;
+	static bool use_continuous_observation;
+	static float continuous_observation_interval;
+	static int continuous_observation_scale;
 
 	MARockSampleState* rock_state_;
 protected:
@@ -166,7 +170,17 @@ public:
 	int NumRockStates() const;
 	int NumPosStates() const;
 	int RobNumCoordState() const{return grid_.xsize()*grid_.ysize();};
-	int RobNumAction() const{return num_rocks_+5;};
+	int RobNumAction() const{
+		if(use_continuous_observation)
+		{
+			return (2*num_rocks_) + 5;
+		}
+		else
+		{
+		return num_rocks_+5;
+		}
+
+	};
 	bool CheckStateValidity(int s) const;
 	bool CheckActionValidity(int a) const;
 

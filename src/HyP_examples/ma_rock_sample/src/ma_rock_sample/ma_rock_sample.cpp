@@ -13,11 +13,13 @@ namespace despot {
 MultiAgentRockSample::MultiAgentRockSample(string map) :
 	BaseMultiAgentRockSample(map) {
 	half_efficiency_distance_ = 20;
+	half_efficiency_distance_2_ = 100;
 }
 
 MultiAgentRockSample::MultiAgentRockSample(int size, int rocks, int num_agents) :
 	BaseMultiAgentRockSample(size, rocks, num_agents) {
 	half_efficiency_distance_ = 20;
+	half_efficiency_distance_2_ = 100;
 
 }
 
@@ -92,24 +94,57 @@ bool MultiAgentRockSample::Step(State& state, double rand_num, int action, doubl
 
 			if (agent_action > E_SAMPLE) {//debugging
 				int rob_obs=0;// (int)(rand_num*3);
-				int rock = agent_action - E_SAMPLE - 1;
+				int rock = (agent_action - E_SAMPLE - 1) % num_rocks_;
 				double distance = Coord::EuclideanDistance(GetRobPos(&rockstate, i),
 					rock_pos_[rock]);
-				double efficiency = (1 + pow(2, -distance / half_efficiency_distance_))
+				int action_type = (agent_action - E_SAMPLE - 1)/num_rocks_;
+				reward = action_type*(-0.01);
+				double half_efficiency_distance = action_type > 0 ? half_efficiency_distance_2_ : half_efficiency_distance_;
+				double efficiency = (1 + pow(2, -distance / half_efficiency_distance))
 					* 0.5;
+				bool good_rock = GetRock(&rockstate, rock);
 				//double efficiency=0.5;
 
-				for(int j = 0; j < num_obs_bits; j++)
-				{int temp_rob_obs;
+				if(use_continuous_observation)
+				{
 
-					if (rand_num < efficiency)
-						temp_rob_obs= GetRock(&rockstate, rock) & E_GOOD;
-					else
-						temp_rob_obs= !(GetRock(&rockstate, rock) & E_GOOD);
-					rob_obs = (2*rob_obs + temp_rob_obs);
-					rand_num=QuickRandom::RandGeneration(rand_num);
+					if(efficiency > (1-continuous_observation_interval))
+					{
+						efficiency = (1-continuous_observation_interval);
+					}
+					double prob_bucket_double = rand_num * continuous_observation_scale;
+					int prob_bucket = (int)prob_bucket_double;
+					double remaining_prob = prob_bucket_double - prob_bucket;
+					prob_good = efficiency + (continuous_observation_interval*(double)prob_bucket / (double)continuous_observation_scale);
+
+						if(remaining_prob > prob_good)
+						{
+							prob_good = 1-prob_good;
+						}
+						if(!good_rock & E_GOOD)
+						{
+							prob_good = 1-prob_good;
+						}
+
+						//double real_obs = (random_num*(upper_limit-lower_limit)) + lower_limit;
+						obs = int(prob_good*continuous_observation_scale/continuous_observation_interval);
+						SetRobObs(obs, rob_obs, i);
 				}
-				rob_obs = 4*rob_obs;
+				else
+				{
+
+					for(int j = 0; j < num_obs_bits; j++)
+					{int temp_rob_obs;
+
+						if (rand_num < efficiency)
+							temp_rob_obs= GetRock(&rockstate, rock) & E_GOOD;
+						else
+							temp_rob_obs= !(GetRock(&rockstate, rock) & E_GOOD);
+						rob_obs = (2*rob_obs + temp_rob_obs);
+						rand_num=QuickRandom::RandGeneration(rand_num);
+					}
+					rob_obs = 4*rob_obs;
+				}
 				SetRobObs(obs, rob_obs, i);
 			}
 
@@ -142,19 +177,27 @@ double MultiAgentRockSample::ObsProb(OBS_TYPE obs, const State& state, int actio
 			//else if (rob_obs < 4) //Last 2 bits for E_NONE
 			//	prob *=0;
 			else{
-				int rock = agent_action - E_SAMPLE - 1;
+				int rock = (agent_action - E_SAMPLE - 1) % num_rocks_;
 				double distance = Coord::EuclideanDistance(GetRobPos(&rockstate, i),
 					rock_pos_[rock]);
-				double efficiency = (1 + pow(2, -distance / half_efficiency_distance_))
-					* 0.5;
 				int true_state = (GetRock(&rockstate, rock) & 1);
-				for(int j = 0; j < num_obs_bits; j++)
+				if(use_continuous_observation)
 				{
-					int my_rob_obs = (rob_obs >> (2+j)) & 1;
-					prob*= ( true_state== my_rob_obs) ? efficiency : (1 - efficiency);
-					if(j % 8 == 0)
+					float obs_prob = (continuous_observation_interval*rob_obs)/(continuous_observation_scale);
+					prob *= (true_state == E_BAD ? (1-obs_prob):obs_prob);
+				}
+				else
+				{
+					double efficiency = (1 + pow(2, -distance / half_efficiency_distance_))
+						* 0.5;
+					for(int j = 0; j < num_obs_bits; j++)
 					{
-						prob = prob*1000; //Multiply by a constant to avoid prob becoming 0
+						int my_rob_obs = (rob_obs >> (2+j)) & 1;
+						prob*= ( true_state== my_rob_obs) ? efficiency : (1 - efficiency);
+						if(j % 8 == 0)
+						{
+							prob = prob*1000; //Multiply by a constant to avoid prob becoming 0
+						}
 					}
 				}
 			}
