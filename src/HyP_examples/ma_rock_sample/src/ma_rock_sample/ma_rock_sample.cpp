@@ -218,16 +218,23 @@ void MultiAgentRockSample::PrintObs(const State& state, OBS_TYPE observation,
 		}
 		else
 		{
-			for(int j = 0; j < num_obs_bits; j++)
+			if(use_continuous_observation)
 			{
-				int my_rob_obs = (agent_observation >> (2+j)) & 1;
-				if(my_rob_obs == E_GOOD)
+				out << my_rob_obs;
+			}
+			else
+			{
+				for(int j = 0; j < num_obs_bits; j++)
 				{
-					out << "G ";
-				}
-				if(my_rob_obs == E_BAD)
-				{
-					out << "B ";
+					int my_rob_obs = (agent_observation >> (2+j)) & 1;
+					if(my_rob_obs == E_GOOD)
+					{
+						out << "G ";
+					}
+					if(my_rob_obs == E_BAD)
+					{
+						out << "B ";
+					}
 				}
 			}
 		}
