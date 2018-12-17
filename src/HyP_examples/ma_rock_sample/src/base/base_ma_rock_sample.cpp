@@ -22,6 +22,7 @@ bool BaseMultiAgentRockSample::skew_good_rock_distribution = false;
 bool BaseMultiAgentRockSample::use_continuous_observation = false;
 float BaseMultiAgentRockSample::continuous_observation_interval = 0.01;
 int BaseMultiAgentRockSample::continuous_observation_scale = 100000;
+int BaseMultiAgentRockSample::num_action_types = 1;
 
 MARockSampleState::MARockSampleState() {
 	joint_pos=0;

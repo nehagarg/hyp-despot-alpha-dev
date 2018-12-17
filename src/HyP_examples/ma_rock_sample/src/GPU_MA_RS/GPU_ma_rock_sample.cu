@@ -307,14 +307,9 @@ DEVICE float Dvc_MultiAgentRockSample::Dvc_ObsProb(OBS_TYPE& obs, Dvc_State& sta
 }
 DEVICE int Dvc_MultiAgentRockSample::NumActions()
 {
-	if(use_continuous_observation)
-	{
-		return pow((float)((2*ma_num_rocks_) + 5), num_agents_);
-	}
-	else
-	{
-		return pow((float)(ma_num_rocks_ + 5), num_agents_);
-	}
+
+		return pow((float)((num_action_types*ma_num_rocks_) + 5), num_agents_);
+
 }
 
 

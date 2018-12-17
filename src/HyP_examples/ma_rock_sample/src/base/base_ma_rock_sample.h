@@ -81,6 +81,7 @@ public:
 	static bool use_continuous_observation;
 	static float continuous_observation_interval;
 	static int continuous_observation_scale;
+	static int num_action_types;
 
 	MARockSampleState* rock_state_;
 protected:
@@ -171,14 +172,7 @@ public:
 	int NumPosStates() const;
 	int RobNumCoordState() const{return grid_.xsize()*grid_.ysize();};
 	int RobNumAction() const{
-		if(use_continuous_observation)
-		{
-			return (2*num_rocks_) + 5;
-		}
-		else
-		{
-		return num_rocks_+5;
-		}
+		return (num_action_types*num_rocks_)+5;
 
 	};
 	bool CheckStateValidity(int s) const;

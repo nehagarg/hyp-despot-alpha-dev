@@ -41,7 +41,8 @@ static DvcCoord* temp_rockpos;
 
 __global__ void MARSPassModelFuncs(Dvc_MultiAgentRockSample* model,int map_size,
 		int num_rocks, double half_efficiency_distance, int* grid, DvcCoord* rockpos, int num_agents, int num_obs_bits_,
-		double half_efficiency_distance2, bool use_continuous_obs, float continuous_obs_interval, int countinuous_obs_scale)
+		double half_efficiency_distance2, bool use_continuous_obs, float continuous_obs_interval, int countinuous_obs_scale
+		, int num_action_types_)
 {
 	DvcModelStep_=&(model->Dvc_Step);
 	DvcModelCopyNoAlloc_=&(model->Dvc_Copy_NoAlloc);
@@ -68,6 +69,7 @@ __global__ void MARSPassModelFuncs(Dvc_MultiAgentRockSample* model,int map_size,
 	use_continuous_observation = use_continuous_obs;
 	continuous_observation_interval = continuous_obs_interval;
 	continuous_observation_scale = countinuous_obs_scale;
+	num_action_types = num_action_types_;
 }
 
 __global__ void RSPassPolicyGraph(int graph_size, int num_edges_per_node, int* action_nodes, int* obs_edges)
@@ -91,7 +93,8 @@ void MultiAgentRockSample::InitGPUModel(){
 	MARSPassModelFuncs<<<1,1,1>>>(Dvc, Hst->size_, Hst->num_rocks_,Hst->half_efficiency_distance_,
 			tempGrid, temp_rockpos, Hst->num_agents_, MultiAgentRockSample::num_obs_bits,
 			Hst->half_efficiency_distance_2_, MultiAgentRockSample::use_continuous_observation,
-			MultiAgentRockSample::continuous_observation_interval, MultiAgentRockSample::continuous_observation_scale);
+			MultiAgentRockSample::continuous_observation_interval, MultiAgentRockSample::continuous_observation_scale
+			, MultiAgentRockSample::num_action_types);
 
 	HANDLE_ERROR(cudaDeviceSynchronize());
 
@@ -225,7 +228,7 @@ public:
 		int num_agents = 2;
 		bool skew_distribution = false;
 		bool use_continuous_obs = false;
-
+		int num_action_types = 1;
 		if (options[E_PARAMS_FILE]) {
 				  std::string params_file = options[E_PARAMS_FILE].arg;
 				  ifstream is(params_file.c_str(), ifstream::in);
@@ -246,6 +249,10 @@ public:
 				  			else if(key == "use_continuous_obs")
 							{
 								is >> use_continuous_obs;
+							}
+				  			else if(key == "num_action_types")
+							{
+								is >> num_action_types;
 							}
 
 
@@ -286,6 +293,7 @@ public:
 			MultiAgentRockSample::MAX_OBS_BIT = MultiAgentRockSample::num_obs_bits + 2; //Because E_NONE is 2
 			MultiAgentRockSample::OBS_BIT_MASK = (1 << MultiAgentRockSample::MAX_OBS_BIT) -1;
 			MultiAgentRockSample::skew_good_rock_distribution = skew_distribution;
+			MultiAgentRockSample::num_action_types = num_action_types;
 			std::cout << "Num obs bits " << MultiAgentRockSample::num_obs_bits << std::endl;
 
 

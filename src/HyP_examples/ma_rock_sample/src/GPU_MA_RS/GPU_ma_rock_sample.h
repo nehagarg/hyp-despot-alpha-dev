@@ -86,6 +86,7 @@ DEVICE extern int OBS_BIT_MASK;
 DEVICE extern bool use_continuous_observation;
 DEVICE extern float continuous_observation_interval;
 DEVICE extern int continuous_observation_scale;
+DEVICE extern int num_action_types;
 
 
 } // namespace despot
