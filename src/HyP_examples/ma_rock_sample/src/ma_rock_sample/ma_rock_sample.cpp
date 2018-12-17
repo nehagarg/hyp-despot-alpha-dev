@@ -220,7 +220,7 @@ void MultiAgentRockSample::PrintObs(const State& state, OBS_TYPE observation,
 		{
 			if(use_continuous_observation)
 			{
-				out << my_rob_obs;
+				out << agent_observation;
 			}
 			else
 			{
