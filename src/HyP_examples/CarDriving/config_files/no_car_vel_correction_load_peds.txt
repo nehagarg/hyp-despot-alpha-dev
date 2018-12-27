@@ -1,0 +1,2 @@
+USE_ZERO_VEL_CORRECTION = 0
+load_peds = 1
