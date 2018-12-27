@@ -1,0 +1,2 @@
+use_continuous_obs = 1
+num_agents = 2
