@@ -110,6 +110,7 @@ PedPomdp::PedPomdp(WorldModel &model_) :
 	random_(Random((unsigned) Seeds::Next()))
 {
 	use_rvo = false;
+	load_peds = false;
 
 }
 
@@ -125,6 +126,7 @@ PedPomdp::PedPomdp(std::string params_file) :
 	random_(Random((unsigned) Seeds::Next()))
 {
 	use_rvo = false;
+	load_peds = false;
 	ifstream is(params_file.c_str(), ifstream::in);
 	string line, key, val;
 		while (is >> key >> val) {
@@ -140,6 +142,11 @@ PedPomdp::PedPomdp(std::string params_file) :
 			 {
 				 is >> ModelParams::USE_ZERO_VEL_CORRECTION;
 			 }
+			 else if (key == "load_peds")
+			 {
+				 is >> load_peds;
+			 }
+
 
 
 		}

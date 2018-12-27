@@ -163,6 +163,7 @@ public:
 
 
 	bool use_rvo;
+	bool load_peds;
  // protected:
 	enum {
 		ACT_CUR,

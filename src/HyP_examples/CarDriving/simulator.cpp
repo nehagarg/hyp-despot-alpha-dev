@@ -71,7 +71,7 @@ State* Simulator::Initialize(){
 
 	if(FIX_SCENARIO==0)
 	{
-		if(DESPOT::Debug_mode)
+		if(DESPOT::Debug_mode || ((PedPomdp*)model_)->load_peds)
 		{
 			ImportPeds("Peds.txt", world_state);
 			cout << "[FIX_SCENARIO] load peds from "<< "Peds.txt" << endl;
