@@ -78,7 +78,7 @@ void QuickRandom::InitRandGen()
 
 void QuickRandom::SetSeed(unsigned long long int v, int ThreadID)
 {
-	seeds_[ThreadID] = 0;
+	seeds_[ThreadID] = v;
 }
 
 

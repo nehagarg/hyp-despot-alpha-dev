@@ -84,7 +84,7 @@ Belief* PedPomdpBelief::MakeCopy() const{
 
 void UpdateState(const PomdpStateWorld* src_world_state, WorldModel& world_model){
 
-	stateTracker.removePeds();
+	//stateTracker.removePeds();
 	stateTracker.updateCar(world_model.path[src_world_state->car.pos], src_world_state->car.dist_travelled);
 	stateTracker.updateVel(src_world_state->car.vel);
 
