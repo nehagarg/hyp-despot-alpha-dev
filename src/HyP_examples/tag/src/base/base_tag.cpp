@@ -566,6 +566,10 @@ void BaseTag::ReadConfig(istream& is) {
                 {
                     is >> BaseTag::DANGER_PENALTY;
                 }
+                else if (key == "tag-reward")
+				{
+					is >> BaseTag::TAG_REWARD;
+				}
                 
 	}
 }
