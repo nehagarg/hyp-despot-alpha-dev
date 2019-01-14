@@ -969,6 +969,7 @@ _InitBounds_IntArrayObs(int total_num_scenarios, int num_particles,
 		else
 		{
 			parent_PID = vnode_particleIDs[PID];
+			first_particle_id = vnode_particleIDs[0];
 		}
 		//int parent_PID = vnode_particleIDs[PID];
 		current_particle = (Dvc_State*) ((int*) localParticles + Shared_mem_per_particle * threadIdx.x);
@@ -990,15 +991,15 @@ _InitBounds_IntArrayObs(int total_num_scenarios, int num_particles,
 		//Do roll-out using the updated particle
 		Dvc_History local_history;
 		local_history.currentSize_ = hist_size;
-		if(Dvc_config->track_alpha_vector)
-		{
+		//if(Dvc_config->track_alpha_vector)
+		//{
 			if(DvcModelGetCarVel_)
 			{
 				local_history.carvel = DvcModelGetCarVel_(new_particles, first_particle_id);
 
 			}
 
-		}
+		//}
 		local_history.actions_ = history->actions_;
 		local_history.observations_ = history->observations_;
 
