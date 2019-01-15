@@ -213,6 +213,7 @@ public:
 	bool use_special_belief;
 	static int num_obs_bits;
 	static float OBS_NOISE;
+	static float STAY_OBS_NOISE;
 
 public:
 	BaseUncNavigation(std::string map);

@@ -26,6 +26,7 @@ PolicyGraph* policy_graph = NULL;
 
 int BaseUncNavigation::num_obs_bits = 8;
 float BaseUncNavigation::OBS_NOISE = 0.03f;
+float BaseUncNavigation::STAY_OBS_NOISE = 0.03f;
 /* ==============================================================================
  * UncNavigationState class
  * ==============================================================================*/
@@ -151,7 +152,12 @@ void UncNavigationBelief::Update(ACT_TYPE action, OBS_TYPE obs)
 				if(nav_state->Inside(pos))
 				{
 					double change_prob = Random::RANDOM.NextDouble();
-					if(change_prob < BaseUncNavigation::OBS_NOISE)
+					double obs_noise = BaseUncNavigation::OBS_NOISE;
+					if(action == BaseUncNavigation::E_STAY)
+					{
+						obs_noise = BaseUncNavigation::STAY_OBS_NOISE;
+					}
+					if(change_prob < obs_noise)
 					{
 						nav_state->GridOpen(pos)= 1-obss[j];
 					}

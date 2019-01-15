@@ -93,6 +93,7 @@ public:
 //World model parameters from CPU
 DEVICE extern int num_obs_bits;
 DEVICE extern float OBS_NOISE;
+DEVICE extern float STAY_OBS_NOISE;
 
 } // namespace despot
 

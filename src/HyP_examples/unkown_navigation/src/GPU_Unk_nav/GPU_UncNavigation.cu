@@ -11,6 +11,7 @@ namespace despot {
 
 DEVICE int num_obs_bits = 8;
 DEVICE float OBS_NOISE = 0.03f;
+DEVICE float STAY_OBS_NOISE = 0.03f;
 DEVICE Dvc_UncNavigation::Dvc_UncNavigation()
 
 {
@@ -28,7 +29,7 @@ DEVICE bool Dvc_UncNavigation::Dvc_Step(Dvc_State& state, float rand_num, int ac
 	Dvc_UncNavigationState& nav_state = static_cast<Dvc_UncNavigationState&>(state);//copy contents, link cells to existing ones
 	bool terminal=false;
 	reward = 0;
-
+	float obs_noise = OBS_NOISE;
 	int dir=threadIdx.y;
 
 	if(dir==0)
@@ -52,6 +53,7 @@ DEVICE bool Dvc_UncNavigation::Dvc_Step(Dvc_State& state, float rand_num, int ac
 
 		if (action == E_STAY) { // Sample
 			reward=-0.2;
+			obs_noise = STAY_OBS_NOISE;
 		}
 
 		obs=0;//Initialize obs
@@ -66,67 +68,67 @@ DEVICE bool Dvc_UncNavigation::Dvc_Step(Dvc_State& state, float rand_num, int ac
 		{
 		case 3:
 			rand_num=Dvc_QuickRandom::RandGeneration(&Temp, rand_num);
-			obs_i=(rand_num<1-OBS_NOISE)?nav_state.Grid(nav_state.rob.x,nav_state.rob.y+1):!nav_state.Grid(nav_state.rob.x,nav_state.rob.y+1);
+			obs_i=(rand_num<1-obs_noise)?nav_state.Grid(nav_state.rob.x,nav_state.rob.y+1):!nav_state.Grid(nav_state.rob.x,nav_state.rob.y+1);
 			break;
 		case 2:
 			rand_num=Dvc_QuickRandom::RandGeneration(&Temp, rand_num);
-			obs_i=(rand_num<1-OBS_NOISE)?nav_state.Grid(nav_state.rob.x+1,nav_state.rob.y):!nav_state.Grid(nav_state.rob.x+1,nav_state.rob.y);
+			obs_i=(rand_num<1-obs_noise)?nav_state.Grid(nav_state.rob.x+1,nav_state.rob.y):!nav_state.Grid(nav_state.rob.x+1,nav_state.rob.y);
 			break;
 		case 1:
 			rand_num=Dvc_QuickRandom::RandGeneration(&Temp, rand_num);
-			obs_i=(rand_num<1-OBS_NOISE)?nav_state.Grid(nav_state.rob.x,nav_state.rob.y-1):!nav_state.Grid(nav_state.rob.x,nav_state.rob.y-1);
+			obs_i=(rand_num<1-obs_noise)?nav_state.Grid(nav_state.rob.x,nav_state.rob.y-1):!nav_state.Grid(nav_state.rob.x,nav_state.rob.y-1);
 			break;
 		case 0:
 			rand_num=Dvc_QuickRandom::RandGeneration(&Temp, rand_num);
-			obs_i=(rand_num<1-OBS_NOISE)?nav_state.Grid(nav_state.rob.x-1,nav_state.rob.y):!nav_state.Grid(nav_state.rob.x-1,nav_state.rob.y);
+			obs_i=(rand_num<1-obs_noise)?nav_state.Grid(nav_state.rob.x-1,nav_state.rob.y):!nav_state.Grid(nav_state.rob.x-1,nav_state.rob.y);
 			break;
 		case 4:
 			rand_num=Dvc_QuickRandom::RandGeneration(&Temp, rand_num);
-			obs_i=(rand_num<1-OBS_NOISE)?nav_state.Grid(nav_state.rob.x-1,nav_state.rob.y+1):!nav_state.Grid(nav_state.rob.x-1,nav_state.rob.y+1);
+			obs_i=(rand_num<1-obs_noise)?nav_state.Grid(nav_state.rob.x-1,nav_state.rob.y+1):!nav_state.Grid(nav_state.rob.x-1,nav_state.rob.y+1);
 			break;
 		case 5:
 			rand_num=Dvc_QuickRandom::RandGeneration(&Temp, rand_num);
-			obs_i=(rand_num<1-OBS_NOISE)?nav_state.Grid(nav_state.rob.x-1,nav_state.rob.y-1):!nav_state.Grid(nav_state.rob.x-1,nav_state.rob.y-1);
+			obs_i=(rand_num<1-obs_noise)?nav_state.Grid(nav_state.rob.x-1,nav_state.rob.y-1):!nav_state.Grid(nav_state.rob.x-1,nav_state.rob.y-1);
 			break;
 		case 6:
 			rand_num=Dvc_QuickRandom::RandGeneration(&Temp, rand_num);
-			obs_i=(rand_num<1-OBS_NOISE)?nav_state.Grid(nav_state.rob.x+1,nav_state.rob.y-1):!nav_state.Grid(nav_state.rob.x+1,nav_state.rob.y-1);
+			obs_i=(rand_num<1-obs_noise)?nav_state.Grid(nav_state.rob.x+1,nav_state.rob.y-1):!nav_state.Grid(nav_state.rob.x+1,nav_state.rob.y-1);
 			break;
 		case 7:
 			rand_num=Dvc_QuickRandom::RandGeneration(&Temp, rand_num);
-			obs_i=(rand_num<1-OBS_NOISE)?nav_state.Grid(nav_state.rob.x+1,nav_state.rob.y+1):!nav_state.Grid(nav_state.rob.x+1,nav_state.rob.y+1);
+			obs_i=(rand_num<1-obs_noise)?nav_state.Grid(nav_state.rob.x+1,nav_state.rob.y+1):!nav_state.Grid(nav_state.rob.x+1,nav_state.rob.y+1);
 			break;
 		case 11:
 			rand_num=Dvc_QuickRandom::RandGeneration(&Temp, rand_num);
-			obs_i=(rand_num<1-OBS_NOISE)?nav_state.Grid(nav_state.rob.x,nav_state.rob.y+2):!nav_state.Grid(nav_state.rob.x,nav_state.rob.y+2);
+			obs_i=(rand_num<1-obs_noise)?nav_state.Grid(nav_state.rob.x,nav_state.rob.y+2):!nav_state.Grid(nav_state.rob.x,nav_state.rob.y+2);
 			break;
 		case 10:
 			rand_num=Dvc_QuickRandom::RandGeneration(&Temp, rand_num);
-			obs_i=(rand_num<1-OBS_NOISE)?nav_state.Grid(nav_state.rob.x+2,nav_state.rob.y):!nav_state.Grid(nav_state.rob.x+2,nav_state.rob.y);
+			obs_i=(rand_num<1-obs_noise)?nav_state.Grid(nav_state.rob.x+2,nav_state.rob.y):!nav_state.Grid(nav_state.rob.x+2,nav_state.rob.y);
 			break;
 		case 9:
 			rand_num=Dvc_QuickRandom::RandGeneration(&Temp, rand_num);
-			obs_i=(rand_num<1-OBS_NOISE)?nav_state.Grid(nav_state.rob.x,nav_state.rob.y-2):!nav_state.Grid(nav_state.rob.x,nav_state.rob.y-2);
+			obs_i=(rand_num<1-obs_noise)?nav_state.Grid(nav_state.rob.x,nav_state.rob.y-2):!nav_state.Grid(nav_state.rob.x,nav_state.rob.y-2);
 			break;
 		case 8:
 			rand_num=Dvc_QuickRandom::RandGeneration(&Temp, rand_num);
-			obs_i=(rand_num<1-OBS_NOISE)?nav_state.Grid(nav_state.rob.x-2,nav_state.rob.y):!nav_state.Grid(nav_state.rob.x-2,nav_state.rob.y);
+			obs_i=(rand_num<1-obs_noise)?nav_state.Grid(nav_state.rob.x-2,nav_state.rob.y):!nav_state.Grid(nav_state.rob.x-2,nav_state.rob.y);
 			break;
 		case 12:
 			rand_num=Dvc_QuickRandom::RandGeneration(&Temp, rand_num);
-			obs_i=(rand_num<1-OBS_NOISE)?nav_state.Grid(nav_state.rob.x-2,nav_state.rob.y+2):!nav_state.Grid(nav_state.rob.x-2,nav_state.rob.y+2);
+			obs_i=(rand_num<1-obs_noise)?nav_state.Grid(nav_state.rob.x-2,nav_state.rob.y+2):!nav_state.Grid(nav_state.rob.x-2,nav_state.rob.y+2);
 			break;
 		case 13:
 			rand_num=Dvc_QuickRandom::RandGeneration(&Temp, rand_num);
-			obs_i=(rand_num<1-OBS_NOISE)?nav_state.Grid(nav_state.rob.x-2,nav_state.rob.y-2):!nav_state.Grid(nav_state.rob.x-2,nav_state.rob.y-2);
+			obs_i=(rand_num<1-obs_noise)?nav_state.Grid(nav_state.rob.x-2,nav_state.rob.y-2):!nav_state.Grid(nav_state.rob.x-2,nav_state.rob.y-2);
 			break;
 		case 14:
 			rand_num=Dvc_QuickRandom::RandGeneration(&Temp, rand_num);
-			obs_i=(rand_num<1-OBS_NOISE)?nav_state.Grid(nav_state.rob.x+2,nav_state.rob.y-2):!nav_state.Grid(nav_state.rob.x+2,nav_state.rob.y-2);
+			obs_i=(rand_num<1-obs_noise)?nav_state.Grid(nav_state.rob.x+2,nav_state.rob.y-2):!nav_state.Grid(nav_state.rob.x+2,nav_state.rob.y-2);
 			break;
 		case 15:
 			rand_num=Dvc_QuickRandom::RandGeneration(&Temp, rand_num);
-			obs_i=(rand_num<1-OBS_NOISE)?nav_state.Grid(nav_state.rob.x+2,nav_state.rob.y+2):!nav_state.Grid(nav_state.rob.x+2,nav_state.rob.y+2);
+			obs_i=(rand_num<1-obs_noise)?nav_state.Grid(nav_state.rob.x+2,nav_state.rob.y+2):!nav_state.Grid(nav_state.rob.x+2,nav_state.rob.y+2);
 			break;
 		}
 		obs=(obs|(obs_i<<dir));
@@ -199,6 +201,10 @@ DEVICE float Dvc_UncNavigation::Dvc_ObsProb(OBS_TYPE& obs, Dvc_State& state, int
 			truth_NW2=nav_state.Grid(nav_state.rob.x - 2,nav_state.rob.y +2);
 		}
 		float Noise=OBS_NOISE;
+		if(action == E_STAY)
+		{
+			Noise = STAY_OBS_NOISE;
+		}
 		if(obs_North==truth_North)
 			prob*=1-Noise;
 		else{
