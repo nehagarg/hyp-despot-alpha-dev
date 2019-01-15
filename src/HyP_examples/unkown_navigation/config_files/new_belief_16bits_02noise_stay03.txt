@@ -1,4 +1,3 @@
 use_special_belief = 1
-num_obs_bits = 8
+num_obs_bits = 16
 obs_noise = 0.2
-stay_obs_noise = 0.2
