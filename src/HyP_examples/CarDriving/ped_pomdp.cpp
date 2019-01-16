@@ -119,6 +119,7 @@ PedPomdp::PedPomdp() :
 	random_(Random((unsigned) Seeds::Next()))
 {
 	use_rvo = false;
+	load_peds = false;
 }
 
 PedPomdp::PedPomdp(std::string params_file) :

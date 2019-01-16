@@ -995,7 +995,14 @@ _InitBounds_IntArrayObs(int total_num_scenarios, int num_particles,
 		//{
 			if(DvcModelGetCarVel_)
 			{
-				local_history.carvel = DvcModelGetCarVel_(new_particles, first_particle_id);
+				if(Dvc_config->track_alpha_vector)
+				{
+					local_history.carvel = DvcModelGetCarVel_(new_particles, first_particle_id);
+				}
+				else
+				{
+					local_history.carvel = DvcModelGetCarVel_(new_particles, global_first_particle_pos);
+				}
 
 			}
 
