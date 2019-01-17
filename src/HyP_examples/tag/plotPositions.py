@@ -31,11 +31,11 @@ def main(data, file_prefix, width, height, label_suffix):
 			continue
 		if lastAction == "Tag":
 			continue
-		robMatch = re.match("Rob at \((\d+), (\d+)\)$", line)
+		robMatch = re.search("Rob at \((\d+), (\d+)\)", line)
 		if robMatch:
 			rMap.increment(int(robMatch.group(1)), int(robMatch.group(2)))
 			continue
-		oppMatch = re.match("Opp at \((\d+), (\d+)\)$", line)
+		oppMatch = re.search("Opp at \((\d+), (\d+)\)", line)
 		if oppMatch:
 			oMap.increment(int(oppMatch.group(1)), int(oppMatch.group(2)))
 
@@ -62,6 +62,7 @@ def main(data, file_prefix, width, height, label_suffix):
 		ax.set_xlabel("Robot Position Distribution")
 	heatmap2 = ax.pcolormesh(rMap.map ** 0.5, cmap=plt.cm.autumn_r)
 	plt.savefig(file_prefix + "_r.png")
+#        plt.show()
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
