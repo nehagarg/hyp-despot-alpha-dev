@@ -44,12 +44,14 @@ bool Planner::RunStep(Solver* solver, World* world, Logger* logger) {
 	double execute_time = (end_t - start_t);
 	logi << "[RunStep] Time spent in ExecuteAction(): " << execute_time << endl;
 
+	if(!terminal)
+	  {
 	start_t = get_time_second();
 	solver->BeliefUpdate(action, obs);
 	end_t = get_time_second();
 	double update_time = (end_t - start_t);
 	logi << "[RunStep] Time spent in Update(): " << update_time << endl;
-
+	  }
 	return logger->SummarizeStep(step_++, round_, terminal, action, obs,
 			step_start_t);
 }
