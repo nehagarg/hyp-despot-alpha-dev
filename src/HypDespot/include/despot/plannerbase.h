@@ -215,7 +215,7 @@ public:
 	/**
 	 * Initialize the solver according to user-specified solver type (defualt "DESPOT")
 	 */
-	Solver* InitializeSolver(DSPOMDP* model, Belief* belief,
+	virtual Solver* InitializeSolver(DSPOMDP* model, Belief* belief,
 			std::string solver_type, option::Option* options);
 
 	/**
