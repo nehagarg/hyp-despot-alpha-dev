@@ -28,8 +28,8 @@ set(DESPOT_BUILD_POMDPX ON CACHE BOOL "Build POMDPX example")
 set(DESPOT_BUILD_GPUS ON CACHE BOOL "Build GPU despot")
 
 
-set(CMAKE_PREFIX_PATH "/opt/ros/kinetic")
-
+#set(CMAKE_PREFIX_PATH "/opt/ros/kinetic;${CMAKE_PREFIX_PATH}")
+message("CMAKE_PREFIX_PATH : ${CMAKE_PREFIX_PATH}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse2 -mfpmath=sse")
 set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -arch=sm_30")
 if (CMAKE_BUILD_TYPE MATCHES "Debug")
@@ -50,8 +50,12 @@ set(
     )
 
 find_package(catkin REQUIRED COMPONENTS
-  roscpp
+ roscpp message_generation std_msgs visualization_msgs vrep_common
 )
+#find_package(catkin REQUIRED COMPONENTS
+  #roscpp message_generation std_msgs visualization_msgs vrep_common
+#)
+
 
 #add_subdirectory(src/HypDespot/)
 set(BUILD_SHARED_LIBS OFF)
@@ -68,12 +72,19 @@ include_directories(
 
 FILE(GLOB LIBRVO_SRCS  src/RVO2/src/*.cpp)
 
+add_message_files(FILES Belief.msg SpeedError.msg State.msg)
+add_service_files(FILES MicoActionFeedback.srv)
+generate_messages(DEPENDENCIES geometry_msgs)
+
 catkin_package(
+CATKIN_DEPENDS roscpp message_runtime vrep_common)
+
+#catkin_package(
   #INCLUDE_DIRS src/planner/
 #  LIBRARIES ped_path_predictor
-  CATKIN_DEPENDS roscpp #std_msgs
+#  CATKIN_DEPENDS roscpp #std_msgs
   #DEPENDS system_lib
-)
+#)
 message("@@@@@@@@@@@@@@ before add lib @@@@@@@@@@@@@@")
 add_subdirectory(src/HypDespot/)
 
@@ -83,6 +94,7 @@ add_subdirectory(src/HyP_examples/adventurer)
 add_subdirectory(src/HyP_examples/CarDriving)
 add_subdirectory(src/HyP_examples/ma_rock_sample)
 add_subdirectory(src/HyP_examples/unkown_navigation)
+add_subdirectory(src/HyP_examples/grasping_ros_mico)
 
 set_target_properties( "${PROJECT_NAME}"
                        PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
@@ -108,4 +120,3 @@ configure_package_config_file("cmake/DespotConfig.cmake.in"
 
 
 message("@@@@@@@@@@@@@@ end @@@@@@@@@@@@@@")
-

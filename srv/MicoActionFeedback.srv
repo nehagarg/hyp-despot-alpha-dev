@@ -1,0 +1,20 @@
+int8 ACTION_MOVE = 0
+int8 ACTION_CLOSE = 1
+int8 ACTION_OPEN = 2
+int8 ACTION_PICK = 3
+int8 GET_TOUCH_THRESHOLD = 4
+int8 INIT_POS = 5
+int8 MOVE_AWAY_POS = 6
+int8 action
+float64 move_x
+float64 move_y
+float64 move_z
+bool check_touch
+bool check_vision_movement
+---
+geometry_msgs/PoseStamped gripper_pose
+float64[2] finger_joint_state
+float64[2] touch_sensor_reading
+int8 vision_movement
+float64 grasp_stability
+
