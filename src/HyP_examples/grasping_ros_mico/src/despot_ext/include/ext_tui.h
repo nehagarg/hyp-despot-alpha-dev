@@ -16,6 +16,7 @@
 //#include "PlanningDiffParamsSolver.h"
 #include "LearningModel.h"
 #include "UserDefinedActionSolver.h"
+#include "GraspingPOMDPWorld.h"
 //#include "DespotWithLearnedDefaultPolicy.h"
 
 using namespace despot;
@@ -52,6 +53,8 @@ public:
 
 };*/
 
+
+
 class TUI: public Planner {
 public:
   TUI() ;
@@ -77,7 +80,15 @@ public:
   virtual void InitializeDefaultParameters();
 
   World* InitializeWorld(std::string& world_type, DSPOMDP* model, option::Option* options){
-    return InitializePOMDPWorld(world_type, model, options);
+    //return InitializePOMDPWorld(world_type, model, options);
+		//Create world: use POMDP model
+		world_type = "pomdp";
+		GraspingPOMDPWorld* world = new GraspingPOMDPWorld(model, Seeds::Next());
+		//Establish connection: do nothing
+		world->Connect();
+		//Initialize: create start state
+		world->Initialize();
+		return world;
   }
 
   std::string ChooseSolver(){ // Specify the solver used in the planner to be DESPOT

@@ -1,11 +1,25 @@
 This version is compatible with ubuntu 16. Ros kinetic and vrep functionality is not guaranteed to work. Vrep functionality has been moved to python which invokes vrep on ubuntu 14. This code interacts with a server running vrep on ubuntu 14.
-Fo ubuntu 14 version see branch grasping_without_vision
+Fo ubuntu 14 version see branch grasping_without_vision of autonomous_grasping project
+
+Many folders containing data from simulator, object labels, object classification files, python files need to be linked from autonomous grasping project or data stored on unicorn:
+python_scripts : autonomousGrasping/python_scripts
+g3db_meshes: /data/neha/g3db_meshes/obj_files on unicorn0
+g3db_object_labels: autonomousGrasping/grasping_ros_mico/g3db_object_labels
+g3db_object_labels_for_classification: autonomousGrasping/grasping_ros_mico/g3db_object_labels_for_classification
+config_files: autonomousGrasping/grasping_ros_mico/config_files
+commands: autonomousGrasping/grasping_ros_mico/commands
+pure_shape_labels: autonomousGrasping/grasping_ros_mico/pure_shape_labels
+launch: autonomousGrasping/grasping_ros_mico/launch
+scripts: autonomousGrasping/grasping_ros_mico/scripts
+data : From unicorn0 in /data/neha/WORK_FOLDER/neha_github/autonomousGrasping/grasping_ros_mico/data
+data_low_friction_table_exp_wider_object_workspace_ver7: From unicorn 0 in /data/neha/WORK_FOLDER/neha_github/autonomousGrasping/grasping_ros_mico/data_low_friction_table_exp_wider_object_workspace_ver7
 
 Works with vrep version 3_3_2
 version 3_3_2 modified using patch from here:
 https://github.com/marcinkaszynski/vrep-ros-plugins/commit/3e3c1c22703a14e55cf32aff4603c23f82b2a5ab
 for getting depth image for dexnet
 For details see this link : http://marcinkaszynski.com/2016/09/10/vrep-ros-rgbdslam-simulated-kinect.html
+dexnet_ws also needs to installed as code uses perception module from it
 
 
 to run vrep in headless mode via ssh
@@ -105,7 +119,10 @@ Then compute the static transform between robot and the marker, if not already d
 roslaunch grasping_ros_mico static_transform_publisher.launch
 To check that static transform is correct, launch kinova ros moveit using command
 roslaunch m1n6s200_moveit_config m1n6s200_demo.launch
-And make sure that robot arm and point clod overlap completley. m1n6s200_moveit_config package is on github or can be copied from mico machine
+And make sure that robot arm and point clod overlap completley. m1n6s200_moveit_config package is on nehagarg github or can be copied from mico machine
+
+All this is done using script in commands/commands.txt or commands/commands_rls.txt
+real_command.sh contains commands for running real robot experiments
 
 #G3DB objects
 Version 7 includes objects which are visible above gripper level. The test objects are same s verion 6 test objects. Only one extra object has been added randomly because one test object was not visible and had to be removed.

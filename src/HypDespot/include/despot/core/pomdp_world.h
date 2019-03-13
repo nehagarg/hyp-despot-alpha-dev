@@ -39,7 +39,7 @@ public:
 	//To help construct initial belief to print debug informations in Logger
 	State* GetCurrentState() const;
 	//send action, receive reward, obs, and terminal
-	bool ExecuteAction(ACT_TYPE action, OBS_TYPE& obs);
+	virtual bool ExecuteAction(ACT_TYPE action, OBS_TYPE& obs);
 };
 
 } /* namespace despot */

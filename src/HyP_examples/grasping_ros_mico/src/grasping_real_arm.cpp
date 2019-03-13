@@ -49,7 +49,8 @@ GraspingMicoParticleBelief::GraspingMicoParticleBelief(std::vector<State*> parti
 			action, reward, o);
                 if(!terminal)
                 {
-                    grasping_model_->SyncParticleState(*particle,obs);
+                	//Not needed for now
+                    //grasping_model_->SyncParticleState(*particle,obs);
                 }
                 //model_->PrintState(*particle);
 		double prob = model_->ObsProb(obs, *particle, action);
