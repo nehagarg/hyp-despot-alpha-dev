@@ -16,6 +16,12 @@ if(NOT DEFINED CMAKE_CUDA_STANDARD)
   set(CMAKE_CUDA_STANDARD_REQUIRED True)
 endif()
 
+find_package(TensorFlow REQUIRED)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=${TensorFlow_ABI}")
+set(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=${TensorFlow_ABI}" )
+
+TensorFlow_REQUIRE_C_LIBRARY()
+TensorFlow_REQUIRE_SOURCE()
 #set(CMAKE_PREFIX_PATH "/opt/ros/kinetic")
 
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse2 -mfpmath=sse")
@@ -32,7 +38,7 @@ endif()
 #set(DESPOT_HOME "../despot/")
 #set(HYPDESPOTALPHA_HOME "../hyp-despot-alpha/")
 
-
+message("@@@@@@@@@@@@@@@@@@@@@2 ${TensorFlow_INCLUDE_DIR} @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
 
 #create despot lib
 # search header files in those sub directories
@@ -41,6 +47,8 @@ INCLUDE_DIRECTORIES(
 ${catkin_INCLUDE_DIRS}
 	#src/despot/
         src/Display
+        ${TensorFlow_INCLUDE_DIR}
+        ${TensorFlow_SOURCE_DIR}
         #msg_gen/cpp/include/despot_vrep_glue
 )
 set(WARNING_FLAGS -Wall -Wextra -Wno-sign-compare)
@@ -87,7 +95,9 @@ list(REMOVE_ITEM GATHER_DATA_SRCS "${CMAKE_CURRENT_SOURCE_DIR}/src/main_without_
 add_executable(gather_data ${GATHER_DATA_SRCS})
 add_executable(grasping_ros_mico ${EXEC_SRCS})
 add_executable(despot_without_display ${WITHOUT_DISPLAY_SRCS})
-
+add_executable (inference_cc src/inference_cc.cc)
+target_include_directories(inference_cc PRIVATE TensorFlow_DEP)
+target_link_libraries(inference_cc PRIVATE TensorFlow_DEP)
 
 
 add_dependencies(grasping_ros_mico ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
@@ -109,6 +119,11 @@ target_link_libraries(despot_without_display ${PROJECT_NAME})
 target_link_libraries(despot_without_display ${YAML-CPP})
 target_link_libraries(despot_without_display ${Boost_SYSTEM_LIBRARY} )
 target_link_libraries(despot_without_display ${PYTHON_LIBRARIES})
+#target_include_directories(despot_without_display PRIVATE TensorFlow_DEP)
+#target_include_directories(despot_without_display SYSTEM INTERFACE ${TensorFlow_INCLUDE_DIR})
+TARGET_LINK_LIBRARIES(despot_without_display ${TensorFlow_C_LIBRARY})
+target_link_libraries(despot_without_display ${TensorFlow_LIBRARY})
+
 
 target_link_libraries(gather_data ${catkin_LIBRARIES})
 target_link_libraries(gather_data ${PROJECT_NAME})

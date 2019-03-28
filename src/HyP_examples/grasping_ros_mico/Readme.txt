@@ -1,6 +1,10 @@
 This version is compatible with ubuntu 16. Ros kinetic and vrep functionality is not guaranteed to work. Vrep functionality has been moved to python which invokes vrep on ubuntu 14. This code interacts with a server running vrep on ubuntu 14.
 Fo ubuntu 14 version see branch grasping_without_vision of autonomous_grasping project
 
+The transition and observation models are learned using tensorflow. For tenorflow c++ api without bazel and with cmake, install tensorflow from source.
+Then follow instructions at : 
+https://github.com/PatWie/tensorflow-cmake
+
 Many folders containing data from simulator, object labels, object classification files, python files need to be linked from autonomous grasping project or data stored on unicorn:
 python_scripts : autonomousGrasping/python_scripts
 g3db_meshes: /data/neha/g3db_meshes/obj_files on unicorn0
