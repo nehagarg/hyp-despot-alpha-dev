@@ -8,6 +8,7 @@
 #include <despot/core/globals.h>
 #include <despot/core/history.h>
 #include <despot/random_streams.h>
+#include <despot/keras_random_streams.h>
 #include <despot/GPUcore/shared_node.h>
 #include <despot/GPUcore/shared_solver.h>
 #include <despot/util/memorypool.h>

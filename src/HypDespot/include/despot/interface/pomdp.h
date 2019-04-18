@@ -415,8 +415,15 @@ public:
 		std::cout << "Caution! Function " << __FUNCTION__ << " haven't been implemented" << std::endl;
 		exit(1);
 	}
-
 	
+	/* ========================================================================
+		 * Functions for KERAS transition and observation model
+		 * ========================================================================*/
+	virtual int LatentDimensionSize()
+	{
+		return -1;
+	}
+
 };
 
 enum Exploration_Mode

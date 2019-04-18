@@ -891,7 +891,7 @@ ValuedAction DESPOT::Search() {
 	statistics_ = Shared_SearchStatistics();
 
 	start = get_time_second();
-	static RandomStreams streams;
+	static KerasRandomStreams streams;
 
 	if (FIX_SCENARIO == 1 || Debug_mode) {
 		std::ifstream fin;
@@ -904,8 +904,10 @@ ValuedAction DESPOT::Search() {
 		fin.close();
 		cout << "[FIX_SCENARIO] random streams read from file "<< stream_file << endl;
 	} else {
-		streams = RandomStreams(Globals::config.num_scenarios,
-		                        Globals::config.search_depth);
+
+			streams = KerasRandomStreams(Globals::config.num_scenarios,
+		                        Globals::config.search_depth, model_->LatentDimensionSize());
+
 	}
 
 	if (FIX_SCENARIO == 2) {
