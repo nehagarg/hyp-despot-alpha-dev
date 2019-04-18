@@ -1,4 +1,4 @@
-// 2018, Patrick Wieschollek <mail@patwie.com>
+//Adapted from  2018, Patrick Wieschollek <mail@patwie.com>
 #include <tensorflow/core/protobuf/meta_graph.pb.h>
 #include <tensorflow/core/public/session.h>
 #include <tensorflow/core/public/session_options.h>
@@ -34,16 +34,18 @@ tensorflow::Status LoadModel(tensorflow::Session *sess, std::string graph_fn,
   tensorflow::Status status;
 
   // Read in the protobuf graph we exported
-  tensorflow::MetaGraphDef graph_def;
+  //tensorflow::MetaGraphDef graph_def;
+  tensorflow::GraphDef graph_def;
   status = ReadBinaryProto(tensorflow::Env::Default(), graph_fn, &graph_def);
   if (status != tensorflow::Status::OK()) return status;
 
   // create the graph in the current session
-  status = sess->Create(graph_def.graph_def());
+  //status = sess->Create(graph_def.graph_def());
+  status = sess->Create(graph_def);
   if (status != tensorflow::Status::OK()) return status;
 
   // restore model from checkpoint, iff checkpoint is given
-  if (checkpoint_fn != "") {
+  /*if (checkpoint_fn != "") {
     const std::string restore_op_name = graph_def.saver_def().restore_op_name();
     const std::string filename_tensor_name =
         graph_def.saver_def().filename_tensor_name();
@@ -62,7 +64,7 @@ tensorflow::Status LoadModel(tensorflow::Session *sess, std::string graph_fn,
     //                  std::vector<Tensor>* outputs) = 0;
     status = sess->Run({}, {}, {"init"}, nullptr);
     if (status != tensorflow::Status::OK()) return status;
-  }
+  }*/
 
   return tensorflow::Status::OK();
 }
@@ -103,8 +105,10 @@ void inference_main(int argc) {
 
 tensorflow::Session* start_session(int argc)
 {
-  const std::string graph_fn = "./exported/my_model.meta";
-  const std::string checkpoint_fn = "./exported/my_model";
+  //const std::string graph_fn = "./exported/my_model.meta";
+  //const std::string checkpoint_fn = "./exported/my_model";
+  const std::string graph_fn = "./transition/decoder_transition_model.pb";
+  const std::string checkpoint_fn = "";
 
   // prepare session
   tensorflow::Session *sess;
@@ -116,36 +120,47 @@ tensorflow::Session* start_session(int argc)
 }
 double inference_keras_main(tensorflow::Session* sess){
   // prepare inputs
-	int batch_size = 100;
-  tensorflow::TensorShape data_shape({batch_size, 7});
+	int batch_size = 1;
+  tensorflow::TensorShape data_shape({batch_size, 9});
+  tensorflow::TensorShape data_shape1({batch_size, 2});
   tensorflow::Tensor data(tensorflow::DT_FLOAT, data_shape);
-
+  tensorflow::Tensor data1(tensorflow::DT_FLOAT, data_shape1);
   // same as in python file
   auto data_ = data.flat<float>().data();
+  auto data1_ = data1.flat<float>().data();
   //auto data_ = data.flat<float>().data();
   //for (int i = 0; i < 7; ++i) data_[i] = 1;
   //data_[0] = 42;
   //data_[1] = 43;
+  //0.33,0.08,0.47,0.08,0.01, 1.1,1.5,0,0
   for (int i = 0; i < batch_size; ++i){
-  data_[7*i + 0] = 0.1;
-  data_[7*i + 1] = 0.2;
-  data_[7*i + 2] = 0.3;
-  data_[7*i + 3] = 0.4;
-  data_[7*i + 4] = 0.5;
-  data_[7*i + 5] = 0;
-  data_[7*i + 6] = 1;
-  data_[7*i + 7] = 0.1;
+  data_[9*i + 0] = 0.33;
+  data_[9*i + 1] = 0.08;
+  data_[9*i + 2] = 0.47;
+  data_[9*i + 3] = 0.08;
+  data_[9*i + 4] = 0.01;
+  data_[9*i + 5] = 1.1;
+  data_[9*i + 6] = 1.5;
+  data_[9*i + 7] = 0;
+  data_[9*i + 8] = 0;
+  data1_[2*i + 0] = 0.9;
+  data1_[2*i + 1] = 0.5;
 }
 
 	double start_t = despot::get_time_second();
+  //tensor_dict feed_dict = {
+  //    {"Intermediate_input", data},
+//  };
   tensor_dict feed_dict = {
-      {"Intermediate_input", data},
+      {"input_state:0", data},{"z_sampling:0", data1}
   };
 
   std::vector<tensorflow::Tensor> outputs;
+  //TF_CHECK_OK(
+  //    sess->Run(feed_dict, {"Output/BiasAdd"}, {}, &outputs));
   TF_CHECK_OK(
-      sess->Run(feed_dict, {"Output/BiasAdd"}, {}, &outputs));
-
+      sess->Run(feed_dict, {"dense_2/BiasAdd"}, {}, &outputs));
+//dense_2/BiasAdd:0
   std::cout << "input           " << data.DebugString() << std::endl;
   std::cout << "output          " << outputs[0].DebugString() << std::endl;
 
