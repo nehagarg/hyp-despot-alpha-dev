@@ -89,7 +89,7 @@ int Planner::RunPlanning(int argc, char *argv[]) {
 			Globals::config.track_alpha_vector = true;
 		}
 
-		PrepareGPU();
+		//PrepareGPU();
 	}
 	clock_t main_clock_start = clock();
 
@@ -139,8 +139,8 @@ int Planner::RunPlanning(int argc, char *argv[]) {
 
 	PrintResult(1, logger, main_clock_start);
 
-	if(Globals::config.useGPU)
-		ClearGPU();
+	//if(Globals::config.useGPU)
+	//	ClearGPU();
 
 	return 0;
 }

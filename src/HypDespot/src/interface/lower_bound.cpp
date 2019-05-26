@@ -64,6 +64,17 @@ void ScenarioLowerBound::Reset() {
 void ScenarioLowerBound::Learn(VNode* tree) {
 }
 
+ValuedAction ScenarioLowerBound::Value(const std::vector<State*>& particles, const std::vector<float>& keras_particle_batch,
+            			RandomStreams& streams, History& history) const
+            	{
+            		return Value(particles,streams,history);
+            	}
+	ValuedAction ScenarioLowerBound::Value(const std::vector<State*>& particles, const std::vector<float>& keras_particle_batch,
+				RandomStreams& streams, History& history, std::vector<double>& alpha_vector_lower_bound) const
+	{
+				return Value(particles,streams,history,alpha_vector_lower_bound);
+			}
+
 /* =============================================================================
  * ParticleLowerBound class
  * =============================================================================*/
@@ -81,6 +92,16 @@ ValuedAction ParticleLowerBound::Value(const vector<State*>& particles,
        return Value(particles, alpha_vector_lower_bound);     
     }
 
+    ValuedAction ParticleLowerBound::Value(const std::vector<State*>& particles, const std::vector<float>& keras_particle_batch,
+            			RandomStreams& streams, History& history) const
+            	{
+            		return Value(particles,streams,history);
+            	}
+	ValuedAction ParticleLowerBound::Value(const std::vector<State*>& particles, const std::vector<float>& keras_particle_batch,
+				RandomStreams& streams, History& history, std::vector<double>& alpha_vector_lower_bound) const
+	{
+				return Value(particles,streams,history,alpha_vector_lower_bound);
+			}
 
 /* =============================================================================
  * BeliefLowerBound class

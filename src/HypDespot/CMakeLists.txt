@@ -42,10 +42,15 @@ find_package(catkin REQUIRED COMPONENTS
 #  ${PROJECT_NAME}
 )
 
-
+find_package(TensorFlow REQUIRED)
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=${TensorFlow_ABI}")
+#set(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=${TensorFlow_ABI}" )
+#TensorFlow_REQUIRE_C_LIBRARY()
+#TensorFlow_REQUIRE_SOURCE()
 include_directories(
    ${catkin_INCLUDE_DIRS}
    include/
+   ${TensorFlow_INCLUDE_DIR}
 )
 
 message("@@@@@@@@@@@@@@ before add lib @@@@@@@@@@@@@@")
@@ -71,19 +76,21 @@ add_library(
   src/core/builtin_upper_bounds.cpp
   src/logger.cpp
   src/planner.cpp
-  src/Parallel_planner.cu
+  #src/Parallel_planner.cu
   src/evaluator.cpp
   src/pomdpx/parser/function.cpp
   src/pomdpx/parser/parser.cpp
   src/pomdpx/parser/variable.cpp
   src/pomdpx/pomdpx.cpp
   src/random_streams.cpp
+  src/keras_random_streams.cpp
   src/plannerbase.cpp
   src/solver/aems.cpp
   src/solver/despot.cpp
   src/solver/DespotWithAlphaFunctionUpdate.cpp
   src/solver/pomcp.cpp
   src/solver/baseline_solver.cpp
+  src/solver/Keras_despot.cpp
   src/util/coord.cpp
   src/util/dirichlet.cpp
   src/util/exec_tracker.cpp
@@ -98,47 +105,46 @@ add_library(
   src/util/tinyxml/tinyxmlerror.cpp
   src/util/tinyxml/tinyxmlparser.cpp
 
-  src/GPUinterface/GPUdefault_policy.cu  
-  src/GPUinterface/GPUpomdp.cu 
-  src/GPUinterface/GPUlower_bound.cu  
-  src/GPUinterface/GPUupper_bound.cu  
-  src/GPUcore/GPUbuiltin_lower_bound.cu
-  src/GPUcore/GPUbuiltin_policy.cu
-  src/GPUcore/GPUpolicy_graph.cu
-  src/GPUcore/GPUbuiltin_upper_bound.cu
-  src/GPUcore/GPUconfig.cu   
-  src/GPUcore/GPUhistory.cu      
-  src/GPUcore/GPUnode.cu  
-  src/GPUcore/GPUglobals.cu  
-  src/GPUcore/shared_node.cu
+  #src/GPUinterface/GPUdefault_policy.cu
+  #src/GPUinterface/GPUpomdp.cu
+  #src/GPUinterface/GPUlower_bound.cu
+  #src/GPUinterface/GPUupper_bound.cu
+  #src/GPUcore/GPUbuiltin_lower_bound.cu
+  #src/GPUcore/GPUbuiltin_policy.cu
+  #src/GPUcore/GPUpolicy_graph.cu
+  #src/GPUcore/GPUbuiltin_upper_bound.cu
+  #src/GPUcore/GPUconfig.cu
+  #src/GPUcore/GPUhistory.cu
+  #src/GPUcore/GPUnode.cu
+  #src/GPUcore/GPUglobals.cu
+  #src/GPUcore/shared_node.cu
   src/GPUcore/thread_globals.cu
-  src/GPUutil/GPUmemorypool.cu  
-  src/GPUutil/GPUseeds.cu    
-  src/GPUutil/GPUutil.cu
-  src/GPUutil/GPUcoord.cu      
-  src/GPUutil/GPUrandom.cu      
-  src/GPUrandom_streams.cu
-  src/solver/Hyp_despot.cu
-  ${LIBRVO_SRCS}
+  #src/GPUutil/GPUmemorypool.cu
+  #src/GPUutil/GPUseeds.cu
+  #src/GPUutil/GPUutil.cu
+  #src/GPUutil/GPUcoord.cu
+  #src/GPUutil/GPUrandom.cu
+  #src/GPUrandom_streams.cu
+  #src/solver/Hyp_despot.cu
+  #${LIBRVO_SRCS}
   # src/planner/Path.cpp
   # src/planner/simulator.cu
   #   src/planner/collision.cpp
-  #   src/planner/coord.cpp                  
+  #   src/planner/coord.cpp
   #   src/planner/math_utils.cpp
   #   src/planner/ped_pomdp.cpp
   #   src/planner/WorldModel.cpp
-  #   src/planner/custom_particle_belief.cpp  
+  #   src/planner/custom_particle_belief.cpp
   #   src/planner/param.cpp
-  #   src/planner/GPU_Car_Drive/GPU_Car_Drive.cu     
+  #   src/planner/GPU_Car_Drive/GPU_Car_Drive.cu
   #   src/planner/GPU_Car_Drive/GPU_LowerBoundPolicy.cu
-  #   src/planner/GPU_Car_Drive/GPU_Init.cu         
+  #   src/planner/GPU_Car_Drive/GPU_Init.cu
   #   src/planner/GPU_Car_Drive/GPU_Path.cu
-  #   src/planner/GPU_Car_Drive/GPU_CarUpperBound.cu  
-  #   src/planner/GPU_Car_Drive/GPU_param.cu  
+  #   src/planner/GPU_Car_Drive/GPU_CarUpperBound.cu
+  #   src/planner/GPU_Car_Drive/GPU_param.cu
   #OPTIONS --compiler-options "-fPIC"
 )
 message("@@@@@@@@@@@@@@ after add lib @@@@@@@@@@@@@@")
 
 
 message("@@@@@@@@@@@@@@ end @@@@@@@@@@@@@@")
-

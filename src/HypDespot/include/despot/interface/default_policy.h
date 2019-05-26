@@ -52,8 +52,8 @@ private:
 	ParticleLowerBound* particle_lower_bound_;
 
 	ValuedAction RecursiveValue(const std::vector<State*>& particles,
-		RandomStreams& streams, History& history, std::vector<double>& alpha_vector_lower_bound, bool compute_alpha_vector) const;
-        ValuedAction Value(const std::vector<State*>& particles, RandomStreams& streams, History& history, std::vector<double>& alpha_vector_lower_bound, bool compute_alpha_vector) const;
+		RandomStreams& streams, History& history, std::vector<double>& alpha_vector_lower_bound, bool compute_alpha_vector, const std::vector<float>& keras_particle_batch) const;
+        ValuedAction Value(const std::vector<State*>& particles, RandomStreams& streams, History& history, std::vector<double>& alpha_vector_lower_bound, bool compute_alpha_vector, const std::vector<float>& keras_particle_batch) const;
 
 public:
 	DefaultPolicy(const DSPOMDP* model, ParticleLowerBound* particle_lower_bound);
@@ -78,6 +78,11 @@ public:
         
 
         ValuedAction Value(const std::vector<State*>& particles, RandomStreams& streams, History& history, std::vector<double>& alpha_vector_lower_bound) const;
+        ValuedAction Value(const std::vector<State*>& particles, const std::vector<float>& keras_particle_batch,
+        			RandomStreams& streams, History& history) const;
+
+        	virtual ValuedAction Value(const std::vector<State*>& particles, const std::vector<float>& keras_particle_batch,
+        				RandomStreams& streams, History& history, std::vector<double>& alpha_vector_lower_bound) const;
 
 };
 

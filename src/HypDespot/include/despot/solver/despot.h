@@ -39,6 +39,10 @@ friend class VNode;
 
 	/************** HyP-DESPOT ************/
 
+	/************Keras Model *************/
+	//tensorflow::Session *sess_lower_upper_bound;
+	//tensorflow::Session *sess_transition;
+	//tensorflow::Session *sess_observation;
 
 protected:
 	VNode* root_;
@@ -77,10 +81,10 @@ protected:
 		ScenarioLowerBound* lower_bound, ScenarioUpperBound* upper_bound,
 		const DSPOMDP* model, History& history, SearchStatistics* statistics =
 			NULL);
-	static Shared_VNode* Trial(Shared_VNode* root, RandomStreams& streams,
-		ScenarioLowerBound* lower_bound, ScenarioUpperBound* upper_bound,
-		const DSPOMDP* model, History& history, bool & Expansion_done, Shared_SearchStatistics* statistics =
-			NULL);
+	//static Shared_VNode* Trial(Shared_VNode* root, RandomStreams& streams,
+	//	ScenarioLowerBound* lower_bound, ScenarioUpperBound* upper_bound,
+	//	const DSPOMDP* model, History& history, bool & Expansion_done, Shared_SearchStatistics* statistics =
+	//		NULL);
 	static void InitLowerBound(VNode* vnode, ScenarioLowerBound* lower_bound,
 		RandomStreams& streams, History& history);
 	static void InitUpperBound(VNode* vnode, ScenarioUpperBound* upper_bound,
@@ -104,24 +108,24 @@ protected:
 	void Compare();
 
 	static void ExploitBlockers(VNode* vnode);
-	static void ExploitBlockers(Shared_VNode* vnode);
+	//static void ExploitBlockers(Shared_VNode* vnode);
 	static VNode* FindBlocker(VNode* vnode);
 	static void Expand(QNode* qnode, ScenarioLowerBound* lower_bound,
 		ScenarioUpperBound* upper_bound, const DSPOMDP* model,
 		RandomStreams& streams, History& history);
 	static void Update(VNode* vnode, bool real);
 	static void Update(QNode* qnode, bool real);
-	static void Update(Shared_VNode* vnode, bool real);
-	static void Update(Shared_QNode* qnode, bool real);
+	//static void Update(Shared_VNode* vnode, bool real);
+	//static void Update(Shared_QNode* qnode, bool real);
 	static VNode* Prune(VNode* vnode, ACT_TYPE& pruned_action, double& pruned_value);
 	static QNode* Prune(QNode* qnode, double& pruned_value);
 	static double WEU(VNode* vnode);
-	static double WEU(Shared_VNode* vnode);
+	//static double WEU(Shared_VNode* vnode);
 	static double WEU(VNode* vnode, double epsilon);
-	static double WEU(Shared_VNode* vnode, double xi);
+	//static double WEU(Shared_VNode* vnode, double xi);
 	static VNode* SelectBestWEUNode(QNode* qnode);
 	static QNode* SelectBestUpperBoundNode(VNode* vnode);
-	static Shared_QNode* SelectBestUpperBoundNode(Shared_VNode* vnode);
+	//static Shared_QNode* SelectBestUpperBoundNode(Shared_VNode* vnode);
 	static ValuedAction OptimalAction(VNode* vnode);
 
 	/*Debug*/
@@ -134,34 +138,35 @@ protected:
 
 	/************** HyP-DESPOT ************/
 
-	static void CheckSteppedParticles(int num_actions);
-	static void ReadBackData(int ThreadID, int offset, int size);
+	//static void CheckSteppedParticles(int num_actions);
+	//static void ReadBackData(int ThreadID, int offset, int size);
 
-	static void MCSimulation(VNode* vnode, int ThreadID,
-			const DSPOMDP* model, RandomStreams& streams,History& history, bool Do_rollout=true);
-	static void GPU_Cal_Obs_Prob(VNode* vnode, int ThreadID,
-				const DSPOMDP* model);
-	static void GPU_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
-		ScenarioUpperBound* ub, const DSPOMDP* model,
-		RandomStreams& streams,
-		History& history);
-	static void GPU_InitBounds(VNode* vnode, ScenarioLowerBound* lower_bound,
-		ScenarioUpperBound* upper_bound,const DSPOMDP* model, RandomStreams& streams,
-		History& history);
-	static void GPU_UpdateParticles(VNode* vnode, ScenarioLowerBound* lb,
-		ScenarioUpperBound* ub, const DSPOMDP* model, RandomStreams& streams,
-		History& history);
+	//static void MCSimulation(VNode* vnode, int ThreadID,
+	//		const DSPOMDP* model, RandomStreams& streams,History& history, bool Do_rollout=true);
+	//static void GPU_Cal_Obs_Prob(VNode* vnode, int ThreadID,
+	//			const DSPOMDP* model);
+	//static void GPU_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
+	//	ScenarioUpperBound* ub, const DSPOMDP* model,
+	//	RandomStreams& streams,
+	//	History& history);
+
+	//static void GPU_InitBounds(VNode* vnode, ScenarioLowerBound* lower_bound,
+	//	ScenarioUpperBound* upper_bound,const DSPOMDP* model, RandomStreams& streams,
+	//	History& history);
+	//static void GPU_UpdateParticles(VNode* vnode, ScenarioLowerBound* lb,
+	//	ScenarioUpperBound* ub, const DSPOMDP* model, RandomStreams& streams,
+	//	History& history);
 
 
-	void PrepareGPUMemory(const DSPOMDP* model, int num_actions, int num_obs);
-	void PrepareGPUStreams(const RandomStreams& streams);
-	void ClearGPUMemory(const DSPOMDP* model);
-	void PrintGPUData(int num_searches);
+	//void PrepareGPUMemory(const DSPOMDP* model, int num_actions, int num_obs);
+	//void PrepareGPUStreams(const RandomStreams& streams);
+	//void ClearGPUMemory(const DSPOMDP* model);
+	//void PrintGPUData(int num_searches);
 	void PrintCPUTime(int num_searches);
 
-	static void PrepareGPUDataForRoot(VNode* node, const DSPOMDP* model, const std::vector<int>& particleIDs, std::vector<State*>& particles);
-	static void PrepareGPUDataForNode(VNode* vnode, const DSPOMDP* model, int ThreadID ,RandomStreams& streams);
-	static void PrepareGPUDataForCommonQNode(QNode* vnode,const DSPOMDP* model, int ThreadID, RandomStreams& streams, const std::vector<int>& particleIDs, int NumParticles );
+	//static void PrepareGPUDataForRoot(VNode* node, const DSPOMDP* model, const std::vector<int>& particleIDs, std::vector<State*>& particles);
+	//static void PrepareGPUDataForNode(VNode* vnode, const DSPOMDP* model, int ThreadID ,RandomStreams& streams);
+	//static void PrepareGPUDataForCommonQNode(QNode* vnode,const DSPOMDP* model, int ThreadID, RandomStreams& streams, const std::vector<int>& particleIDs, int NumParticles );
 
 	double AverageInitLower() const;
 	double StderrInitLower() const;
@@ -176,18 +181,26 @@ protected:
 	void PrintStatisticResult();
 
 
-	static void ExpandTreeServer(RandomStreams streams,
-			ScenarioLowerBound* lower_bound, ScenarioUpperBound* upper_bound,
-			const DSPOMDP* model, History history, Shared_SearchStatistics* statistics,
-			double& used_time,double& explore_time,double& backup_time,int& num_trials,double timeout,
-			MsgQueque<Shared_VNode>& node_queue, MsgQueque<Shared_VNode>& print_queue, int threadID);
+	//static void ExpandTreeServer(RandomStreams streams,
+//			ScenarioLowerBound* lower_bound, ScenarioUpperBound* upper_bound,
+//			const DSPOMDP* model, History history, Shared_SearchStatistics* statistics,
+//			double& used_time,double& explore_time,double& backup_time,int& num_trials,double timeout,
+//			MsgQueque<Shared_VNode>& node_queue, MsgQueque<Shared_VNode>& print_queue, int threadID);
 
-	static float CalExplorationValue(int depth);
-	static void CalExplorationValue(Shared_QNode* node);
-	static void CalExplorationValue(Shared_VNode* node);
+	//static float CalExplorationValue(int depth);
+	//static void CalExplorationValue(Shared_QNode* node);
+	//static void CalExplorationValue(Shared_VNode* node);
 
 	/************** HyP-DESPOT ************/
 
+
+	/************* Keras Functions ********/
+	//static void Keras_InitRootBounds(VNode* vnode, const DSPOMDP* model, RandomStreams& streams,
+	//		History& history, tensorflow::Session *sess_lower_upper_bound);
+	static void Keras_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
+			ScenarioUpperBound* ub, const DSPOMDP* model,
+			RandomStreams& streams,
+			History& history);
 
 public:
 
@@ -206,10 +219,10 @@ public:
 public:
 	/************** HyP-DESPOT ************/
 	static MemoryPool<QNode> qnode_pool_;
-	static MemoryPool<Shared_QNode> s_qnode_pool_;
+	//static MemoryPool<Shared_QNode> s_qnode_pool_;
 
 	static MemoryPool<VNode> vnode_pool_;
-	static MemoryPool<Shared_VNode> s_vnode_pool_;
+	//static MemoryPool<Shared_VNode> s_vnode_pool_;
 	/************** HyP-DESPOT ************/
 
 };

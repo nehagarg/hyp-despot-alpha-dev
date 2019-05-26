@@ -67,6 +67,17 @@ public:
 	 */
 	virtual ValuedAction Value(const std::vector<State*>& particles,
 		RandomStreams& streams, History& history, std::vector<double>& alpha_vector_lower_bound) const = 0;
+
+	virtual ValuedAction Value(const std::vector<State*>& particles, const std::vector<float>& keras_particle_batch,
+			RandomStreams& streams, History& history) const;
+	/*{
+		return Value(particles,streams,history);
+	}*/
+	virtual ValuedAction Value(const std::vector<State*>& particles, const std::vector<float>& keras_particle_batch,
+				RandomStreams& streams, History& history, std::vector<double>& alpha_vector_lower_bound) const;
+		/*{
+			return Value(particles,stream,history,alpha_vector_lower_bound);
+		}*/
 };
 
 /* =============================================================================
@@ -95,12 +106,32 @@ public:
         
         virtual ValuedAction Value(const std::vector<State*>& particles, std::vector<double>& alpha_vector_lower_bound) const = 0;
 
+       // virtual ValuedAction Value(const std::vector<State*>& particles, const std::vector<float>& keras_particle_batch) const;
+        /*{
+        	return Value(particles);
+        }*/
+
+               // virtual ValuedAction Value(const std::vector<State*>& particles, std::vector<double>& alpha_vector_lower_bound, const std::vector<float>& keras_particle_batch) const;
+                /*{
+                	return Value(particles,alpha_vector_lower_bound);
+                }*/
+
 	ValuedAction Value(const std::vector<State*>& particles,
 		RandomStreams& streams, History& history) const;
         
 
         ValuedAction Value(const std::vector<State*>& particles, RandomStreams& streams, History& history, std::vector<double>& alpha_vector_lower_bound) const;
 
+        virtual ValuedAction Value(const std::vector<State*>& particles, const std::vector<float>& keras_particle_batch,
+        			RandomStreams& streams, History& history) const;
+        	/*{
+        		return Value(particles,streams,history);
+        	}*/
+        	virtual ValuedAction Value(const std::vector<State*>& particles, const std::vector<float>& keras_particle_batch,
+        				RandomStreams& streams, History& history, std::vector<double>& alpha_vector_lower_bound) const;
+        	/*{
+        				return Value(particles,streams,history,alpha_vector_lower_bound);
+        			}*/
 };
 
 /* =============================================================================

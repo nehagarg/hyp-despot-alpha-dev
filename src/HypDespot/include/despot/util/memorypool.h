@@ -50,7 +50,7 @@ public:
 	}
 
 	T* Allocate() {
-		Globals::lock_process();
+		//Globals::lock_process();
 
 		if (freelist_.empty())
 			NewChunk();
@@ -62,20 +62,20 @@ public:
 		obj->SetAllocated();
 		num_allocated_++;
 
-		Globals::unlock_process();
+		//Globals::unlock_process();
 
 		return obj;
 	}
 
 	void Free(T* obj) {
-		Globals::lock_process();
+		//Globals::lock_process();
 
 		assert(obj->IsAllocated());
 		obj->ClearAllocated();
 		freelist_.push_back(obj);
 		num_allocated_--;
 
-		Globals::unlock_process();
+		//Globals::unlock_process();
 	}
 
 	void DeleteAll() {

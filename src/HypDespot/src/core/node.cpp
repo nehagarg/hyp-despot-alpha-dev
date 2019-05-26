@@ -186,6 +186,26 @@ const std::vector<int>& VNode::particleIDs() const {
 	    }
 	//return particleIDs_;
 }
+
+const std::vector<float>& VNode::particle_keras_batch() const
+{
+	if(Globals::config.track_alpha_vector)
+		    {
+
+		            return common_parent_->particle_keras_batch;
+
+		    }
+		    else
+		    {
+		        return particle_keras_batch_;
+		    }
+
+}
+
+void VNode::set_keras_particle_batch(std::vector<float>& particle_keras_batch)
+{
+	particle_keras_batch_ = particle_keras_batch;
+}
 void VNode::depth(int d) {
 	depth_ = d;
 }
@@ -207,13 +227,13 @@ OBS_TYPE VNode::edge() {
 }
 
 double VNode::Weight() {
-	if(Globals::config.useGPU==false ||!PassGPUThreshold())
+	/*if(Globals::config.useGPU==false ||!PassGPUThreshold())
 		if(GPUWeight()>0)
 		  {
 		    //std::cout << "Returning GPU Weight " << std::endl;
 			return GPUWeight();
 		  }
-		else
+		else*/
                 {
                     if(Globals::config.track_alpha_vector)
                     {
@@ -232,8 +252,8 @@ double VNode::Weight() {
                     }
 			//return State::Weight(particles_);
                 }
-	else/* if(num_GPU_particles_>0)*/
-		return GPUWeight();
+	//else/* if(num_GPU_particles_>0)*/
+	//	return GPUWeight();
 }
 bool VNode::PassGPUThreshold(){
 	return (particleIDs().size()>2/*0*/ || depth()<1);
@@ -552,6 +572,8 @@ Dvc_State* VNode::GetGPUparticles(){
 		//return GPU_particles_;
 
 	};
+
+
 /* =============================================================================
  * QNode class
  * =============================================================================*/

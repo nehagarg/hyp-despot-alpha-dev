@@ -28,25 +28,33 @@ bool DespotWithAlphaFunctionUpdate::PedPomdpProb = false;
     {
         logd << "Expanding in Despot With Alpha function update" << std::endl;
         VNode* parent = qnode->parent();
-        if(Globals::config.useGPU && parent->PassGPUThreshold())
+        if((Globals::config.useGPU && parent->PassGPUThreshold())|| Globals::config.use_keras_model)
 		{
-        	if(Globals::config.use_multi_thread_)
+        	/*if(Globals::config.use_multi_thread_)
         	{
         		(static_cast<Shared_QNode*>(parent->common_parent_))->lock();
-        	}
+        	}*/
 			if(parent->common_parent_->common_children_.size()==0)
 			{
-				DESPOT::GPU_Expand_Action(parent,lb,ub,model,streams,history);
+				if(Globals::config.useGPU && parent->PassGPUThreshold())
+				{
+					//DESPOT::GPU_Expand_Action(parent,lb,ub,model,streams,history);
+				}
+				if(Globals::config.use_keras_model)
+				{
+					DESPOT::Keras_Expand_Action(parent, lb, ub, model, streams,
+						                  history);
+				}
 			}
-			if(Globals::config.use_multi_thread_)
+			/*if(Globals::config.use_multi_thread_)
 			{
 				(static_cast<Shared_QNode*>(parent->common_parent_))->unlock();
-			}
+			}*/
 
 		}
 
         QNode* common_qnode;
-        if(Globals::config.use_multi_thread_)
+        /*if(Globals::config.use_multi_thread_)
         {
 
 
@@ -57,7 +65,7 @@ bool DespotWithAlphaFunctionUpdate::PedPomdpProb = false;
 			(static_cast<Shared_QNode*>(common_qnode))->lock();
 
         }
-        else
+        else*/
         {
         		common_qnode = parent->CommonChild(qnode->edge());
 
@@ -147,7 +155,7 @@ bool DespotWithAlphaFunctionUpdate::PedPomdpProb = false;
         VNode* residual_vnode;
         if(common_qnode->particles_.size() > 0)
         {
-        	if (Globals::config.use_multi_thread_)
+        	/*if (Globals::config.use_multi_thread_)
         			{
         				residual_vnode = new Shared_VNode(parent->depth() + 1,
         				                         static_cast<Shared_QNode*>(qnode), static_cast<Shared_QNode*>(common_qnode),
@@ -155,7 +163,7 @@ bool DespotWithAlphaFunctionUpdate::PedPomdpProb = false;
         				if (Globals::config.exploration_mode == UCT)
         					static_cast<Shared_VNode*>(residual_vnode)->visit_count_ = 1.1;
         			}
-        			else
+        			else*/
         			{
         				residual_vnode = new VNode(parent->depth() + 1,
         						qnode,common_qnode, Globals::RESIDUAL_OBS);
@@ -199,14 +207,14 @@ bool DespotWithAlphaFunctionUpdate::PedPomdpProb = false;
                 //int observation_particle_size_ = partitions[obs].size();
 		VNode* vnode;
 		if (Globals::config.use_multi_thread_)
-		        			{
+		        			/*{
 		        				vnode = new Shared_VNode(parent->depth() + 1,
 		        				                         static_cast<Shared_QNode*>(qnode), static_cast<Shared_QNode*>(common_qnode),
 		        				                         obs);
 		        				if (Globals::config.exploration_mode == UCT)
 		        					static_cast<Shared_VNode*>(vnode)->visit_count_ = 1.1;
 		        			}
-		        			else
+		        			else*/
 		        			{
 		        				vnode = new VNode(parent->depth() + 1,
 		        							qnode, common_qnode, obs);
@@ -336,18 +344,18 @@ bool DespotWithAlphaFunctionUpdate::PedPomdpProb = false;
                 //lower_bound += vnode->lower_bound();
 
         }
-	if(Globals::config.use_multi_thread_){
+	/*if(Globals::config.use_multi_thread_){
 	  //std::cout << "Unlocking inside if" << std::endl;
 
 	  (static_cast<Shared_QNode*>(common_qnode))->unlock();
-	}
+	}*/
         }
         //Copy from populated qnode
         else{
-			  if(Globals::config.use_multi_thread_){
+			  /*if(Globals::config.use_multi_thread_){
 			  //std::cout << "Going inside else" << std::endl;
 			  (static_cast<Shared_QNode*>(common_qnode))->unlock();
-			  }
+			  }*/
             populated_qnode = common_qnode->populating_node; //common_qnode->parent()->Child(qnode->edge()) can be wrong with multiple threads. So keeping a pointer to poluating node
             if(populated_qnode == qnode)
             {
@@ -357,7 +365,7 @@ bool DespotWithAlphaFunctionUpdate::PedPomdpProb = false;
             else
             {
 	      logd << "Copying from existing qnode \n";
-	      if(Globals::config.useGPU && parent->PassGPUThreshold())
+	     /* if(Globals::config.useGPU && parent->PassGPUThreshold())
 	      {
 
 	    	  if(Globals::config.use_multi_thread_ && Globals::config.exploration_mode==UCT)
@@ -365,14 +373,14 @@ bool DespotWithAlphaFunctionUpdate::PedPomdpProb = false;
 	    		  assert(static_cast<Shared_QNode*>(qnode)->visit_count_ == 0);
 	 				static_cast<Shared_QNode*>(qnode)->visit_count_=1.1;
 	    	  }
-	      }
+	      }*/
             std::map<OBS_TYPE, VNode*>& populated_children = populated_qnode->children();
             for (std::map<OBS_TYPE, VNode*>::iterator it = populated_children.begin();
 		it != populated_children.end(); it++)
             {
                 OBS_TYPE obs = it->first;
                 VNode* vnode;
-                if (Globals::config.use_multi_thread_)
+               /* if (Globals::config.use_multi_thread_)
 				{
 					vnode = new Shared_VNode(parent->depth() + 1,
 											 static_cast<Shared_QNode*>(qnode), static_cast<Shared_QNode*>(common_qnode),
@@ -380,7 +388,7 @@ bool DespotWithAlphaFunctionUpdate::PedPomdpProb = false;
 					if (Globals::config.exploration_mode == UCT)
 						static_cast<Shared_VNode*>(vnode)->visit_count_ = 1.1;
 				}
-				else
+				else*/
 				{
                 vnode = new VNode(parent->depth() + 1,
 			qnode, common_qnode, obs);
@@ -467,28 +475,28 @@ bool DespotWithAlphaFunctionUpdate::PedPomdpProb = false;
         qnode->upper_bound(Globals::POS_INFTY);
         if(Globals::config.use_sawtooth_upper_bound)
         {
-	  if(Globals::config.use_multi_thread_){
+	  /*if(Globals::config.use_multi_thread_){
 	    //std::cout << "Unlocking inside if" << std::endl;
 
 	    (static_cast<Shared_QNode*>(common_qnode))->lock();
-	  }
+	  }*/
 	  
           if(common_qnode->qnode_upper_bound_per_particle.size()==0)
           {
               common_qnode->qnode_upper_bound_per_particle.resize(Globals::config.num_scenarios, Globals::POS_INFTY);
           }
-	  if(Globals::config.use_multi_thread_){
+	  /*if(Globals::config.use_multi_thread_){
 	    //std::cout << "Unlocking inside if" << std::endl;
 
 	    (static_cast<Shared_QNode*>(common_qnode))->unlock();
-	  }
+	  }*/
 	  
         }
 
-	if(Globals::config.use_multi_thread_){
+	/*if(Globals::config.use_multi_thread_){
 	  DespotWithAlphaFunctionUpdate::Update(static_cast<Shared_QNode*>(qnode), false, 7);
 	}
-	else {
+	else*/ {
 	  DespotWithAlphaFunctionUpdate::Update(qnode,7);
 	}
 	//qnode->step_reward = step_reward;
@@ -515,7 +523,7 @@ bool DespotWithAlphaFunctionUpdate::PedPomdpProb = false;
     
     
 
-int DespotWithAlphaFunctionUpdate::Update(Shared_VNode* vnode, bool real)
+/*int DespotWithAlphaFunctionUpdate::Update(Shared_VNode* vnode, bool real)
 {
 	//lock_guard < mutex > lck(vnode->GetMutex());//lock v_node during updation
 	int upper_bound_changed = 0;
@@ -550,13 +558,7 @@ int DespotWithAlphaFunctionUpdate::Update(Shared_VNode* vnode, bool real)
 				double qnode_upper_bound = 0;
 				if(Globals::config.track_alpha_vector){
 
-					/*for (int i = 0; i < Globals::config.num_scenarios; i++)
-					{
-						//int particle_index = qnode->particles_[i]->scenario_id;
-						qnode_lower_bound += vnode->particle_weights[i]*qnode->lower_bound_alpha_vector[i];
-						qnode_upper_bound += vnode->particle_weights[i]*qnode->upper_bound_alpha_vector[i];
 
-					}*/
 					qnode_lower_bound = ((QNode*)qnode)->lower_bound();
 					qnode_upper_bound = ((QNode*)qnode)->upper_bound();
 					if(qnode_lower_bound > lower)
@@ -618,10 +620,8 @@ int DespotWithAlphaFunctionUpdate::Update(Shared_VNode* vnode, bool real)
 		vnode->unlock();
 		return (4*boundary_upper_bound_changed + 2*upper_bound_changed + lower_bound_changed);
 		        //std::cout << "Update Estimated value " <<  vnode->has_estimated_upper_bound_value << " array size " << vnode->estimated_upper_bound_alpha_vector.value_array->size() << std::endl;
-			/*if (utility_upper < vnode->utility_upper_bound) {
-				vnode->utility_upper_bound = utility_upper;
-			}*/
-}
+
+}*/
 int DespotWithAlphaFunctionUpdate::Update(VNode* vnode) {
     int upper_bound_changed = 0;
     int lower_bound_changed = 0;
@@ -720,7 +720,7 @@ int DespotWithAlphaFunctionUpdate::Update(VNode* vnode) {
     
 
 
-void DespotWithAlphaFunctionUpdate::Update(Shared_QNode* qnode, bool real, int vnode_update_status)
+/*void DespotWithAlphaFunctionUpdate::Update(Shared_QNode* qnode, bool real, int vnode_update_status)
 {
 
 
@@ -812,13 +812,10 @@ void DespotWithAlphaFunctionUpdate::Update(Shared_QNode* qnode, bool real, int v
 		}
 		if (upper < ((QNode*)qnode)->upper_bound()) {
 			((QNode*)qnode)->upper_bound(upper);
-	               /* for (int i = 0; i < Globals::config.num_scenarios; i++)
-	            {
-	                    qnode->upper_bound_alpha_vector[i] = upper_bound_vector[i];
-	                }*/
+
 		}
 
-}
+}*/
 void DespotWithAlphaFunctionUpdate::Update(QNode* qnode, int vnode_update_status) {
         //double lower = qnode->step_reward;
 	//double upper = qnode->step_reward;
@@ -937,7 +934,7 @@ void DespotWithAlphaFunctionUpdate::Update(QNode* qnode, int vnode_update_status
 	
 }
 
-void DespotWithAlphaFunctionUpdate::UpdateSibling(Shared_VNode* vnode, Shared_VNode* sibling_node, bool real, int vnode_update_status)
+/*void DespotWithAlphaFunctionUpdate::UpdateSibling(Shared_VNode* vnode, Shared_VNode* sibling_node, bool real, int vnode_update_status)
 {
 	if (DESPOT::Gap(sibling_node) <=0.0)
 		return;
@@ -958,11 +955,7 @@ void DespotWithAlphaFunctionUpdate::UpdateSibling(Shared_VNode* vnode, Shared_VN
 	ValuedAction vnode_valued_action;
 	vnode->lock();//lock v_node to read lower bound alpha vector
 	vnode_lower_bound_vector = *(vnode->lower_bound_alpha_vector.value_array);
-	/*for (int i = 0; i < Globals::config.num_scenarios; i++)
-	{
 
-		vnode_lower_bound_vector.push_back((*vnode->lower_bound_alpha_vector.value_array)[i]);
-	}*/
 	vnode_valued_action = vnode->lower_bound_alpha_vector;
 	vnode->unlock();
 	for (int i = 0; i < Globals::config.num_scenarios; i++)
@@ -978,7 +971,6 @@ void DespotWithAlphaFunctionUpdate::UpdateSibling(Shared_VNode* vnode, Shared_VN
 		sibling_node->lower_bound_alpha_vector.action = vnode_valued_action.action;
 		sibling_node->lower_bound_alpha_vector.value = qnode_lower_bound;
 		sibling_node->lower_bound_alpha_vector_ = vnode_lower_bound_vector;
-		//sibling_node->lower_bound_alpha_vector_.insert(sibling_node->lower_bound_alpha_vector_.begin(),vnode_lower_bound_vector.begin(), vnode_lower_bound_vector.end() );
 		sibling_node->lower_bound_alpha_vector.value_array = &(sibling_node->lower_bound_alpha_vector_);
 
 	}
@@ -996,35 +988,9 @@ void DespotWithAlphaFunctionUpdate::UpdateSibling(Shared_VNode* vnode, Shared_VN
 		std::vector<double> vnode_common_parent_vnode_upper_bound_per_particle;
 		vnode->common_parent()->lock();
 		vnode_common_parent_vnode_upper_bound_per_particle = vnode->common_parent()->vnode_upper_bound_per_particle;
-		/*
-		 for (int i = 0; i < Globals::config.num_scenarios; i++)
-		 {
-			 vnode_common_parent_vnode_upper_bound_per_particle.push_back(vnode->common_parent()->vnode_upper_bound_per_particle[i]);
-		 }*/
+
 		 vnode->common_parent()->unlock();
-		  /*
-		  std::cout << "Computing sawtooth" <<std::endl;
-		  //print es
-		  std::cout << "Singleton values [" ;
-		  for (int i = 0; i < Globals::config.num_scenarios; i++)
-		    {
-		      std::cout << vnode->common_parent()->vnode_upper_bound_per_particle[i] << ",";
-		    }
-		  std::cout << "]" << std::endl;
-		  std::cout << "b' weights [";
-		  for (int i = 0; i < Globals::config.num_scenarios; i++)
-		    {
-		      std::cout << vnode->particle_weights[i] << ",";
-		    }
-		  std::cout << "]"<< std::endl;
-		  std::cout << "b weights [";
-		  for (int i = 0; i < Globals::config.num_scenarios; i++)
-		    {
-		      std::cout << sibling_node->particle_weights[i] << ",";
-		    }
-		  std::cout << "]"<< std::endl;
-		  std::cout << "b' upper bound " << vnode->upper_bound() << " b upper bound " << sibling_node->upper_bound() << std::endl;
-		  */
+
 
 
 		 	 //Find the minimum ratio weights
@@ -1063,7 +1029,7 @@ void DespotWithAlphaFunctionUpdate::UpdateSibling(Shared_VNode* vnode, Shared_VN
 		}
 	        }
 
-}
+}*/
     void DespotWithAlphaFunctionUpdate::UpdateSibling(VNode* vnode, VNode* sibling_node, int vnode_update_status) {
         /*if (sibling_node->IsLeaf()) {
 		return;

@@ -1,9 +1,11 @@
 #include <despot/keras_random_streams.h>
 #include <despot/util/seeds.h>
+#include <despot/core/globals.h>
 #include <vector>
 #include <sstream>
 #include <cstring>
 #include <assert.h>
+#include <random>
 using namespace std;
 
 namespace despot {
@@ -36,7 +38,7 @@ KerasRandomStreams::KerasRandomStreams(int num_streams, int length, int latent_d
 }
 
 
-std::vector<float>& KerasALLParticlesEntry(int position = -1) const {
+const std::vector<float>& KerasRandomStreams::KerasALLParticlesEntry(int position) const {
 	if(position == -1)
 	{
 		return keras_streams_[position_];
@@ -47,6 +49,64 @@ std::vector<float>& KerasALLParticlesEntry(int position = -1) const {
 	}
 }
 
+const void KerasRandomStreams::KerasParticlesEntry(const std::vector<State*>& particles, std::vector<float>& random_vector, int position) const
+{
+	int p = position;
+	if(position == -1)
+		{
+			p = position_;
+		}
+	int num_begin = 0;
+	int num_end = 0;
+	for(int i = 0; i < particles.size(); i++)
+	{
+		int particle_id = particles[i]->scenario_id;
+		if(particle_id == (num_end))
+		{
+			num_end++;
+		}
+		else
+		{
+			random_vector.insert(random_vector.end(),keras_streams_[p].data() + num_begin*latent_dimension_, keras_streams_[p].data() + (num_end)*latent_dimension_);
+			num_begin = particle_id;
+			num_end = num_begin +1;
+		}
+	}
+	if(num_end > num_begin)
+	{
+		random_vector.insert(random_vector.end(),keras_streams_[p].data() + num_begin*latent_dimension_, keras_streams_[p].data() + (num_end)*latent_dimension_);
+	}
+
+}
 
 
+const void KerasRandomStreams::KerasParticlesEntry(const std::vector<int>& particles, std::vector<float>& random_vector, int position) const
+{
+	int p = position;
+	if(position == -1)
+		{
+			p = position_;
+		}
+	int num_begin = 0;
+	int num_end = 0;
+	for(int i = 0; i < particles.size(); i++)
+	{
+		int particle_id = particles[i];
+		if(particle_id == (num_end))
+		{
+			num_end++;
+		}
+		else
+		{
+			random_vector.insert(random_vector.end(),keras_streams_[p].data() + num_begin*latent_dimension_, keras_streams_[p].data() + (num_end)*latent_dimension_);
+			num_begin = particle_id;
+			num_end = num_begin +1;
+		}
+	}
+	if(num_end > num_begin)
+	{
+		random_vector.insert(random_vector.end(),keras_streams_[p].data() + num_begin*latent_dimension_, keras_streams_[p].data() + (num_end)*latent_dimension_);
+	}
+
+}
 } // namespace despot

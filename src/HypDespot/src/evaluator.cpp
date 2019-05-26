@@ -69,8 +69,8 @@ int Planner::RunEvaluation(int argc, char *argv[]) {
 	if(options==NULL)
 		return 0;
 
-	if(Globals::config.useGPU)
-		PrepareGPU();
+	//if(Globals::config.useGPU)
+	//	PrepareGPU();
 
 	clock_t main_clock_start = clock();
 
@@ -122,8 +122,8 @@ int Planner::RunEvaluation(int argc, char *argv[]) {
 
 	PrintResult(num_runs, logger, main_clock_start);
 
-	if(Globals::config.useGPU)
-		ClearGPU();
+	//if(Globals::config.useGPU)
+	//	ClearGPU();
 	
 	return 0;
 }

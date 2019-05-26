@@ -22,6 +22,7 @@ protected:
   std::vector<State*> particles_; // Used in DESPOT
     std::vector<int> particleIDs_; //Used in GPUDESPOT
     Dvc_State* GPU_particles_; // Used in GPUDESPOT
+    std::vector<float> particle_keras_batch_; //used for using neural network transition and observation function
 	Belief* belief_; // Used in AEMS
 	int depth_;
 	QNode* parent_;
@@ -79,6 +80,7 @@ public:
 	Belief* belief() const;
 	const std::vector<State*>& particles() const;
 	const std::vector<int>& particleIDs() const;
+
 	void depth(int d);
 	int depth() const;
 	void parent(QNode* parent);
@@ -128,6 +130,10 @@ public:
 	void ResizeParticles(int i);
 	void ReadBackCPUParticles(const DSPOMDP* model);
 	void ReconstructCPUParticles(const DSPOMDP* model, RandomStreams& streams, History& history);
+
+	/*Keras Particle function*/
+	const std::vector<float>& particle_keras_batch() const;
+	void set_keras_particle_batch(std::vector<float>& particle_keras_batch);
 };
 
 /* =============================================================================
@@ -175,6 +181,8 @@ public:
         std::vector<int> particleIDs_; //Used in GPUDESPOT
         Dvc_State* GPU_particles_; // Used in GPUDESPOT
         int num_GPU_particles_;  // Used in GPUDESPOT
+
+        std::vector<float> particle_keras_batch; //used for using neural network transition and observation function
         //===========================================================================
         
 	double weight_;

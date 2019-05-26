@@ -11,6 +11,7 @@
 #include <despot/util/memorypool.h>
 #include <despot/util/seeds.h>
 #include <despot/util/util.h>
+#include "tensorflow/core/framework/tensor.h"
 
 namespace despot {
 
@@ -41,6 +42,10 @@ public:
 		this->state_id = state_id;
 		this->weight = weight;
 		return this;
+	}
+	virtual void get_keras_input(std::vector<float>& keras_input, int particle_index = 0)
+	{
+
 	}
 };
 
@@ -375,7 +380,7 @@ public:
 	 * Functions for HyP-DESPOT
 	 * ========================================================================*/
 
-	virtual Dvc_State* AllocGPUParticles(int numParticles, MEMORY_MODE mode,  Dvc_State*** particles_all_a = NULL ) const = 0;
+	/*virtual Dvc_State* AllocGPUParticles(int numParticles, MEMORY_MODE mode,  Dvc_State*** particles_all_a = NULL ) const = 0;
 
 	virtual void DeleteGPUParticles( MEMORY_MODE mode, Dvc_State** particles_all_a = NULL) const = 0;
 
@@ -414,15 +419,34 @@ public:
 	{
 		std::cout << "Caution! Function " << __FUNCTION__ << " haven't been implemented" << std::endl;
 		exit(1);
-	}
+	}*/
 	
 	/* ========================================================================
 		 * Functions for KERAS transition and observation model
 		 * ========================================================================*/
-	virtual int LatentDimensionSize()
+	virtual int LatentDimensionSize() const
 	{
 		return -1;
 	}
+
+	virtual int KerasInputVectorSize() const
+	{
+		return 0;
+	}
+
+	void StepKerasParticles(const std::vector<float>& keras_particle_batch, int action, std::vector<float>&random_number_vecctor,
+			std::vector<tensorflow::Tensor>& outputs) const
+	{
+
+	}
+
+	void GetObservationProbability(const std::vector<float>& keras_particle_batch, const std::vector<float>& keras_obs_particle_batch, int action,
+			std::vector<float>&random_number_vecctor, std::vector<tensorflow::Tensor>& outputs) const
+		{
+
+		}
+
+
 
 };
 

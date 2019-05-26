@@ -50,15 +50,15 @@ public:
 
 } // namespace despot
 
-#define LOG(lv) \
+#define LOG_DESPOT(lv) \
 if (despot::logging::level() < despot::logging::ERROR || despot::logging::level() < lv) ; \
 else despot::logging::stream(lv)
 
-#define loge LOG(despot::logging::ERROR)
-#define logw LOG(despot::logging::WARN)
-#define logi LOG(despot::logging::INFO)
-#define logd LOG(despot::logging::DEBUG)
-#define logv LOG(despot::logging::VERBOSE)
+#define loge LOG_DESPOT(despot::logging::ERROR)
+#define logw LOG_DESPOT(despot::logging::WARN)
+#define logi LOG_DESPOT(despot::logging::INFO)
+#define logd LOG_DESPOT(despot::logging::DEBUG)
+#define logv LOG_DESPOT(despot::logging::VERBOSE)
 
 #define default_out \
 if (Globals::config.silence) ; \

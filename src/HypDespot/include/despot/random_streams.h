@@ -13,7 +13,7 @@ namespace despot {
  * entry is independently and identically drawn from [0, 1].
  */
 class RandomStreams {
-private:
+protected:
 	mutable int position_;
 
 public:
