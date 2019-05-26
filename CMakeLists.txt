@@ -88,12 +88,12 @@ CATKIN_DEPENDS roscpp message_runtime vrep_common)
 message("@@@@@@@@@@@@@@ before add lib @@@@@@@@@@@@@@")
 add_subdirectory(src/HypDespot/)
 
-add_subdirectory(src/HyP_examples/tiger)
-add_subdirectory(src/HyP_examples/tag)
-add_subdirectory(src/HyP_examples/adventurer)
-add_subdirectory(src/HyP_examples/CarDriving)
-add_subdirectory(src/HyP_examples/ma_rock_sample)
-add_subdirectory(src/HyP_examples/unkown_navigation)
+#add_subdirectory(src/HyP_examples/tiger)
+#add_subdirectory(src/HyP_examples/tag)
+#add_subdirectory(src/HyP_examples/adventurer)
+#add_subdirectory(src/HyP_examples/CarDriving)
+#add_subdirectory(src/HyP_examples/ma_rock_sample)
+#add_subdirectory(src/HyP_examples/unkown_navigation)
 add_subdirectory(src/HyP_examples/grasping_ros_mico)
 
 set_target_properties( "${PROJECT_NAME}"
