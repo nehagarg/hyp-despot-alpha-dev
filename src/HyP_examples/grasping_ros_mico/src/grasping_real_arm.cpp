@@ -201,14 +201,22 @@ GraspingRealArm::GraspingRealArm(std::string modelParamFileName, int start_state
     if(config["version7"])
     {
         RobotInterface::version7 = config["version7"].as<bool>();
-        //Keeping learning model problem name same
-        //as no change in that due to change to ver6
         LearningModel::problem_name  = "vrep/ver7";
     }
     else
     {
         RobotInterface::version7 = false;
     }
+
+    if(config["version8"])
+	{
+		RobotInterface::version8 = config["version8"].as<bool>();
+		LearningModel::problem_name  = "vrep/ver8";
+	}
+	else
+	{
+		RobotInterface::version8 = false;
+	}
 
     if(config["use_data_step"])
     {
@@ -251,6 +259,16 @@ GraspingRealArm::GraspingRealArm(std::string modelParamFileName, int start_state
         RobotInterface::use_regression_models = false;
     }
 
+    RobotInterface::use_keras_models = Globals::config.use_keras_model;
+    /*if(config["use_keras_models"])
+        {
+            RobotInterface::use_keras_models = config["use_keras_models"].as<bool>();
+        }
+        else
+        {
+            RobotInterface::use_keras_models = false;
+        }
+	*/
     if(config["auto_load_object"])
     {
         RobotInterface::auto_load_object = config["auto_load_object"].as<bool>();

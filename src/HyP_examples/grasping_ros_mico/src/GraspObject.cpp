@@ -73,7 +73,7 @@ GraspObject::GraspObject(std::string object_name_, std::string data_dir_name_, b
     min_z_o = default_min_z_o;
     initial_object_pose_z = default_initial_object_pose_z;
     
-    if(data_dir_name_.find("ver6") != std::string::npos || data_dir_name_.find("ver7") != std::string::npos )
+    if(data_dir_name_.find("ver6") != std::string::npos || data_dir_name_.find("ver7") != std::string::npos || data_dir_name_.find("ver8") != std::string::npos)
     {
         initial_object_y = initial_object_y_version6;
     }

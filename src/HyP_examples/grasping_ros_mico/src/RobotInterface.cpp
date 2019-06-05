@@ -25,8 +25,9 @@ bool RobotInterface::version6;
 bool RobotInterface::version7;
 bool RobotInterface::version8;
 bool RobotInterface::get_object_belief;
-bool RobotInterface::use_data_step;
+bool RobotInterface::use_data_step; //Start the vrep simulator to get vision observation for objecct class but use data step after that
 bool RobotInterface::use_regression_models;
+bool RobotInterface::use_keras_models;
 bool RobotInterface::auto_load_object;
 bool RobotInterface::use_pruned_data;
 bool RobotInterface::use_discretized_data;
@@ -83,6 +84,12 @@ RobotInterface::RobotInterface() {
 
     num_predictions_for_dynamic_function = 18;
 
+    if(use_keras_models)
+    {
+    	//KerasModels temp_keras_model = KerasModels(A_PICK + 1);
+    	//keras_models = &(temp_keras_model);
+    	keras_models = new KerasModels(A_PICK + 1);
+    }
     if(version5 || version6 || version7 || version8)
     {
         touch_sensor_mean_ver5[0] = 0.11;
@@ -159,9 +166,14 @@ RobotInterface::RobotInterface() {
 }
 
 RobotInterface::RobotInterface(const RobotInterface& orig) {
+
 }
 
 RobotInterface::~RobotInterface() {
+	if(use_keras_models)
+	{
+		delete keras_models;
+	}
 }
 
 void RobotInterface::loadObjectDynamicModel(int object_id) {
@@ -172,6 +184,10 @@ void RobotInterface::loadObjectDynamicModel(int object_id) {
         {
             getRegressionModels(object_id);
         }
+    else if(use_keras_models)
+    {
+    	keras_models->load_keras_models();
+    }
         else
         {
             getSimulationData( object_id);

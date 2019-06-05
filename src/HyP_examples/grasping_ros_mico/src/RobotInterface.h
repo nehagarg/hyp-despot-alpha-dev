@@ -11,6 +11,7 @@
 #include "GraspingStateRealArm.h"
 #include "GraspingObservation.h"
 #include "simulation_data_reader.h"
+#include "KerasModels.h"
 #include <cmath> //To make abs work for double
 #include "Python.h"
 
@@ -140,6 +141,7 @@ public:
     static bool get_object_belief;
     static bool use_classifier_for_belief;
     static bool use_regression_models;
+    static bool use_keras_models;
     static bool auto_load_object;
     static bool use_pruned_data;
     static bool use_discretized_data;
@@ -180,7 +182,7 @@ public:
     //mutable MultiScikitModels* dynamicModelsC[NUMBER_OF_OBJECTS][A_PICK+1];
     //mutable PyObject* dynamicFunction;
     int num_predictions_for_dynamic_function;
-    
+    KerasModels* keras_models;
     
     double get_action_range(int action, int action_type) const ;
     void GetObsFromData(GraspingStateRealArm grasping_state, GraspingObservation& grasping_obs, double random_num, int action, bool debug = false) const; //state is the state reached after performing action

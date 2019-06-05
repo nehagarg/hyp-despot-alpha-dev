@@ -1,10 +1,13 @@
+#ifndef INFERENCECC_H_
+#define INFERENCECC_H_
+
 //Adapted from  2018, Patrick Wieschollek <mail@patwie.com>
 #include <tensorflow/core/protobuf/meta_graph.pb.h>
 #include <tensorflow/core/public/session.h>
 #include <tensorflow/core/public/session_options.h>
 #include <iostream>
 #include <string>
-
+#include <despot/util/util.h>
 typedef std::vector<std::pair<std::string, tensorflow::Tensor>> tensor_dict;
 
 /**
@@ -166,3 +169,4 @@ double inference_keras_main(tensorflow::Session* sess){
 
   return start_t;
 }
+#endif /* INFERENCECC_H_ */

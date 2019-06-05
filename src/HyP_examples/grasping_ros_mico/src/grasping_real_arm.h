@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   grasping.h
  * Author: neha
  *
@@ -32,13 +32,13 @@
 class GraspingRealArm;
 
 class GraspingMicoParticleBelief : public GraspingParticleBelief {
-public:   
+public:
     GraspingMicoParticleBelief(std::vector<State*> particles, const DSPOMDP* model,
 	Belief* prior, bool split);
    void Update(int action, OBS_TYPE obs);
-   
+
    const GraspingRealArm* grasping_model_;
-            
+
 };
 
 
@@ -50,14 +50,14 @@ public:
     GraspingRealArm(int start_state_index_, VrepInterface* roboInterface_);
     //GraspingRealArm(std::string dataFileName, int start_state_index_);
     GraspingRealArm(std::string modelParamFileName, int start_state_index_);
-    
-    
+
+
     virtual ~GraspingRealArm();
 
     int NumActions() const {
         return A_PICK + 1;
     };
-    
+
      /* Deterministic simulative model.*/
     bool Step(State& state, double random_num, int action,
         double& reward, uint64_t& obs) const {
@@ -76,16 +76,16 @@ public:
         obs = observation.GetHash();
         //assert(false);
         return isTerminal;
-        
+
     }
      bool Step(State& state, double random_num, int action,
         double& reward, ObservationClass& obs) const;
     bool StepActual(State& state, double random_num, int action,
         double& reward, ObservationClass& obs) const; //Function for actual step in simulation or real robot
-    
+
     /* Functions related to beliefs and starting states.*/
     double ObsProb(uint64_t obs, const State& state, int action) const {
-        //std::cout << "ObsProb: This should not have been printed"; 
+        //std::cout << "ObsProb: This should not have been printed";
         ObservationClass observation;
         observation.SetIntObs(obs);
         return ObsProb(observation, state, action);
@@ -94,13 +94,13 @@ public:
     double ObsProb(ObservationClass obs, const State& state, int action) const;
     Belief* InitialBelief(const State* start, std::string type = "DEFAULT") const;
     State* CreateStartState(std::string type = "DEFAULT") const;
- 
+
     /* Bound-related functions.*/
     double GetMaxReward() const { return reward_max;}
     ValuedAction GetMinRewardAction() const {
         return ValuedAction(A_OPEN, -1);
-         
-                
+
+
     };
 
     ValuedAction GetBestAction() const {
@@ -109,7 +109,7 @@ public:
 
         };
     ScenarioLowerBound* CreateScenarioLowerBound(std::string name = "DEFAULT", std::string particle_bound_name = "DEFAULT") const;
- 
+
     ScenarioUpperBound* CreateScenarioUpperBound(std::string name = "DEFAULT", std::string particle_bound_name = "DEFAULT") const;
 
     /* Memory management.*/
@@ -131,17 +131,17 @@ public:
         //num_active_particles --;
         memory_pool_.Free(static_cast<GraspingStateRealArm*>(particle));
     };
-    
+
     int NumActiveParticles() const {
 	return memory_pool_.num_allocated();
     }
-    
+
     /**printing functions*/
 
     void PrintState(const State& state, std::ostream& out = std::cout) const;
 
     void PrintAction(int action, std::ostream& out = std::cout) const;
-    
+
     void PrintObs(const State& state, ObservationClass& obs, std::ostream& out = std::cout) const;
     void PrintObs(ObservationClass& obs, std::ostream& out = std::cout) const;
     void PrintObs(const State& state, uint64_t obs, std::ostream& out = std::cout) const {
@@ -165,9 +165,9 @@ public:
     //std::string learned_model_name = "";
     //int automatic_switching_method = 0; // 0  for threshold switching 1 for switching wirh both correct and wrong prediction 2 for switching with only correct prediction
     //std::string svm_model_prefix = "";
-       
+
     RobotInterface* robotInterface;
-    
+
     std::hash<std::string> obsHash;
     mutable std::map<uint64_t, GraspingObservation> obsHashMap;
     mutable GraspingStateRealArm initial_state;
@@ -176,18 +176,18 @@ public:
     std::vector<int> belief_object_ids;
     int test_object_id;
     bool logFileInterface;
-    
+
     //vector<HistoryWithReward*> LearningData() const;
     //ObservationClass GetInitialObs() const;
     //int GetActionIdFromString(string dataline ) const;
     std::vector<State*> InitialBeliefParticles(const State* start, std::string type="DEFAULT") const;
-    
-    mutable ros::NodeHandle grasping_display_n; 
+
+    mutable ros::NodeHandle grasping_display_n;
     // data used for this graspcup example
     mutable ros::Publisher pub_belief;
     mutable ros::Publisher pub_gripper;
-    
-    
+
+
     //Learning model
     std::vector<HistoryWithReward*> LearningData() const {
         std::vector<HistoryWithReward*> ans;
@@ -195,17 +195,17 @@ public:
     //Not used anymore should be removed
     uint64_t GetInitialObs() const {return 0;} ; //Not used anymore should be removed
     double GetDistance(int action1, uint64_t obs1, int action2, uint64_t obs2) const {return 0;} //Not used anymore should be removed
-    
+
     void PrintObs(uint64_t obs, std::ostream& out = std::cout) const {
         ObservationClass observation;
         observation.SetIntObs(obs);
         PrintObs(observation,out);
-    }; 
+    };
     void GenerateAdaboostTestFile(uint64_t obs, History h) const {}//Not used anymore should be removed
     int GetStartStateIndex() const {
         return start_state_index;
     }
-    
+
     void getInputSequenceForLearnedModelFromObs(GraspingObservation o, std::ostream& oss) const
     {
         double x_ref = robotInterface->min_x_i;
@@ -217,7 +217,7 @@ public:
         }
         int inc = 1;
         if(LearningModel::problem_name.find("vrep/ver5") !=std::string::npos
-            || LearningModel::problem_name.find("vrep/ver7") !=std::string::npos)    
+            || LearningModel::problem_name.find("vrep/ver7") !=std::string::npos)
         {
             inc = 2;
         }
@@ -235,7 +235,7 @@ public:
                 if(weight_belief_values == 0 && LearningModel::problem_name.find("vrep/ver7") ==std::string::npos)
                         {
                             c = '*';
-                        }    
+                        }
             }
             oss << o.finger_joint_state[j] << c;
         }
@@ -259,15 +259,15 @@ public:
             }
     }
     void GetInputSequenceForLearnedmodel(History h, std::ostream& oss) const
-    {   
+    {
         int weight_belief_values = 0;
-        
-        
-        
+
+
+
         if(LearningModel::problem_name.find("weighted") !=std::string::npos)
         {
             weight_belief_values = prior_vision_observation.size();
-        
+
             if( h.Size() == 0)
             {
                 //Create initial observation
@@ -277,22 +277,22 @@ public:
                 getInputSequenceForLearnedModelFromObs(o,oss);
             }
         }
-        
+
         int inc = 1;
         if(LearningModel::problem_name.find("vrep/ver5") !=std::string::npos
            || LearningModel::problem_name.find("vrep/ver7") !=std::string::npos)
         {
             inc = 2;
         }
-        
+
         for(int i = 0; i < h.Size(); i++)
             {
                 oss << h.Action(i) << ",";
                 GraspingObservation o = obsHashMap.at(h.Observation(i));
                 getInputSequenceForLearnedModelFromObs(o,oss);
-                
+
             }
-        
+
         if(inc ==1 )
         {
             oss << NumActions() << ",-1,-1,-1,-1,-1,-1,-1,-1 " ;
@@ -311,7 +311,7 @@ public:
             oss<<" ";
         }
     }
-       
+
     ValuedAction GetNextActionFromUser(History h) const {
         if (logFileInterface)
         {
@@ -323,9 +323,27 @@ public:
         }
     }
 
+    //=================Keras Despot Functions=====================================================
+	virtual int LatentDimensionSize() const
+	{
+		return 2;
+	}
+
+	virtual int KerasInputVectorSize() const
+	{
+		return 8;
+	}
+
+	void StepKerasParticles(const std::vector<float>& keras_particle_batch, int action, std::vector<float>&random_number_vecctor,
+			std::vector<tensorflow::Tensor>& outputs) const;
+
+
+	void GetObservationProbability(const std::vector<float>& keras_particle_batch, const std::vector<float>& keras_obs_particle_batch, int action,
+			std::vector<float>&random_number_vecctor, std::vector<tensorflow::Tensor>& outputs) const;
+
 
 	//=================Hyp Despot Functions With Dummy Implementation=============================
-        virtual Dvc_State* AllocGPUParticles(int numParticles, MEMORY_MODE mode,  Dvc_State*** particles_all_a = NULL ) const
+    /*    virtual Dvc_State* AllocGPUParticles(int numParticles, MEMORY_MODE mode,  Dvc_State*** particles_all_a = NULL ) const
         {
             std::cout << "Caution! Function " << __FUNCTION__ << " haven't been implemented" << std::endl;
             return NULL;
@@ -397,11 +415,10 @@ public:
              std::cout << "Caution! Function " << __FUNCTION__ << " haven't been implemented" << std::endl;
              return 0;
         }
-
+*/
 
 };
 
 
 
 #endif	/* GRASPING_REAL_ARM_H */
-

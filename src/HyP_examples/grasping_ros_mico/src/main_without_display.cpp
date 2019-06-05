@@ -2,7 +2,7 @@
 #include "grasping_real_arm.h"
 #include "ros/ros.h"
 #include "log_file_reader.h"
-#include "inference_cc.h"
+//#include "inference_cc.h"
 using namespace despot;
 
 
@@ -18,7 +18,7 @@ public:
 };
 
 
-int main(int argc, char* argv[])
+/*int main(int argc, char* argv[])
 {
 	tensorflow::Session* sess =   start_session(argc);
 	for(int i = 0; i < 10; i++)
@@ -33,10 +33,10 @@ int main(int argc, char* argv[])
 
 
 
-}
+}*/
 
 
-/*int main(int argc, char* argv[]) {
+int main(int argc, char* argv[]) {
     std::cout << "In main" << std::endl;
     main_init(argc, argv);
      std::cout << "In main" << std::endl;
@@ -51,4 +51,3 @@ int main(int argc, char* argv[])
 
  // return RosTUI().run(argc, argv);
 }
-*/

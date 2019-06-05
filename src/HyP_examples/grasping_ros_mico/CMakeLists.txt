@@ -16,7 +16,7 @@ if(NOT DEFINED CMAKE_CUDA_STANDARD)
   set(CMAKE_CUDA_STANDARD_REQUIRED True)
 endif()
 
-find_package(TensorFlow REQUIRED)
+#find_package(TensorFlow REQUIRED)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=${TensorFlow_ABI}")
 set(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=${TensorFlow_ABI}" )
 
@@ -112,6 +112,8 @@ target_link_libraries(grasping_ros_mico ${PROJECT_NAME} )
 target_link_libraries(grasping_ros_mico ${YAML-CPP})
 target_link_libraries( grasping_ros_mico ${Boost_SYSTEM_LIBRARY} )
 target_link_libraries(grasping_ros_mico ${PYTHON_LIBRARIES})
+TARGET_LINK_LIBRARIES(grasping_ros_mico ${TensorFlow_C_LIBRARY})
+target_link_libraries(grasping_ros_mico ${TensorFlow_LIBRARY})
 
 target_link_libraries(despot_without_display ${catkin_LIBRARIES})
 target_link_libraries(despot_without_display ${PROJECT_NAME})
@@ -134,6 +136,8 @@ target_link_libraries(gather_data ${PYTHON_LIBRARIES})
 #target_link_libraries(gather_data ${CUDA_LIBRARIES})
 #message("Cuda libraries ${CUDA_LIBRARIES}")
 #target_link_libraries(gather_data /usr/local/cuda-9.0/targets/x86_64-linux/lib/libcudart.so)
+TARGET_LINK_LIBRARIES(gather_data ${TensorFlow_C_LIBRARY})
+target_link_libraries(gather_data ${TensorFlow_LIBRARY})
 
 set_target_properties( gather_data
                        PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
