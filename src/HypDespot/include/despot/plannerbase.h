@@ -148,7 +148,7 @@ const option::Descriptor usage[] =
 					"  \t--econst <arg>  \tExploration constant for action branches (default 0.95)." },
 				{ E_EXPLORE_CONST_O, 0, "", "oeconst", option::Arg::Required,
 					"  \t--oeconst <arg>  \tExploration constant for observation branches(default 0.05)." },
-				{ E_USE_KERAS, 0, "", "use keras", option::Arg::Required,
+				{ E_USE_KERAS, 0, "", "USEKERAS", option::Arg::Required,
 					"  \t--USEKERAS <arg>  \tUse keras transition and observation model (default false)." },
 				{ 0, 0, 0, 0, 0, 0 } };
 
