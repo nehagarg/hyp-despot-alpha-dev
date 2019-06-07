@@ -24,6 +24,7 @@ https://github.com/marcinkaszynski/vrep-ros-plugins/commit/3e3c1c22703a14e55cf32
 for getting depth image for dexnet
 For details see this link : http://marcinkaszynski.com/2016/09/10/vrep-ros-rgbdslam-simulated-kinect.html
 dexnet_ws also needs to installed as code uses perception module from it
+dexnet_ws has been modified to not impot cnn in perception module and some classes in gqcnn module as it conflicts with tensorflow c++ api
 
 
 to run vrep in headless mode via ssh
