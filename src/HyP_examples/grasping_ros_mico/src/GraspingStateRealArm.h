@@ -10,6 +10,7 @@
 
 #include <despot/interface/pomdp.h>
 #include "geometry_msgs/PoseStamped.h"
+#include "Quaternion.h"
 
 class GraspingStateRealArm : public despot::State {
     public:
@@ -26,7 +27,7 @@ class GraspingStateRealArm : public despot::State {
         double touch_value[2]; //Store the touch value observed for a given state. Useful to get observation for a No-OP
         bool closeCalled; //Can be used to evaluate gripper status
         int vision_movement; //0 for no movement //1 for movement
-        
+        std::vector<float> keras_input_vector;
         GraspingStateRealArm() {
             object_id = -1;
             touch[0] = 0;
@@ -37,6 +38,7 @@ class GraspingStateRealArm : public despot::State {
             touch_value[1] = 0.0;
             closeCalled = false; //We always start with open gripper
             vision_movement = 0;
+            keras_input_vector.resize(0);
         }
     
     GraspingStateRealArm(const GraspingStateRealArm& initial_state) : State()
@@ -99,6 +101,42 @@ class GraspingStateRealArm : public despot::State {
 
     }
     
+    void get_keras_input(std::vector<float>& keras_input, int particle_index = 0)
+    {
+    	//Assuming keras_input size is already initialized
+    	if(keras_input_vector.size() == 0)
+    	{
+    		keras_input_vector.push_back((float)gripper_pose.pose.position.x);
+    		keras_input_vector.push_back((float)gripper_pose.pose.position.y);
+    		keras_input_vector.push_back((float)object_pose.pose.position.x);
+			keras_input_vector.push_back((float)object_pose.pose.position.y);
+			Quaternion q(object_pose.pose.orientation.x,
+			            object_pose.pose.orientation.y,
+			            object_pose.pose.orientation.z,
+			            object_pose.pose.orientation.w);
+			    double roll, pitch,yaw;
+			    Quaternion::toEulerAngle(q,roll, pitch,yaw);
+			keras_input_vector.push_back((float)yaw);
+			keras_input_vector.push_back((float)finger_joint_state[0]);
+			keras_input_vector.push_back((float)finger_joint_state[2]);
+			keras_input_vector.push_back((float)object_id);
+			if(closeCalled)
+			{
+				keras_input_vector.push_back((float)1);
+			}
+			else
+			{
+				keras_input_vector.push_back((float)0);
+			}
+    	}
+    	std::copy(keras_input_vector.begin(),keras_input_vector.end(),&keras_input[particle_index]);
+
+    }
+    void copy_keras_input(std::vector<float>& keras_input, int particle_index = 0) const
+    {
+    	std::copy(keras_input_vector.begin(),keras_input_vector.end(),&keras_input[particle_index]);
+    }
+
     void getStateFromString(std::string state_string) {
             //  0.3379 0.1516 1.73337 -0.694327 -0.0171483 -0.719 -0.0255881|0.4586 0.0829 1.7066 -0.0327037 0.0315227 -0.712671 0.700027|-2.95639e-05 0.00142145 -1.19209e-
     //06 -0.00118446
