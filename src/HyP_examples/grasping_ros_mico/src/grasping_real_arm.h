@@ -324,21 +324,19 @@ public:
     }
 
     //=================Keras Despot Functions=====================================================
-	virtual int LatentDimensionSize() const
-	{
-		return 2;
-	}
+	virtual int LatentDimensionSize() const;
 
-	virtual int KerasInputVectorSize() const
-	{
-		return 8;
-	}
+	virtual int KerasInputVectorSize() const;
 
-	void StepKerasParticles(const std::vector<float>& keras_particle_batch, int action, std::vector<float>&random_number_vecctor,
+
+	virtual int KerasObservationVectorSize() const;
+
+
+	virtual void StepKerasParticles(const std::vector<float>& keras_particle_batch, int action, std::vector<float>&random_number_vecctor,
 			std::vector<tensorflow::Tensor>& outputs) const;
 
 
-	void GetObservationProbability(const std::vector<float>& keras_particle_batch, const std::vector<float>& keras_obs_particle_batch, int action,
+	virtual void GetObservationProbability(const std::vector<float>& keras_particle_batch, const std::vector<float>& keras_obs_particle_batch, int action,
 			std::vector<float>&random_number_vecctor, std::vector<tensorflow::Tensor>& outputs) const;
 
 

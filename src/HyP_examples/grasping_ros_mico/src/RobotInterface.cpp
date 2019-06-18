@@ -28,6 +28,7 @@ bool RobotInterface::get_object_belief;
 bool RobotInterface::use_data_step; //Start the vrep simulator to get vision observation for objecct class but use data step after that
 bool RobotInterface::use_regression_models;
 bool RobotInterface::use_keras_models;
+int RobotInterface::gpuID;
 bool RobotInterface::auto_load_object;
 bool RobotInterface::use_pruned_data;
 bool RobotInterface::use_discretized_data;
@@ -39,6 +40,7 @@ bool RobotInterface::use_wider_object_workspace;
 bool RobotInterface::use_probabilistic_neighbour_step;
 bool RobotInterface::use_discrete_observation_in_step;
 bool RobotInterface::use_discrete_observation_in_update;
+
 RobotInterface::RobotInterface() {
     min_x_i = 0.3379; //range for gripper movement
     max_x_i = 0.5279;  // range for gripper movement
@@ -690,6 +692,43 @@ std::map<std::string, std::vector<int> > RobotInterface::getSimulationData(int o
 
 bool RobotInterface::Step(GraspingStateRealArm& grasping_state, double random_num, int action, double& reward, GraspingObservation& grasping_obs, bool debug) const {
 GraspingStateRealArm initial_grasping_state = grasping_state;
+
+if(use_keras_models) //Used during belief update. Search uses the batch call
+    {
+    	std::vector<float> keras_input;
+    	keras_input.resize(KerasInputVectorSize());
+    	grasping_state.get_keras_input(keras_input);
+    	std::vector<tensorflow::Tensor> outputs;
+    	std::vector<float> random_num_vector;
+    	if(action != A_PICK)
+    	{
+    		std::default_random_engine generator(random_num);
+    		random_num_vector.push_back(Gaussian_Distribution(generator,0, 1 ));
+    		random_num_vector.push_back(Gaussian_Distribution(generator,0, 1 ));
+    	}
+    	else
+    	{
+    		random_num_vector.push_back((float)random_num);
+    	}
+    	StepKerasParticles(keras_input,action, random_num_vector,outputs);
+    	auto terminal_vector = outputs[1].flat<float>().data();
+    	bool ans = terminal_vector[0] >= 1;
+		reward = (outputs[2].flat<float>().data())[0];
+		auto stepped_particle_batch = outputs[0].flat<float>().data();
+		auto obs_vector = outputs[3].flat<float>().data();
+		if(grasping_obs.keras_observation.size() == 0)
+		{
+			grasping_obs.keras_observation.resize(KerasObservationVectorSize());
+		}
+		std::copy(obs_vector,obs_vector+ KerasObservationVectorSize(),grasping_obs.keras_observation.begin() );
+		//Keras input vector will not be of zero size because it contained intial state vector
+		std::copy(stepped_particle_batch, stepped_particle_batch + KerasInputVectorSize(), grasping_state.keras_input_vector.begin());
+		std::cout << "Terminal for action " << action << " " << terminal_vector[0] << " " <<  ans << std::endl;
+		return ans;
+
+    }
+
+
 //debug = true;
     //PrintState(grasping_state, std::cout);
     // PrintAction(action);
@@ -820,6 +859,19 @@ GraspingStateRealArm initial_grasping_state = grasping_state;
 double RobotInterface::ObsProb(GraspingObservation grasping_obs, const GraspingStateRealArm& grasping_state, int action) const {
         GraspingObservation grasping_obs_expected;
 
+        if(use_keras_models) //Used in particle filter, Search calls the batch function
+        {
+        	std::vector<float> keras_input;
+			keras_input.resize(KerasInputVectorSize());
+			grasping_state.copy_keras_input(keras_input); //Cannot use get because it is not const function
+			std::vector<tensorflow::Tensor> outputs;
+			std::vector<float> random_num_vector;
+			std::vector<float> obs_vector = grasping_obs.keras_observation;
+        	GetObservationProbability(obs_vector, keras_input, action,
+        				random_num_vector, outputs);
+        	double prob = (double)((outputs[0].flat<float>().data())[0]);
+        	return prob;
+        }
     GetObsFromData(grasping_state, grasping_obs_expected, despot::Random::RANDOM.NextDouble(), action);
 
    // PrintObs(grasping_obs_expected);
@@ -981,6 +1033,15 @@ void RobotInterface::PrintObs(GraspingObservation& grasping_obs, std::ostream& o
     {
         last_char = '\n';
     }
+    if(grasping_obs.keras_observation.size() > 0)
+    {
+    	for(int i = 0; i < grasping_obs.keras_observation.size(); i++)
+    	{
+    		out << grasping_obs.keras_observation[i] << " ";
+    	}
+    	out << last_char;
+    	return;
+    }
 
     out << grasping_obs.gripper_pose.pose.position.x << " " <<
                         grasping_obs.gripper_pose.pose.position.y << " " <<
@@ -1079,6 +1140,16 @@ void RobotInterface::PrintState(const GraspingStateRealArm& grasping_state, std:
     {
         last_char = '\n';
     }
+
+    if(grasping_state.keras_input_vector.size() > 0)
+        {
+        	for(int i = 0; i < grasping_state.keras_input_vector.size(); i++)
+        	{
+        		out << grasping_state.keras_input_vector[i] << " ";
+        	}
+        	out << last_char;
+        	return;
+        }
     out << grasping_state.gripper_pose.pose.position.x << " " <<
                         grasping_state.gripper_pose.pose.position.y << " " <<
                         grasping_state.gripper_pose.pose.position.z << " " <<
@@ -2351,6 +2422,26 @@ bool validState = IsValidState(grasping_state);
         }
 
     }
+}
+
+
+
+void RobotInterface::StepKerasParticles(const std::vector<float>& keras_particle_batch, int action, std::vector<float>&random_number_vecctor,
+    			std::vector<tensorflow::Tensor>& outputs) const
+{
+	keras_models->run_transition_session(keras_particle_batch,action, random_number_vecctor,outputs);
+}
+
+
+void RobotInterface::GetObservationProbability(const std::vector<float>& keras_particle_batch, const std::vector<float>& keras_obs_particle_batch, int action,
+			std::vector<float>&random_number_vecctor, std::vector<tensorflow::Tensor>& outputs) const
+{
+	if(action == A_PICK || ((action < A_CLOSE) && (action % 2 == 1)))
+	{
+		std::cout << "Caution! Function " << __FUNCTION__ << " getting terminal action " << action << std::endl;
+		//return;
+	}
+	keras_models->run_observation_session(keras_particle_batch,keras_obs_particle_batch,action, random_number_vecctor,outputs);
 }
 
 //Conert 48 sensor observation to 2 sensor observation on front fingers by taking max

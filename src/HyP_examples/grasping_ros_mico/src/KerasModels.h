@@ -17,8 +17,14 @@ public:
 	KerasModels(int num_actions);
 	virtual ~KerasModels();
 	void load_keras_models();
+	void run_observation_session(const std::vector<float>& keras_particle_batch, const std::vector<float>& keras_obs_particle_batch, int action,
+			std::vector<float>&random_number_vecctor, std::vector<tensorflow::Tensor>& outputs) const;
+	void run_transition_session(const std::vector<float>& keras_particle_batch, int action, std::vector<float>&random_number_vecctor,
+			std::vector<tensorflow::Tensor>& outputs);
   std::vector<tensorflow::Session *> transition_model_sessions;
   std::vector<tensorflow::Session *> observation_model_sessions;
+  std::vector<tensorflow::Tensor> default_observation_prob_output;
+  std::vector<tensorflow::Tensor> default_transition_output;
 };
 
 

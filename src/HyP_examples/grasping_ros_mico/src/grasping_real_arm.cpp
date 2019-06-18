@@ -260,6 +260,7 @@ GraspingRealArm::GraspingRealArm(std::string modelParamFileName, int start_state
     }
 
     RobotInterface::use_keras_models = Globals::config.use_keras_model;
+    RobotInterface::gpuID = Globals::config.GPUid;
     /*if(config["use_keras_models"])
         {
             RobotInterface::use_keras_models = config["use_keras_models"].as<bool>();
@@ -825,8 +826,33 @@ bool GraspingRealArm::Step(State& state, double random_num, int action,
 
 }
 
+int GraspingRealArm::LatentDimensionSize() const
+	{
+		return robotInterface->LatentDimensionSize();
+	}
+
+int GraspingRealArm::KerasInputVectorSize() const
+	{
+		return robotInterface->KerasInputVectorSize();
+	}
+
+int GraspingRealArm::KerasObservationVectorSize() const
+		{
+			return robotInterface->KerasInputVectorSize();
+		}
+
+void GraspingRealArm::StepKerasParticles(const std::vector<float>& keras_particle_batch, int action, std::vector<float>&random_number_vecctor,
+			std::vector<tensorflow::Tensor>& outputs) const
+{
+	robotInterface->StepKerasParticles(keras_particle_batch,action,random_number_vecctor,outputs);
+}
 
 
+void GraspingRealArm::GetObservationProbability(const std::vector<float>& keras_particle_batch, const std::vector<float>& keras_obs_particle_batch, int action,
+		std::vector<float>&random_number_vecctor, std::vector<tensorflow::Tensor>& outputs) const
+{
+	robotInterface->GetObservationProbability(keras_particle_batch,keras_obs_particle_batch,action,random_number_vecctor,outputs);
+}
 
 
 

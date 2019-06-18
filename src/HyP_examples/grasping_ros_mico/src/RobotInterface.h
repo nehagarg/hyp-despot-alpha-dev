@@ -17,6 +17,7 @@
 
 #include "GraspObject.h"
 #include "ActionSpecification.h"
+#include "Quaternion.h"
 class RobotInterface {
 public:
     RobotInterface();
@@ -142,6 +143,7 @@ public:
     static bool use_classifier_for_belief;
     static bool use_regression_models;
     static bool use_keras_models;
+    static int gpuID;
     static bool auto_load_object;
     static bool use_pruned_data;
     static bool use_discretized_data;
@@ -220,6 +222,28 @@ public:
     virtual bool IsValidPick(GraspingStateRealArm grasping_state, GraspingObservation grasping_obs) const = 0;
     virtual void CheckAndUpdateGripperBounds(GraspingStateRealArm& grasping_state, int action) const = 0;
     virtual void GetDefaultPickState(GraspingStateRealArm& grasping_state, double random_num, int pick_type = 2) const = 0;
+
+    void StepKerasParticles(const std::vector<float>& keras_particle_batch, int action, std::vector<float>&random_number_vecctor,
+    			std::vector<tensorflow::Tensor>& outputs) const;
+
+
+	void GetObservationProbability(const std::vector<float>& keras_particle_batch, const std::vector<float>& keras_obs_particle_batch, int action,
+			std::vector<float>&random_number_vecctor, std::vector<tensorflow::Tensor>& outputs) const;
+
+	static int LatentDimensionSize()
+		{
+			return 2;
+		}
+
+	static int KerasInputVectorSize()
+	{
+		return 9;
+	}
+
+	static int KerasObservationVectorSize()
+		{
+			return 8;
+		}
 };
 
 
@@ -236,77 +260,6 @@ inline double Uniform_Distribution(std::default_random_engine& generator, double
     return distribution(generator);
 }
 
-class Quaternion
-{
-public:
-    Quaternion(double x, double y, double z, double w)
-    {
-        this->x_ = x;
-        this->y_ = y;
-        this->z_ = z;
-        this->w_ = w;
-    }
-    virtual ~Quaternion() {
-    }
 
-    void setW(double w) {
-        this->w_ = w;
-    }
-
-    double w() const {
-        return w_;
-    }
-
-    void setZ(double z) {
-        this->z_ = z;
-    }
-
-    double z() const {
-        return z_;
-    }
-
-    void setY(double y) {
-        this->y_ = y;
-    }
-
-    double y() const {
-        return y_;
-    }
-
-    void setX(double x) {
-        this->x_ = x;
-    }
-
-    double x() const {
-        return x_;
-    }
-    
-    //Returns in radians
-    static void toEulerAngle(const Quaternion& q, double& roll, double& pitch, double& yaw)
-    {
-	// roll (x-axis rotation)
-	double sinr = +2.0 * (q.w() * q.x() + q.y() * q.z());
-	double cosr = +1.0 - 2.0 * (q.x() * q.x() + q.y() * q.y());
-	roll = atan2(sinr, cosr);
-
-	// pitch (y-axis rotation)
-	double sinp = +2.0 * (q.w() * q.y() - q.z() * q.x());
-	if (fabs(sinp) >= 1)
-		pitch = copysign(M_PI / 2, sinp); // use 90 degrees if out of range
-	else
-		pitch = asin(sinp);
-
-	// yaw (z-axis rotation)
-	double siny = +2.0 * (q.w() * q.z() + q.x() * q.y());
-	double cosy = +1.0 - 2.0 * (q.y() * q.y() + q.z() * q.z());  
-	yaw = atan2(siny, cosy);
-    }
-    private:
-        double x_;
-        double y_;
-        double z_;
-        double w_;
-    
-};
 #endif	/* ROBOTINTERFACE_H */
 
