@@ -730,8 +730,17 @@ void DESPOT::InitLowerBound(VNode* vnode, ScenarioLowerBound* lower_bound,
                 if(common_parent->default_move.value_array == NULL)
                 {
                     common_parent->default_lower_bound_alpha_vector.resize(Globals::config.num_scenarios, 0); 
-                    common_parent->default_move = lower_bound->Value(vnode->particles(), streams, history, common_parent->default_lower_bound_alpha_vector);
-                    for(int i = 0; i < Globals::config.num_scenarios; i++)
+                    if(Globals::config.use_keras_model)
+                    {
+                    	common_parent->default_move = lower_bound->Value(vnode->particles(), vnode->particle_keras_batch(),streams, history, common_parent->default_lower_bound_alpha_vector);
+
+                    }
+                    else
+                    {
+                    	common_parent->default_move = lower_bound->Value(vnode->particles(), streams, history, common_parent->default_lower_bound_alpha_vector);
+
+                    }
+                     for(int i = 0; i < Globals::config.num_scenarios; i++)
                     {
                         common_parent->default_lower_bound_alpha_vector[i] = common_parent->default_lower_bound_alpha_vector[i] * Globals::Discount(vnode->depth());
                     }
@@ -746,7 +755,14 @@ void DESPOT::InitLowerBound(VNode* vnode, ScenarioLowerBound* lower_bound,
         }
         else
         {
+        	if(Globals::config.use_keras_model)
+        	{
+        		vnode->lower_bound_alpha_vector = lower_bound->Value(vnode->particles(), vnode->particle_keras_batch(),streams, history);
+        	}
+        	else
+        	{
              vnode->lower_bound_alpha_vector = lower_bound->Value(vnode->particles(), streams, history);
+        	}
             vnode->lower_bound_alpha_vector.value *= Globals::Discount(vnode->depth());
             
 	}

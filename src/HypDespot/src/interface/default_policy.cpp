@@ -157,16 +157,23 @@ ValuedAction DefaultPolicy::RecursiveValue(const vector<State*>& particles,
                     {
 
 						std::vector<float> random_number_vector;
-						((KerasRandomStreams&)streams).KerasParticlesEntry(particles,random_number_vector);
+						if(action == 10) //Hack for grasping
+						{
+							((KerasRandomStreams&)streams).KerasParticlesEntry(particles,random_number_vector, true);
+						}
+						else
+						{
+							((KerasRandomStreams&)streams).KerasParticlesEntry(particles,random_number_vector);
+						}
 						std::vector<tensorflow::Tensor> outputs;
                     	model_->StepKerasParticles(keras_particle_batch, action, random_number_vector, outputs);
-                    	auto terminal_vector = outputs[1].flat<bool>().data();
+                    	auto terminal_vector = outputs[1].flat<float>().data();
 						auto reward_vector = outputs[2].flat<float>().data();
 						auto stepped_particle_batch = outputs[0].flat<float>().data();
                     	for (int i = 0; i < particles.size(); i++) {
 							State* particle = particles[i];
 							(*va.value_array)[particle->scenario_id] += reward_vector[i] ;
-							if(terminal_vector[i] == false )
+							if((int)terminal_vector[i] == 0 )
 							{
 								new_particles.push_back(particle);
 								new_keras_particle_batch.insert(new_keras_particle_batch.end(),
