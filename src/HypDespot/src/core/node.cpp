@@ -204,7 +204,18 @@ const std::vector<float>& VNode::particle_keras_batch() const
 
 void VNode::set_keras_particle_batch(std::vector<float>& particle_keras_batch)
 {
-	particle_keras_batch_ = particle_keras_batch;
+	if(Globals::config.track_alpha_vector)
+	{
+
+			common_parent_->particle_keras_batch = particle_keras_batch;
+
+	}
+	else
+	{
+		particle_keras_batch_ = particle_keras_batch;
+	}
+
+	//particle_keras_batch_ = particle_keras_batch;
 }
 void VNode::depth(int d) {
 	depth_ = d;
