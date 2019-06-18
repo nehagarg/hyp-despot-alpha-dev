@@ -23,6 +23,7 @@ private:
 public:
 //	  std::vector<std::vector<double> > streams_; // streams_[i] is associated with i-th particle
 	std::vector<std::vector<float> > keras_streams_;
+	std::vector<std::vector<float> > keras_uniform_streams_;
 	// streams_[i][j*lantent_dim] is associated with jth particle at position i. For each particle, latent_dim entries are there
 	/**
 	 * Constructs multiple random sequences of the same length.
@@ -36,8 +37,8 @@ public:
 	//std::vector<double> KerasParticleEntry(int stream) const;
 	//std::vectoy<double> KerasParticleEntry(int stream, int position) const;
 	const std::vector<float>& KerasALLParticlesEntry(int position = -1) const;
-	const void KerasParticlesEntry(const std::vector<State*>& particles, std::vector<float>& random_vector, int position = -1) const;
-	const void KerasParticlesEntry(const std::vector<int>& particles, std::vector<float>& random_vector, int position = -1) const;
+	const void KerasParticlesEntry(const std::vector<State*>& particles, std::vector<float>& random_vector, bool uniform_stream = false , int position = -1) const;
+	const void KerasParticlesEntry(const std::vector<int>& particles, std::vector<float>& random_vector, bool uniform_stream = false, int position = -1) const;
 };
 
 } // namespace despot
