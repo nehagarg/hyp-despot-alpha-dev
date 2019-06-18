@@ -45,7 +45,7 @@ public:
 	}
 	virtual void get_keras_input(std::vector<float>& keras_input, int particle_index = 0)
 	{
-
+		std::cout << "Caution! Function " << __FUNCTION__ << " haven't been implemented" << std::endl;
 	}
 };
 
@@ -434,16 +434,21 @@ public:
 		return 0;
 	}
 
-	void StepKerasParticles(const std::vector<float>& keras_particle_batch, int action, std::vector<float>&random_number_vecctor,
-			std::vector<tensorflow::Tensor>& outputs) const
+	virtual int KerasObservationVectorSize() const
 	{
-
+		return 0;
 	}
 
-	void GetObservationProbability(const std::vector<float>& keras_particle_batch, const std::vector<float>& keras_obs_particle_batch, int action,
+	virtual void StepKerasParticles(const std::vector<float>& keras_particle_batch, int action, std::vector<float>&random_number_vecctor,
+			std::vector<tensorflow::Tensor>& outputs) const
+	{
+		std::cout << "Caution! Function " << __FUNCTION__ << " haven't been implemented" << std::endl;
+	}
+
+	virtual void GetObservationProbability(const std::vector<float>& keras_particle_batch, const std::vector<float>& keras_obs_particle_batch, int action,
 			std::vector<float>&random_number_vecctor, std::vector<tensorflow::Tensor>& outputs) const
 		{
-
+		std::cout << "Caution! Function " << __FUNCTION__ << " haven't been implemented" << std::endl;
 		}
 
 
