@@ -838,7 +838,7 @@ int GraspingRealArm::KerasInputVectorSize() const
 
 int GraspingRealArm::KerasObservationVectorSize() const
 		{
-			return robotInterface->KerasInputVectorSize();
+			return robotInterface->KerasObservationVectorSize();
 		}
 
 void GraspingRealArm::StepKerasParticles(const std::vector<float>& keras_particle_batch, int action, std::vector<float>&random_number_vecctor,

@@ -120,22 +120,24 @@ void KerasModels::load_keras_models()
 		}
 }
 
-//keras_particle_batch is the observation vector in version 1
-void KerasModels::run_observation_session(const std::vector<float>& keras_particle_batch, const std::vector<float>& keras_obs_particle_batch, int action,
+
+void KerasModels::run_observation_session(const std::vector<float>& obs_batch, const std::vector<float>& all_particle_batch, int action,
 			std::vector<float>&random_number_vecctor, std::vector<tensorflow::Tensor>& outputs) const
 {
 	double start_t = despot::get_time_second();
 	if(observation_model_sessions[action] != NULL)
 	{
 		//std::cout << "Running observation model for action " << action << std::endl;
-		int batch_size = keras_obs_particle_batch.size()/RobotInterface::KerasInputVectorSize();
+		//std::cout << "Obs batch size " << obs_batch.size() << std::endl;
+		//std::cout << "particle batch size " << all_particle_batch.size() << std::endl;
+		int batch_size = all_particle_batch.size()/RobotInterface::KerasInputVectorSize();
 		tensorflow::TensorShape state_input_shape({batch_size, RobotInterface::KerasInputVectorSize()});
 		tensorflow::TensorShape obs_input_shape({batch_size, RobotInterface::KerasObservationVectorSize()});
 		tensorflow::Tensor state_input(tensorflow::DT_FLOAT, state_input_shape);
 		tensorflow::Tensor obs_input(tensorflow::DT_FLOAT, obs_input_shape);
 
-		std::copy_n(keras_obs_particle_batch.begin(),keras_obs_particle_batch.size(),state_input.flat<float>().data());
-		std::copy_n(keras_particle_batch.begin(),keras_particle_batch.size(),obs_input.flat<float>().data());
+		std::copy_n(all_particle_batch.begin(),all_particle_batch.size(),state_input.flat<float>().data());
+		std::copy_n(obs_batch.begin(),obs_batch.size(),obs_input.flat<float>().data());
 		tensor_dict feed_dict = {
 		      {"input_state1:0", state_input},{"obs_input:0", obs_input}
 		  };
@@ -221,7 +223,7 @@ void KerasModels::run_observation_session(const std::vector<float>& keras_partic
 			}
 		double end_t = despot::get_time_second();
 		//std::cout << "Transition Time taken for action " << action << " " << end_t - start_t << std::endl;
-		std::cout << "Transition reward for action " << action << " " << outputs[2].flat<float>().data()[0]<< std::endl;
+		//std::cout << "Transition reward for action " << action << " " << outputs[2].flat<float>().data()[0]<< std::endl;
 	}
 
 
