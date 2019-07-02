@@ -2436,7 +2436,7 @@ void RobotInterface::StepKerasParticles(const std::vector<float>& keras_particle
 void RobotInterface::GetObservationProbability(const std::vector<float>& keras_particle_batch, const std::vector<float>& keras_obs_particle_batch, int action,
 			std::vector<float>&random_number_vecctor, std::vector<tensorflow::Tensor>& outputs) const
 {
-	if(action == A_PICK || ((action < A_CLOSE) && (action % 2 == 1)))
+	if(action == A_PICK )
 	{
 		std::cout << "Caution! Function " << __FUNCTION__ << " getting terminal action " << action << std::endl;
 		//return;

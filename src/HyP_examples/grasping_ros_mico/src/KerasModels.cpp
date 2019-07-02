@@ -182,14 +182,25 @@ void KerasModels::run_observation_session(const std::vector<float>& obs_batch, c
 					tensorflow::TensorShape random_input_shape({batch_size, RobotInterface::LatentDimensionSize()});
 					tensorflow::Tensor random_input(tensorflow::DT_FLOAT, random_input_shape);
 					std::copy_n(random_number_vecctor.begin(),random_number_vecctor.size(),random_input.flat<float>().data());
-					if(action == A_CLOSE) //trained with prob_decoder
+					if(action == A_CLOSE || ((action < A_CLOSE) && (action % 2 ==1) )) //trained with prob_decoder
 					{
 						tensor_dict feed_dict = {
 												  {"input_state_6:0", state_input},{"z_sampling_6:0", random_input}
 											  };
-						TF_CHECK_OK(
+						if(action == A_CLOSE)
+						{
+							TF_CHECK_OK(
 									transition_model_sessions[action]->Run(feed_dict, {"full_model/concatenate_next_state_output/concat:0",
 																	"full_model/get_terminal_value_non_pick/zeros_like:0", "full_model/close_action_reward/Select_2:0", "decoder_6/dense_12/BiasAdd:0"}, {}, &outputs));
+						}
+						else
+						{
+							TF_CHECK_OK(
+										transition_model_sessions[action]->Run(feed_dict, {"full_model/concatenate_next_state_output/concat:0",
+																							"full_model/get_terminal_value_non_pick/zeros_like:0",
+																							"full_model/move_action_reward/Select_3:0",
+																							"decoder_6/dense_12/BiasAdd:0"}, {}, &outputs));
+						}
 					}
 					else
 					{
@@ -209,7 +220,7 @@ void KerasModels::run_observation_session(const std::vector<float>& obs_batch, c
 							TF_CHECK_OK(
 								transition_model_sessions[action]->Run(feed_dict, {"full_model/concatenate_next_state_output/concat:0",
 																					"full_model/get_terminal_value_non_pick/zeros_like:0",
-																					"full_model/move_action_reward/Select_2:0",
+																					"full_model/move_action_reward/Select_3:0",
 																					"decoder_5/dense_12/BiasAdd:0"}, {}, &outputs));
 						}
 					}
