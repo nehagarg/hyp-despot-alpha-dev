@@ -1212,6 +1212,33 @@ void RobotInterface::GenerateGaussianParticleFromState(GraspingStateRealArm& ini
 
 }
 
+void RobotInterface::GenerateGaussianParticleFromState_V8(GraspingStateRealArm& initial_state, std::string type) const {
+
+
+                // the engine for generator samples from a distribution
+            unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+            std::default_random_engine generator(seed);
+            initial_state.object_pose.pose.position.x = Gaussian_Distribution(generator,graspObjects[initial_state.object_id]->initial_object_x, 0.02 );
+            initial_state.object_pose.pose.position.y = Gaussian_Distribution(generator,graspObjects[initial_state.object_id]->initial_object_y, 0.02 );
+
+            //Using uniform distribution for angle
+            double angle_add = Uniform_Distribution(generator,0, 2*3.14);
+
+			Quaternion q(graspObjects[initial_state.object_id]->initial_object_pose_xx,
+						 graspObjects[initial_state.object_id]->initial_object_pose_yy,
+						 graspObjects[initial_state.object_id]->initial_object_pose_zz,
+						 graspObjects[initial_state.object_id]->initial_object_pose_w);
+			double roll, pitch,yaw;
+			Quaternion::toEulerAngle(q,roll, pitch,yaw);
+			double new_yaw = yaw + angle_add;
+			Quaternion::toQuaternion(new_yaw,pitch,roll,initial_state.object_pose.pose.orientation.x,
+					initial_state.object_pose.pose.orientation.y,
+											 initial_state.object_pose.pose.orientation.z,
+											 initial_state.object_pose.pose.orientation.w);
+
+
+}
+
 void RobotInterface::GenerateUniformParticleFromState(GraspingStateRealArm& initial_state, std::string type) const {
 // the engine for generator samples from a distribution
             unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
@@ -1219,6 +1246,28 @@ void RobotInterface::GenerateUniformParticleFromState(GraspingStateRealArm& init
             initial_state.object_pose.pose.position.x = initial_state.object_pose.pose.position.x + Uniform_Distribution(generator,-0.04, 0.04);
             initial_state.object_pose.pose.position.y = initial_state.object_pose.pose.position.y + Uniform_Distribution(generator,-0.04, 0.04 );
 
+}
+
+void RobotInterface::GenerateUniformParticleFromState_V8(GraspingStateRealArm& initial_state, std::string type) const {
+// the engine for generator samples from a distribution
+            unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+            std::default_random_engine generator(seed);
+            initial_state.object_pose.pose.position.x = initial_state.object_pose.pose.position.x + Uniform_Distribution(generator,-0.02, 0.02);
+            initial_state.object_pose.pose.position.y = initial_state.object_pose.pose.position.y + Uniform_Distribution(generator,-0.02, 0.02 );
+
+            double angle_add = Uniform_Distribution(generator,0, 2*3.14);
+
+			Quaternion q(initial_state.object_pose.pose.orientation.x,
+						 initial_state.object_pose.pose.orientation.y,
+						 initial_state.object_pose.pose.orientation.z,
+						 initial_state.object_pose.pose.orientation.w);
+			double roll, pitch,yaw;
+			Quaternion::toEulerAngle(q,roll, pitch,yaw);
+			double new_yaw = yaw + angle_add;
+			Quaternion::toQuaternion(new_yaw,pitch,roll,initial_state.object_pose.pose.orientation.x,
+					initial_state.object_pose.pose.orientation.y,
+											 initial_state.object_pose.pose.orientation.z,
+											 initial_state.object_pose.pose.orientation.w);
 }
 
 

@@ -44,6 +44,8 @@ public:
     
     void GenerateGaussianParticleFromState(GraspingStateRealArm& initial_state, std::string type = "DEFAULT") const;
     void GenerateUniformParticleFromState(GraspingStateRealArm& initial_state, std::string type = "DEFAULT") const;
+    void GenerateGaussianParticleFromState_V8(GraspingStateRealArm& initial_state, std::string type = "DEFAULT") const;
+	void GenerateUniformParticleFromState_V8(GraspingStateRealArm& initial_state, std::string type = "DEFAULT") const;
     
     void GetDefaultStartState(GraspingStateRealArm& initial_state) const;
     void SyncParticleState(GraspingStateRealArm& state, GraspingObservation grasping_obs);

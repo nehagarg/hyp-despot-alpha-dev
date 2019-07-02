@@ -912,11 +912,25 @@ std::vector<State*> GraspingRealArm::InitialBeliefParticles(const State* start, 
                     {
                         if (type == "GAUSSIAN" || type == "GAUSSIAN_WITH_STATE_IN" )
                         {
-                            robotInterface->GenerateGaussianParticleFromState(*grasping_state, type);
+                        	if(RobotInterface::version8)
+                        	{
+                        		robotInterface->GenerateGaussianParticleFromState_V8(*grasping_state, type);
+                        	}
+                        	else
+                        	{
+                        		robotInterface->GenerateGaussianParticleFromState(*grasping_state, type);
+                        	}
                         }
                         if (type == "UNIFORM" || type == "UNIFORM_WITH_STATE_IN")
                         {
-                            robotInterface->GenerateUniformParticleFromState(*grasping_state, type);
+                        	if(RobotInterface::version8)
+                        	{
+                        		robotInterface->GenerateUniformParticleFromState_V8(*grasping_state, type);
+                        	}
+                        	else
+                        	{
+                        		robotInterface->GenerateUniformParticleFromState(*grasping_state, type);
+                        	}
                         }
 
                         if (robotInterface->IsValidState(*grasping_state))
@@ -973,14 +987,17 @@ std::vector<State*> GraspingRealArm::InitialBeliefParticles(const State* start, 
         {
             robotInterface->loadObjectDynamicModel(grasping_state->object_id);
         }
-        double object_x = grasping_state->object_pose.pose.position.x;
-        double object_y = grasping_state->object_pose.pose.position.y;
-        robotInterface->GetDefaultStartState(*grasping_state);
-        if(type!= "DEFAULT")
+        //double object_x = grasping_state->object_pose.pose.position.x;
+        //double object_y = grasping_state->object_pose.pose.position.y;
+        if(type == "DEFAULT")
+        {
+        	robotInterface->GetDefaultStartState(*grasping_state);
+        }
+        /*if(type!= "DEFAULT")
         {
             grasping_state->object_pose.pose.position.x = object_x;
             grasping_state->object_pose.pose.position.y = object_y;
-        }
+        }*/
         grasping_state->weight = belief_object_weights[grasping_state->object_id];
         particles.push_back(grasping_state);
         num_particles = num_particles + 1;

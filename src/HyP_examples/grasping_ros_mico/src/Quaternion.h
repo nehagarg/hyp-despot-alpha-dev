@@ -66,6 +66,23 @@ public:
 	double cosy = +1.0 - 2.0 * (q.y() * q.y() + q.z() * q.z());
 	yaw = atan2(siny, cosy);
     }
+
+    static void toQuaternion( double yaw, double pitch, double roll, double& x, double& y,  double& z, double& w) // yaw (Z), pitch (Y), roll (X)
+    {
+        // Abbreviations for the various angular functions
+        double cy = cos(yaw * 0.5);
+        double sy = sin(yaw * 0.5);
+        double cp = cos(pitch * 0.5);
+        double sp = sin(pitch * 0.5);
+        double cr = cos(roll * 0.5);
+        double sr = sin(roll * 0.5);
+
+        w = cy * cp * cr + sy * sp * sr;
+        x = cy * cp * sr - sy * sp * cr;
+        y = sy * cp * sr + cy * sp * cr;
+        z = sy * cp * cr - cy * sp * sr;
+    }
+
     private:
         double x_;
         double y_;

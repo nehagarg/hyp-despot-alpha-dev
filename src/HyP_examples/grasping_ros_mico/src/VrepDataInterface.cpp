@@ -81,50 +81,76 @@ void VrepDataInterface::CreateStartState(GraspingStateRealArm& initial_state, st
     if (start_state_index >= 0 ) 
     {
         std::cout << "Start_state index is " << start_state_index << std::endl;
-        
-        //std::vector<GraspingStateRealArm> initial_states =  InitialStartStateParticles(initial_state);
-        //std::cout << "Particle size is " <<  initial_states.size()<< std::endl;
-        //int ii = start_state_index % initial_states.size();
-        //initial_state.object_pose.pose.position.x = initial_states[ii].object_pose.pose.position.x ;
-        //initial_state.object_pose.pose.position.y = initial_states[ii].object_pose.pose.position.y ;
-        //initial_state = initial_states[i];
-    //return  initial_states[ii];
-        int start_state_index_mod = start_state_index % 81;
-        
-        if(start_state_index_mod < 49)
+        if(RobotInterface::version8) //start_state_index goes from 0 to 89
         {
-        int i = (start_state_index_mod % 49) / 7;
-        int j = (start_state_index_mod % 49) % 7;
-        initial_state.object_pose.pose.position.y = graspObjects[initial_state.object_id]->initial_object_y -0.03 + (j*0.01);
-        initial_state.object_pose.pose.position.x = graspObjects[initial_state.object_id]->initial_object_x -0.03 + (i*0.01);
+        	int position_index = start_state_index % 9;
+        	int angle_index = start_state_index /9 ;
+        	int i = position_index % 3;
+        	int j = position_index / 3;
+        	initial_state.object_pose.pose.position.y = graspObjects[initial_state.object_id]->initial_object_y -0.01 + (j*0.01);
+			initial_state.object_pose.pose.position.x = graspObjects[initial_state.object_id]->initial_object_x -0.01 + (i*0.01);
+			double angle_add = 2*3.14*angle_index/10;
+
+			Quaternion q(initial_state.object_pose.pose.orientation.x,
+						 initial_state.object_pose.pose.orientation.y,
+						 initial_state.object_pose.pose.orientation.z,
+						 initial_state.object_pose.pose.orientation.w);
+			double roll, pitch,yaw;
+			Quaternion::toEulerAngle(q,roll, pitch,yaw);
+			double new_yaw = yaw + angle_add;
+			Quaternion::toQuaternion(new_yaw,pitch,roll,initial_state.object_pose.pose.orientation.x,
+					initial_state.object_pose.pose.orientation.y,
+											 initial_state.object_pose.pose.orientation.z,
+											 initial_state.object_pose.pose.orientation.w);
+
+
         }
         else
         {
-            int actual_index = (start_state_index_mod - 49) % 32;
-            int i ;
-            int j;
-            if(actual_index < 8)
-            {
-                i = actual_index % 8;
-                j = 0;
-            }
-            else if(actual_index < 16)
-            {
-                i = 8;
-                j = (actual_index - 8) % 8;
-            }
-            else if(actual_index < 24)
-            {
-                i = 8 - (((actual_index - 16))%8);
-                j=8;
-            }
-            else
-            {
-                i = 0;
-                j = 8 - (((actual_index - 24))%8);
-            }
-            initial_state.object_pose.pose.position.y = graspObjects[initial_state.object_id]->initial_object_y -0.04 + (j*0.01);
-            initial_state.object_pose.pose.position.x = graspObjects[initial_state.object_id]->initial_object_x -0.04 + (i*0.01);
+			//std::vector<GraspingStateRealArm> initial_states =  InitialStartStateParticles(initial_state);
+			//std::cout << "Particle size is " <<  initial_states.size()<< std::endl;
+			//int ii = start_state_index % initial_states.size();
+			//initial_state.object_pose.pose.position.x = initial_states[ii].object_pose.pose.position.x ;
+			//initial_state.object_pose.pose.position.y = initial_states[ii].object_pose.pose.position.y ;
+			//initial_state = initial_states[i];
+		//return  initial_states[ii];
+			int start_state_index_mod = start_state_index % 81;
+
+			if(start_state_index_mod < 49)
+			{
+			int i = (start_state_index_mod % 49) / 7;
+			int j = (start_state_index_mod % 49) % 7;
+			initial_state.object_pose.pose.position.y = graspObjects[initial_state.object_id]->initial_object_y -0.03 + (j*0.01);
+			initial_state.object_pose.pose.position.x = graspObjects[initial_state.object_id]->initial_object_x -0.03 + (i*0.01);
+			}
+			else
+			{
+				int actual_index = (start_state_index_mod - 49) % 32;
+				int i ;
+				int j;
+				if(actual_index < 8)
+				{
+					i = actual_index % 8;
+					j = 0;
+				}
+				else if(actual_index < 16)
+				{
+					i = 8;
+					j = (actual_index - 8) % 8;
+				}
+				else if(actual_index < 24)
+				{
+					i = 8 - (((actual_index - 16))%8);
+					j=8;
+				}
+				else
+				{
+					i = 0;
+					j = 8 - (((actual_index - 24))%8);
+				}
+				initial_state.object_pose.pose.position.y = graspObjects[initial_state.object_id]->initial_object_y -0.04 + (j*0.01);
+				initial_state.object_pose.pose.position.x = graspObjects[initial_state.object_id]->initial_object_x -0.04 + (i*0.01);
+			}
         }
     }
     else
