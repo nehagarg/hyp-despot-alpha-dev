@@ -53,6 +53,7 @@ DefaultPolicy::~DefaultPolicy() {
             	va.value = va.value + particles[i]->weight*((*va.value_array)[particles[i]->scenario_id]);
             }
             va.value_array->clear();
+            return va;
         }
     ValuedAction DefaultPolicy::Value(const std::vector<State*>& particles, RandomStreams& streams,
     		History& history, std::vector<double>& alpha_vector_lower_bound, bool compute_alpha_vector,
