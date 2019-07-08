@@ -1,4 +1,5 @@
 #include <despot/solver/despot.h>
+#include <despot/GPUcore/disabled_util.h> //For using hash with float vector
 //#include <tensorflow/core/protobuf/meta_graph.pb.h>
 //#include <tensorflow/core/public/session.h>
 //#include <tensorflow/core/public/session_options.h>
@@ -36,7 +37,7 @@ namespace despot {
 void DESPOT::Keras_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
 		ScenarioUpperBound* ub, const DSPOMDP* model, RandomStreams& streams,
 		History& history) {
-
+	logd << "Expanding in Keras expand action" << std::endl;
 	//int ThreadID = 0;
 	//if (Globals::config.use_multi_thread_)
 	//	ThreadID = Globals::MapThread(this_thread::get_id());
@@ -88,7 +89,7 @@ void DESPOT::Keras_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
 	std::vector<std::vector<float>> generated_obs;
 
 
-	if(Globals::config.track_alpha_vector)
+	if(Globals::config.track_alpha_vector) //DESPOT-ALPHA
 	{
 		/*Expand common QNode*/
 
@@ -497,55 +498,94 @@ void DESPOT::Keras_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
 			}
 
 	}
-	else
+	else  // DESPOT
 	{
 
-/*
+
 	//Expand v-node
 	for (int action = 0; action < NumActions; action++) {
 		//Partition particles by observation
 
+		std::vector<tensorflow::Tensor> outputs;
+		if(action == 10) //Hack for grasping
+		{
+			model->StepKerasParticles(keras_particle_batch, action, uniform_random_number_vector, outputs);
+		}
+		else
+		{
+			model->StepKerasParticles(keras_particle_batch, action, random_number_vector, outputs);
+		}
+		double step_reward = 0;
+		auto terminal_vector = outputs[1].flat<float>().data();
+		auto reward_vector = outputs[2].flat<float>().data();
+		auto stepped_particle_batch = outputs[0].flat<float>().data();
+		auto obs_vector = outputs[3].flat<float>().data();
+
+
+
 		std::map<OBS_TYPE, std::vector<State*> > partitions;
 		std::map<OBS_TYPE, std::vector<int> > partitions_ID;
-		for (int i = 0; i < NumParticles; i++) {
-			int parent_PID = particleIDs[i];
-			OBS_TYPE obs = parent_PID;
+		std::map<OBS_TYPE, std::vector<float> > partitions_particle_batch;
 
-			if (Hst_term_all_a_and_p[ThreadID][action * NumScenarios + parent_PID] == false) {
-				partitions[obs].push_back(NULL);
-				partitions_ID[obs].push_back(i);
-			}
+
+
+
+		for (int i = 0; i < NumParticles; i++) {
+			//int parent_PID = particles[i]->scenario_id;
+			//OBS_TYPE obs = parent_PID;
+
+
+			step_reward +=  reward_vector[i]*particles[i]->weight;
+
+
+				if ((int)terminal_vector[i] == 0 ) {
+					std::vector<float> generated_obs_per_action;
+					generated_obs_per_action.insert(generated_obs_per_action.end(),
+					obs_vector + i*model->KerasObservationVectorSize(),
+					obs_vector + (i+1)*model->KerasObservationVectorSize());
+
+					std::hash<std::vector<float>> myhash;
+					OBS_TYPE obs=myhash(generated_obs_per_action);
+					partitions[obs].push_back(particles[i]);
+					partitions_ID[obs].push_back(particles[i]->scenario_id);
+					partitions_particle_batch[obs].insert(partitions_particle_batch[obs].end(),
+							stepped_particle_batch + i*model->KerasInputVectorSize(),
+							stepped_particle_batch + (i+1)*model->KerasInputVectorSize());
+				}
 		}
 
 
 
 
 		QNode* qnode = vnode->Child(action);
-
+		qnode->step_reward = Globals::Discount(vnode->depth())*step_reward - Globals::config.pruning_constant;
+		double lower_bound = 0, upper_bound = 0;
+		lower_bound = qnode->step_reward;
+		upper_bound = qnode->step_reward;
 		//if(Globals::config.use_multi_thread_ && Globals::config.exploration_mode==UCT)
 		//	static_cast<Shared_QNode*>(qnode)->visit_count_=1.1;
 
-		if (partitions.size() == 0 && false) {
-			cout<<"[Qnode] depth="<<vnode->depth()+1<<" obs="<< vnode->edge()<<" qnode "<<action<<" all particle termination: reward="<<Hst_r_all_a[action];
-			cout<<" parent lb:"<<qnode->parent()->lower_bound()<<endl;
-		} else {
-		}
+		//if (partitions.size() == 0 && false) {
+		//	cout<<"[Qnode] depth="<<vnode->depth()+1<<" obs="<< vnode->edge()<<" qnode "<<action<<" all particle termination: reward="<<Hst_r_all_a[action];
+		//	cout<<" parent lb:"<<qnode->parent()->lower_bound()<<endl;
+		//} else {
+		//}
 
-		double lower_bound = 0, upper_bound = 0;
-		Hst_r_all_a[ThreadID][action] = Globals::Discount(vnode->depth())
-				* Hst_r_all_a[ThreadID][action]
-				- Globals::config.pruning_constant; //pruning_constant is used for regularization
-		lower_bound = (Hst_r_all_a[ThreadID][action]);
-		upper_bound = (Hst_r_all_a[ThreadID][action]);
 
-		bool DoPrint= DESPOT::Print_nodes;
-		if (FIX_SCENARIO == 1 && DoPrint) {
-			cout.precision(10);
-			if(action==0) cout<<endl;
-			cout << "step reward (d= " << vnode->depth() + 1 << " ): "
-					<< Hst_r_all_a[ThreadID][action] / (1.0f/Globals::config.num_scenarios * NumParticles)
-					<< endl;
-		}
+		//Hst_r_all_a[ThreadID][action] = Globals::Discount(vnode->depth())
+		//		* Hst_r_all_a[ThreadID][action]
+		//		- Globals::config.pruning_constant; //pruning_constant is used for regularization
+		//lower_bound = (Hst_r_all_a[ThreadID][action]);
+		//upper_bound = (Hst_r_all_a[ThreadID][action]);
+
+		//bool DoPrint= DESPOT::Print_nodes;
+		//if (FIX_SCENARIO == 1 && DoPrint) {
+		//	cout.precision(10);
+		//	if(action==0) cout<<endl;
+		//	cout << "step reward (d= " << vnode->depth() + 1 << " ): "
+		//			<< Hst_r_all_a[ThreadID][action] / (1.0f/Globals::config.num_scenarios * NumParticles)
+		//			<< endl;
+		//}
 
 
 		std::map<OBS_TYPE, VNode*>& children = qnode->children();
@@ -560,6 +600,7 @@ void DESPOT::Keras_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
 				child_vnode = new VNode(partitions[obs], partitions_ID[obs],
 						vnode->depth() + 1, qnode, obs);
 
+				child_vnode->set_keras_particle_batch(partitions_particle_batch[obs]);
 
 			//Create GPU particles for the new v-node
 			child_vnode->weight_=partitions[obs].size()/((float)NumScenarios);
@@ -567,65 +608,101 @@ void DESPOT::Keras_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
 			logd << " New node created!" << endl;
 			children[obs] = child_vnode;
 
+			//auto start1 = Time::now();
+
+			history.Add(qnode->edge(), obs);
+
+			//EnableDebugInfo(vnode, qnode);
+
+			InitBounds(vnode, lb, ub, streams, history);
+
+			//DisableDebugInfo();
+
+			history.RemoveLast();
+			logd << " New node's bounds: (" << vnode->lower_bound() << ", "
+				 << vnode->upper_bound() << ")" << endl;
+
+			//if (FIX_SCENARIO == 1 || doPrint) {
+			//	cout.precision(10);
+			//	cout << " [CPU Vnode] New node's bounds: (d= " << vnode->depth()
+			//		 << " ,obs=" << obs << " ,lb= "
+			//		 << vnode->lower_bound() / vnode->Weight() << " ,ub= "
+			//		 << vnode->upper_bound() / vnode->Weight() << " ,uub= "
+			//		 << vnode->utility_upper_bound() / vnode->Weight()
+			//		 << " ,weight= " << vnode->Weight() << " )" ;//<< endl;
+			//	if (vnode->Weight() == 1.0 / Globals::config.num_scenarios) cout << ", particle_id=" << "-"/*vnode->particles()[0]->scenario_id*/;
+			//	cout << ", WEU=" << WEU(vnode);
+			//	cout << ", parent_obs=" << vnode->parent()->parent()->edge();
+			//	cout  << endl;
+
+			//	cout << " [Vnode] New node's particles: ";
+			//	for (int i=0; i<vnode->particles().size();i++)
+			//		cout<< vnode->particles()[i]->scenario_id<<" ";
+		//		cout<<endl;
+		//	}
+
+			lower_bound += vnode->lower_bound();
+			upper_bound += vnode->upper_bound();
+			//InitBoundTime += Globals::ElapsedTime(start1);
 			//Calculate initial bounds
-			double vnode_lower_bound = 0;
-			double vnode_upper_bound = 0;
-			double vnode_utility_upper = 0;
+			//double vnode_lower_bound = 0;
+			//double vnode_upper_bound = 0;
+			//double vnode_utility_upper = 0;
 
-			for (int i = 0; i < child_vnode->particleIDs().size(); i++) {
-				int parent_PID = child_vnode->particleIDs()[i];
+			//for (int i = 0; i < child_vnode->particleIDs().size(); i++) {
+			//	int parent_PID = child_vnode->particleIDs()[i];
 
-				vnode_lower_bound += Hst_lb_all_a_p[ThreadID][action
-						* NumScenarios + parent_PID].value;
-				vnode_upper_bound += Hst_ub_all_a_p[ThreadID][action
-						* NumScenarios + parent_PID];
-				vnode_utility_upper += Hst_uub_all_a_p[ThreadID][action
-						* NumScenarios + parent_PID];
-			}
+			//	vnode_lower_bound += Hst_lb_all_a_p[ThreadID][action
+			//			* NumScenarios + parent_PID].value;
+			//	vnode_upper_bound += Hst_ub_all_a_p[ThreadID][action
+			//			* NumScenarios + parent_PID];
+			//	vnode_utility_upper += Hst_uub_all_a_p[ThreadID][action
+			//			* NumScenarios + parent_PID];
+			//}
 
-			child_vnode->lower_bound(vnode_lower_bound);
-			child_vnode->upper_bound(vnode_upper_bound-Globals::config.pruning_constant);
-			child_vnode->utility_upper_bound(vnode_utility_upper);
-			int first_particle = action * NumScenarios
-					+ child_vnode->particleIDs()[0];
-			child_vnode->default_move(
-					ValuedAction(
-							Hst_lb_all_a_p[ThreadID][first_particle].action,
-							vnode_lower_bound));
-			logd << " New node's bounds: (" << child_vnode->lower_bound()
-					<< ", " << child_vnode->upper_bound() << ")" << endl;
+			//child_vnode->lower_bound(vnode_lower_bound);
+			//child_vnode->upper_bound(vnode_upper_bound-Globals::config.pruning_constant);
+			//child_vnode->utility_upper_bound(vnode_utility_upper);
+			//int first_particle = action * NumScenarios
+			//		+ child_vnode->particleIDs()[0];
+			//child_vnode->default_move(
+			//		ValuedAction(
+			//				Hst_lb_all_a_p[ThreadID][first_particle].action,
+			//				vnode_lower_bound));
+			//logd << " New node's bounds: (" << child_vnode->lower_bound()
+			//		<< ", " << child_vnode->upper_bound() << ")" << endl;
 
-			if (child_vnode->upper_bound() < child_vnode->lower_bound()
+			//if (child_vnode->upper_bound() < child_vnode->lower_bound()
 			// close gap because no more search can be done on leaf node
-					|| child_vnode->depth() == Globals::config.search_depth - 1) {
-				child_vnode->upper_bound(child_vnode->lower_bound());
-			}
+			//		|| child_vnode->depth() == Globals::config.search_depth - 1) {
+			//	child_vnode->upper_bound(child_vnode->lower_bound());
+			//}
 
 
 
-			if (FIX_SCENARIO == 1 || DoPrint) {
-				cout.precision(10);
-				cout << " [GPU Vnode] New node's bounds: (d= "
-						<< child_vnode->depth() << " ,obs=" << obs << " , lb= "
-						<< child_vnode->lower_bound() / child_vnode->weight_
-						<< " ,ub= "
-						<< child_vnode->upper_bound() / child_vnode->weight_
-						<< " ,uub= "
-						<< child_vnode->utility_upper_bound()
-								/ child_vnode->weight_ << " ,weight= "
-						<< child_vnode->weight_ << " )";
-				if(child_vnode->Weight()==1.0/Globals::config.num_scenarios) cout<<", particle_id="<< child_vnode->particles()[0]->scenario_id;
-					cout<<", WEU="<<WEU(child_vnode);
-				cout  << endl;
-			}
+			//if (FIX_SCENARIO == 1 || DoPrint) {
+			//	cout.precision(10);
+			//	cout << " [GPU Vnode] New node's bounds: (d= "
+			//			<< child_vnode->depth() << " ,obs=" << obs << " , lb= "
+			//			<< child_vnode->lower_bound() / child_vnode->weight_
+			//			<< " ,ub= "
+			//			<< child_vnode->upper_bound() / child_vnode->weight_
+			//			<< " ,uub= "
+			//			<< child_vnode->utility_upper_bound()
+			//					/ child_vnode->weight_ << " ,weight= "
+			//			<< child_vnode->weight_ << " )";
+			//	if(child_vnode->Weight()==1.0/Globals::config.num_scenarios) cout<<", particle_id="<< child_vnode->particles()[0]->scenario_id;
+			//		cout<<", WEU="<<WEU(child_vnode);
+			//	cout  << endl;
+			//}
 
-			lower_bound += child_vnode->lower_bound();
-			upper_bound += child_vnode->upper_bound();
+			//lower_bound += child_vnode->lower_bound();
+			//upper_bound += child_vnode->upper_bound();
 
-		}
+		} //Loop colse over num partitions
 
 
-		qnode->step_reward = Hst_r_all_a[ThreadID][action];
+		//qnode->step_reward = Hst_r_all_a[ThreadID][action];
 
 		qnode->lower_bound(lower_bound);
 		qnode->upper_bound(upper_bound);
@@ -634,19 +711,19 @@ void DESPOT::Keras_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
 		qnode->default_value = lower_bound;
 
 		qnode->Weight();
-		if (FIX_SCENARIO == 1 || DoPrint) {
-			cout.precision(10);
-			cout << " [GPU Qnode] New qnode's bounds: (d= " << vnode->depth() + 1
-					<< " ,action=" << action << ", lb= "
-					<< qnode->lower_bound() / qnode->Weight() << " ,ub= "
-					<< qnode->upper_bound() / qnode->Weight() << " ,uub= "
-					<< qnode->utility_upper_bound() / qnode->Weight()
-					<< " ,weight= " << qnode->Weight() << " )" << endl;
-		}
+		//if (FIX_SCENARIO == 1 || DoPrint) {
+		//	cout.precision(10);
+		//	cout << " [GPU Qnode] New qnode's bounds: (d= " << vnode->depth() + 1
+		//			<< " ,action=" << action << ", lb= "
+		//			<< qnode->lower_bound() / qnode->Weight() << " ,ub= "
+		//			<< qnode->upper_bound() / qnode->Weight() << " ,uub= "
+		//			<< qnode->utility_upper_bound() / qnode->Weight()
+		//			<< " ,weight= " << qnode->Weight() << " )" << endl;
+		//}
 
 
-	}*/
-	}
+	} //Loop close over num actions
+	} //Despot loop close
 
 	//if(Globals::config.use_multi_thread_)
 	//	static_cast<Shared_VNode*>(vnode)->is_waiting_=false;
