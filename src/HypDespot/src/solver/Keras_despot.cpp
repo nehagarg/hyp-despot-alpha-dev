@@ -620,8 +620,8 @@ void DESPOT::Keras_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
 			//DisableDebugInfo();
 
 			history.RemoveLast();
-			logd << " New node's bounds: (" << vnode->lower_bound() << ", "
-				 << vnode->upper_bound() << ")" << endl;
+			logd << " New node's bounds: (" << child_vnode->lower_bound() << ", "
+				 << child_vnode->upper_bound() << ")" << endl;
 
 			//if (FIX_SCENARIO == 1 || doPrint) {
 			//	cout.precision(10);
@@ -642,8 +642,8 @@ void DESPOT::Keras_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
 		//		cout<<endl;
 		//	}
 
-			lower_bound += vnode->lower_bound();
-			upper_bound += vnode->upper_bound();
+			lower_bound += child_vnode->lower_bound();
+			upper_bound += child_vnode->upper_bound();
 			//InitBoundTime += Globals::ElapsedTime(start1);
 			//Calculate initial bounds
 			//double vnode_lower_bound = 0;
