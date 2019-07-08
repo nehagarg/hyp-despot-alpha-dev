@@ -505,7 +505,7 @@ void DESPOT::Keras_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
 	//Expand v-node
 	for (int action = 0; action < NumActions; action++) {
 		//Partition particles by observation
-
+		logd << "Expanding for action " << action << std::endl;
 		std::vector<tensorflow::Tensor> outputs;
 		if(action == 10) //Hack for grasping
 		{
@@ -601,6 +601,7 @@ void DESPOT::Keras_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
 						vnode->depth() + 1, qnode, obs);
 
 				child_vnode->set_keras_particle_batch(partitions_particle_batch[obs]);
+				logd << "Particle_batch" << child_vnode->particle_keras_batch() << endl;
 
 			//Create GPU particles for the new v-node
 			child_vnode->weight_=partitions[obs].size()/((float)NumScenarios);
@@ -614,7 +615,7 @@ void DESPOT::Keras_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
 
 			//EnableDebugInfo(vnode, qnode);
 
-			InitBounds(vnode, lb, ub, streams, history);
+			InitBounds(child_vnode, lb, ub, streams, history);
 
 			//DisableDebugInfo();
 
