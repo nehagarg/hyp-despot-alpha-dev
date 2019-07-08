@@ -1211,9 +1211,11 @@ public:
 
         if (history.Size()) {
             if (history.LastAction() == 8) {
+            	//std::cout << "Last action is 8" << std::endl;
                 return 10; //10 is Pick 8 is close gripper
             }
         }
+        //std::cout << "Last action is not 8 " << std::endl;
         return 8;
     }
 };
@@ -1392,3 +1394,6 @@ ScenarioUpperBound* GraspingRealArm::CreateScenarioUpperBound(std::string name,
 		exit(0);
 	}
 }
+
+//Command for despot. change solver to btdespotalphast for despot-alpha
+//../../../build/devel/lib/hyp_despot/despot_without_display -m config_files/low_friction_table/vrep_scene_ver8/multiObjectType/headphones_train3_reward100_penalty10/56_headphones_final-11-Nov-2015-14-14-02_instance0.yaml -v 3 --USEKERAS 1 -s 10 --solver=DESPOT -n 5 --nobs 10 -t 10 --number=27 -l CAP --GPUID 2 -u TRIVIAL --belief=SINGLE_PARTICLE > test_despot.log 2>&1
