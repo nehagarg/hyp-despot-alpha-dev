@@ -205,6 +205,18 @@ void DESPOT::Keras_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
 
 			logd << "Particles survived " << common_qnode->particleIDs_.size()  << std::endl;
 			generated_obs.push_back(generated_obs_per_action);
+			logd << "Initial particles:" << keras_particle_batch << std::endl;
+			logd << "Stepped particles: " << common_qnode->particle_keras_batch << std::endl;
+			logd << "Generated observation " << generated_obs_per_action << std::endl;
+			logd << "Random number vector " ;
+			if(action == 10)
+			{
+				logd << uniform_random_number_vector << std::endl;
+			}
+			else
+			{
+				logd << random_number_vector << std::endl;
+			}
 		} // First Loop close over actions
 
 
@@ -288,7 +300,7 @@ void DESPOT::Keras_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
 			QNode* common_qnode = qnode;
 			std::map<OBS_TYPE, VNode*>& children = qnode->children();
 			VNode* residual_vnode;
-
+			logd << "Action is " << action << std::endl;
 			if(common_qnode->particleIDs_.size() > 0)
 			{
 				residual_vnode = children[Globals::RESIDUAL_OBS];
@@ -297,7 +309,7 @@ void DESPOT::Keras_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
 				//std::vector<float> all_particle_batch = generated_obs[action];
 				//std::cout << "Generated_obs size " << all_particle_batch.size() << std::endl;
 				std::vector<float> obs_batch;
-				std::vector<float> random_number_vector; //not needed now as we pass observation
+				//std::vector<float> random_number_vector; //not needed now as we pass observation
 				//const std::vector<float>& all_random_number_vector =
 					//((KerasRandomStreams&)streams).KerasALLParticlesEntry();
 
@@ -322,7 +334,7 @@ void DESPOT::Keras_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
 					{
 						if((obs_batch.size() -
 								i*(common_qnode->particle_keras_batch.size()*model->KerasObservationVectorSize()/model->KerasInputVectorSize())) == 0)
-								{
+								{ //Insert the observation at ith position
 									obs_batch.insert(obs_batch.end(),
 											generated_obs[action].begin()+i*model->KerasObservationVectorSize(),
 											generated_obs[action].begin()+(i+1)*model->KerasObservationVectorSize());
@@ -330,7 +342,7 @@ void DESPOT::Keras_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
 											//all_random_number_vector.begin() + (common_qnode->particleIDs_[i])*model->LatentDimensionSize(),
 											//all_random_number_vector.begin() + (common_qnode->particleIDs_[i]+1)*model->LatentDimensionSize());
 								}
-						else
+						else //double the array
 						{
 							auto end_iterator = obs_batch.end();
 
@@ -343,26 +355,30 @@ void DESPOT::Keras_Expand_Action(VNode* vnode, ScenarioLowerBound* lb,
 							//		random_num_end_iterator);
 
 						}
-						if(obs_batch.size() < (i+1)*common_qnode->particle_keras_batch.size()*model->KerasObservationVectorSize()/model->KerasInputVectorSize())
-						{
-							int diff = (i+1)*common_qnode->particle_keras_batch.size()*model->KerasObservationVectorSize()/model->KerasInputVectorSize()
-									- obs_batch.size();
-							obs_batch.insert(obs_batch.end(),
-											obs_batch.begin() +
-											i*(common_qnode->particle_keras_batch.size()*model->KerasObservationVectorSize()/model->KerasInputVectorSize()),
-											obs_batch.begin() +
-											i*(common_qnode->particle_keras_batch.size()*model->KerasObservationVectorSize()/model->KerasInputVectorSize()) + diff);
-							//random_number_vector.insert(random_number_vector.end(),
-							//		random_number_vector.begin()+ i*common_qnode->particle_keras_batch.size()*model->LatentDimensionSize()/model->KerasInputVectorSize(),
-							//		random_number_vector.begin()+ (i*common_qnode->particle_keras_batch.size() + diff)*model->LatentDimensionSize()/model->KerasInputVectorSize());
-						}
 					}
+					if(obs_batch.size() < (i+1)*common_qnode->particle_keras_batch.size()*model->KerasObservationVectorSize()/model->KerasInputVectorSize())
+					{
+						int diff = (i+1)*common_qnode->particle_keras_batch.size()*model->KerasObservationVectorSize()/model->KerasInputVectorSize()
+								- obs_batch.size();
+						obs_batch.insert(obs_batch.end(),
+										obs_batch.begin() +
+										i*(common_qnode->particle_keras_batch.size()*model->KerasObservationVectorSize()/model->KerasInputVectorSize()),
+										obs_batch.begin() +
+										i*(common_qnode->particle_keras_batch.size()*model->KerasObservationVectorSize()/model->KerasInputVectorSize()) + diff);
+						//random_number_vector.insert(random_number_vector.end(),
+						//		random_number_vector.begin()+ i*common_qnode->particle_keras_batch.size()*model->LatentDimensionSize()/model->KerasInputVectorSize(),
+						//		random_number_vector.begin()+ (i*common_qnode->particle_keras_batch.size() + diff)*model->LatentDimensionSize()/model->KerasInputVectorSize());
+					}
+
 
 				}
 				std::vector<tensorflow::Tensor> obs_tensorflow_outputs;
+				logd << "Obs batch " << obs_batch << std::endl;
+				logd << "all particle batch " << all_particle_batch << std::endl;
 				model->GetObservationProbability(obs_batch, all_particle_batch, action,random_number_vector,
 						obs_tensorflow_outputs);
 				auto obs_outputs = obs_tensorflow_outputs[0].flat<float>().data();
+				logd << "Obs outputs " << obs_outputs << std::endl;
 			//}
 
 			 double max_prob_sum = 0.0;
