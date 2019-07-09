@@ -476,14 +476,17 @@ void VNode::Free(const DSPOMDP& model) {
             }
         }
 
-	for (int a = 0; a < children().size(); a++) {
-		QNode* qnode = Child(a);
-		map<OBS_TYPE, VNode*>& children = qnode->children();
-		for (map<OBS_TYPE, VNode*>::iterator it = children.begin();
-			it != children.end(); it++) {
-			it->second->Free(model);
-		}
-	}
+        if(!Globals::config.use_keras_model) //When using keras model, particles are not copied. So removing particles only in root node
+        {
+			for (int a = 0; a < children().size(); a++) {
+				QNode* qnode = Child(a);
+				map<OBS_TYPE, VNode*>& children = qnode->children();
+				for (map<OBS_TYPE, VNode*>::iterator it = children.begin();
+					it != children.end(); it++) {
+					it->second->Free(model);
+				}
+			}
+        }
 }
 
 void VNode::PrintPolicyTree(int depth, ostream& os) {
