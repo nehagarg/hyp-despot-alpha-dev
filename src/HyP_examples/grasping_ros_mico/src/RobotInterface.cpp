@@ -724,7 +724,7 @@ if(use_keras_models) //Used during belief update. Search uses the batch call
 		std::copy(obs_vector,obs_vector+ KerasObservationVectorSize(),grasping_obs.keras_observation.begin() );
 		//Keras input vector will not be of zero size because it contained intial state vector
 		std::copy(stepped_particle_batch, stepped_particle_batch + KerasInputVectorSize(), grasping_state.keras_input_vector.begin());
-		std::cout << "Terminal for action " << action << " " << terminal_vector[0] << " " <<  ans << std::endl;
+		//std::cout << "Terminal for action " << action << " " << terminal_vector[0] << " " <<  ans << std::endl;
 		return ans;
 
     }
