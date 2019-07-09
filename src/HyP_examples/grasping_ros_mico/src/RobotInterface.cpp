@@ -709,6 +709,7 @@ if(use_keras_models) //Used during belief update. Search uses the batch call
     	else
     	{
     		random_num_vector.push_back((float)random_num);
+    		std::cout << "Random_num is " << random_num << std::endl;
     	}
     	StepKerasParticles(keras_input,action, random_num_vector,outputs);
     	auto terminal_vector = outputs[1].flat<float>().data();
