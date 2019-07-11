@@ -174,7 +174,7 @@ void KerasModels::run_observation_session(const std::vector<float>& obs_batch, c
 					  };
 					//Getiing reward in place of next state and obs as they will not be used
 					TF_CHECK_OK(
-									transition_model_sessions[action]->Run(feed_dict, {"pick_action_reward/Select_1:0",
+									transition_model_sessions[action]->Run(feed_dict, {"pick_model/dense_layer_2/Softmax:0",
 											"get_terminal_value_pick/ones_like:0", "pick_action_reward/Select_1:0","pick_action_reward/Select_1:0" }, {}, &outputs));
 					//std::cout << "Run transition session" << std::endl;
 				}
