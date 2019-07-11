@@ -1132,6 +1132,15 @@ void GraspingRealArm::PrintState(const State& state, std::ostream& out) const {
 
 }
 
+void GraspingRealArm::PrintParticles(const std::vector<State*> particles, std::ostream& out) const
+{
+	for(int i = 0; i < particles.size(); i++)
+	{
+		const GraspingStateRealArm& grasping_state = static_cast<const GraspingStateRealArm&> (*(particles[i]));
+		 out << grasping_state.object_id << "|";
+		robotInterface->PrintState(grasping_state, out);
+	}
+}
 
 // Textual display
 void GraspingRealArm::DisplayBeliefs(ParticleBelief* belief,
@@ -1397,3 +1406,4 @@ ScenarioUpperBound* GraspingRealArm::CreateScenarioUpperBound(std::string name,
 
 //Command for despot. change solver to btdespotalphast for despot-alpha
 //../../../build/devel/lib/hyp_despot/despot_without_display -m config_files/low_friction_table/vrep_scene_ver8/multiObjectType/headphones_train3_reward100_penalty10/56_headphones_final-11-Nov-2015-14-14-02_instance0.yaml -v 3 --USEKERAS 1 -s 10 --solver=DESPOT -n 5 --nobs 10 -t 10 --number=27 -l CAP --GPUID 2 -u TRIVIAL --belief=SINGLE_PARTICLE > test_despot.log 2>&1
+//../../../build/devel/lib/hyp_despot/despot_without_display -m config_files/low_friction_table/vrep_scene_ver8/multiObjectType/headphones_train3_reward100_penalty10/56_headphones_final-11-Nov-2015-14-14-02_instance0.yaml -v 3 --USEKERAS 1 -s 50 --solver=BTDESPOTALPHAST -n 80 --nobs 10 -t 20 --number=18 -l CAP --GPUID 2 -u TRIVIAL --belief=UNIFORM_WITH_STATE_IN > test.log 2>&1

@@ -150,6 +150,7 @@ public:
         PrintObs(state,observation,out);
     }
     void PrintBelief(const Belief& belief, std::ostream& out = std::cout) const;
+    void PrintParticles(const std::vector<State*> particles, std::ostream& out = std::cout) const;
     void DisplayBeliefs(ParticleBelief* belief, std::ostream& ostr) const;
     void DisplayState(const State& state, std::ostream& ostr) const;
     void InitializeRobotInterface(int interface_type) ;

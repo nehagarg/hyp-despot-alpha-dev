@@ -83,8 +83,8 @@ void VrepDataInterface::CreateStartState(GraspingStateRealArm& initial_state, st
         std::cout << "Start_state index is " << start_state_index << std::endl;
         if(RobotInterface::version8) //start_state_index goes from 0 to 89
         {
-        	int position_index = start_state_index % 9;
-        	int angle_index = start_state_index /9 ;
+        	int position_index = (start_state_index % 90)% 9;
+        	int angle_index = (start_state_index % 90) /9 ;
         	int i = position_index % 3;
         	int j = position_index / 3;
         	initial_state.object_pose.pose.position.y = graspObjects[initial_state.object_id]->initial_object_y -0.01 + (j*0.01);
