@@ -1125,7 +1125,7 @@ void GraspingRealArm::PrintObs(const State& state, ObservationClass& obs, std::o
 void GraspingRealArm::PrintState(const State& state, std::ostream& out) const {
     const GraspingStateRealArm& grasping_state = static_cast<const GraspingStateRealArm&> (state);
     robotInterface->PrintState(grasping_state, out);
-    if(&out != &std::cout)
+    if(&out != &std::cout || RobotInterface::version8)
     {
         out << grasping_state.object_id << "\n";
     }

@@ -24,6 +24,7 @@ KerasModels::KerasModels(int num_actions) {
 		//tensorflow::Session * transition_sess;
 		transition_model_sessions.push_back(NULL);
 		observation_model_sessions.push_back(NULL);
+		observation_encoder_model_sessions.push_back(NULL);
 	}
 //Assuming maximum 500 particles
 	int batch_size = 500;
@@ -118,9 +119,60 @@ void KerasModels::load_keras_models()
 			  std::cout << "File not found" << graph_fn << std::endl;
 		  }
 		}
+
+		for(int i = 0; i < observation_encoder_model_sessions.size(); i ++)
+			{
+				std::stringstream sstr;
+				sstr << "scripts/observation_model/observation_encoder_model_";
+				sstr << i;
+				sstr << ".pb";
+		//const std::string graph_fn = "./transition/decoder_transition_model.pb";
+						const std::string graph_fn = sstr.str()	;
+			  const std::string checkpoint_fn = "";
+			  std::ifstream file(graph_fn);
+			  // prepare session
+
+			  if(file)
+			  {
+				  tensorflow::Session * observation_encoder_sess;
+				  observation_encoder_model_sessions[i] = observation_encoder_sess;
+				  std::cout << "Loading file" << graph_fn << std::endl;
+				  tensorflow::SessionOptions options;
+				  options.config.mutable_gpu_options()->set_visible_device_list(gpuID_str.str());
+				  TF_CHECK_OK(tensorflow::NewSession(options, &observation_encoder_model_sessions[i]));
+				  TF_CHECK_OK(LoadModel(observation_encoder_model_sessions[i], graph_fn, checkpoint_fn));
+			  }
+			  else
+			  {
+				  std::cout << "File not found" << graph_fn << std::endl;
+			  }
+			}
+
+
 }
 
-
+void KerasModels::run_observation_encoder_session(const std::vector<float>& image_batch, int action,	std::vector<tensorflow::Tensor>& outputs)
+{
+	double start_t = despot::get_time_second();
+	if(observation_encoder_model_sessions[action] != NULL)
+	{
+		int image_vector_size = 184*208;
+		int batch_size = image_batch.size()/image_vector_size;
+		tensorflow::TensorShape im_input_shape({batch_size, 184,208,1});
+		tensorflow::Tensor im_input(tensorflow::DT_FLOAT, im_input_shape);
+		std::copy_n(image_batch.begin(),image_batch.size(),im_input.flat<float>().data());
+		tensor_dict feed_dict = {
+				      {"input_image:0", im_input}
+				  };
+				TF_CHECK_OK(
+						observation_encoder_model_sessions[action]->Run(feed_dict, {"dense_1/BiasAdd:0"}, {}, &outputs));
+	}
+	else
+	{
+		std::cout << "CAUTION!: Observation encoder model ccalled for action " << action << std::endl;
+		outputs = default_observation_prob_output;
+	}
+}
 void KerasModels::run_observation_session(const std::vector<float>& obs_batch, const std::vector<float>& all_particle_batch, int action,
 			std::vector<float>&random_number_vecctor, std::vector<tensorflow::Tensor>& outputs) const
 {

@@ -35,7 +35,7 @@ public:
     
     virtual void CreateStartState(GraspingStateRealArm& initial_state, std::string type = "DEFAULT") const = 0;
     virtual std::pair <std::map<int,double>,std::vector<double> > GetBeliefObjectProbability(std::vector<int> belief_object_ids) const;
-    double ObsProb(GraspingObservation grasping_obs, const GraspingStateRealArm& grasping_state, int action) const;
+    virtual double ObsProb(GraspingObservation grasping_obs, const GraspingStateRealArm& grasping_state, int action) const;
     bool Step(GraspingStateRealArm& state, double random_num, int action,
         double& reward, GraspingObservation& obs, bool debug = false) const;
     virtual bool StepActual(GraspingStateRealArm& state, double random_num, int action,

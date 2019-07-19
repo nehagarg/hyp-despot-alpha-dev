@@ -1040,6 +1040,11 @@ void RobotInterface::PrintObs(GraspingObservation& grasping_obs, std::ostream& o
     	{
     		out << grasping_obs.keras_observation[i] << " ";
     	}
+    	if(RobotInterface::version8)
+		{
+		  out << "|"  ;
+		  out << grasping_obs.rgb_image_name;
+		}
     	out << last_char;
     	return;
     }
@@ -2403,10 +2408,10 @@ bool validState = IsValidState(grasping_state);
             int initial_gripper_status = GetGripperStatus(initial_grasping_state);
             if((initial_gripper_status == 0 && action == A_OPEN) ||
               (initial_gripper_status !=0 && action <= A_CLOSE)  ||
-              (initial_grasping_state.gripper_pose.pose.position.x <(min_x_i + 0.005) && (action >= A_DECREASE_X && action < A_INCREASE_Y)) ||
+             ((!RobotInterface::version8) && ((initial_grasping_state.gripper_pose.pose.position.x <(min_x_i + 0.005) && (action >= A_DECREASE_X && action < A_INCREASE_Y)) ||
               (initial_grasping_state.gripper_pose.pose.position.x >(max_x_i - 0.005)&& (action >= A_INCREASE_X && action < A_DECREASE_X)) ||
               (initial_grasping_state.gripper_pose.pose.position.y < (min_y_i + 0.005)&& (action >= A_DECREASE_Y && action < A_CLOSE) )||
-              (initial_grasping_state.gripper_pose.pose.position.y > (max_y_i - 0.005)&& (action >= A_INCREASE_Y && action < A_DECREASE_Y) )
+              (initial_grasping_state.gripper_pose.pose.position.y > (max_y_i - 0.005)&& (action >= A_INCREASE_Y && action < A_DECREASE_Y) )))
 
               )
             {//Disallow open action when gripper is open and move actions when gripper is close
@@ -2424,7 +2429,7 @@ bool validState = IsValidState(grasping_state);
                 {
 
 
-                    if(separate_close_reward)
+                    if(separate_close_reward && !RobotInterface::version8)
                     {
                         int gripper_status = GetGripperStatus(grasping_state);
                         if(gripper_status == 0) //gripper is open

@@ -102,7 +102,7 @@ private:
             std::ofstream& myfile, int i, int j, int action, int k1,
             geometry_msgs::PoseStamped mico_target_pose, std::string object_id) const;
     void CreateObjectStartState(GraspingStateRealArm& initial_state, std::string type = "DEFAULT") const;
-    
+    void EncodeObservation(GraspingObservation& grasping_obs, const GraspingStateRealArm& grasping_state, int action) const;
     PyObject* GetPointCloudAboveGripperPlane(double min_x) const;
     int CheckPointCloudMovement(PyObject* starting_point_cloud, PyObject* step_point_cloud) const;
     std::string GetAndSaveVisionImageName(int object_id) const;

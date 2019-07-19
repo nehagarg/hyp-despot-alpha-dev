@@ -46,6 +46,7 @@ VrepInterface::VrepInterface(int start_state_index_) : VrepDataInterface(start_s
          joint_file_name = joint_file_name + "/jointData.txt";
         }
     }
+    std::cout << "Joint file name is :" << joint_file_name << std::endl;
     std::ifstream infile1(joint_file_name);
     int x_i, x_j;
     while (infile1 >> x_i >> x_j)
@@ -81,20 +82,20 @@ VrepInterface::VrepInterface(int start_state_index_) : VrepDataInterface(start_s
     {
         mico_target_handle = object_handle_srv.response.handle;
     }
-    
+    std::cout << "Mico target handle is " << mico_target_handle << std::endl;
     object_handle_srv.request.objectName = "Mico_tip";
     if(sim_get_object_handle_client.call(object_handle_srv))
     {
         mico_tip_handle = object_handle_srv.response.handle;
     }
     
-    
+    std::cout << "Mico tip handle is " << mico_tip_handle << std::endl;
     object_handle_srv.request.objectName = "Cup";
     if(sim_get_object_handle_client.call(object_handle_srv))
     {
         target_object_handle = object_handle_srv.response.handle;
     }
-    
+    std::cout << "Target object handle is " << target_object_handle << std::endl;
     for(int i = 0; i < 48; i++)
     //for(int i = 0; i < 2; i++)
     {
@@ -112,6 +113,7 @@ VrepInterface::VrepInterface(int start_state_index_) : VrepDataInterface(start_s
         {
             force_sensor_handles[i] = object_handle_srv.response.handle;
         }
+        std::cout << "Got force sensor " << i << std::endl;
     }
        
     for(int i = 0; i < 4; i++)
@@ -2021,11 +2023,12 @@ bool VrepInterface::StepActual(GraspingStateRealArm& grasping_state, double rand
     }
     if(RobotInterface::version8)
     {
-        if(action < A_PICK)
-        {
+        //if(action < A_PICK)
+        //{
             //Get vision observation
             grasping_obs.rgb_image_name = GetAndSaveVisionImageName(grasping_state.object_id);
-        }
+            EncodeObservation(grasping_obs, grasping_state, action);
+        //}
     }
     GetReward(initial_grasping_state, grasping_state, grasping_obs, action, reward);
     UpdateNextStateValuesBasedAfterStep(grasping_state,grasping_obs,reward,action);
@@ -2040,11 +2043,22 @@ bool VrepInterface::StepActual(GraspingStateRealArm& grasping_state, double rand
 
 void VrepInterface::CreateObjectStartState(GraspingStateRealArm& initial_state, std::string type) const {
         VrepDataInterface::CreateStartState(initial_state, type);
-        
+        PrintState(initial_state);
         //Get object pose from vrep and update its x and y coordnates from initial state
         double object_x = initial_state.object_pose.pose.position.x;
         double object_y = initial_state.object_pose.pose.position.y;
-        
+        double new_yaw;
+        if(RobotInterface::version8)
+		{
+			Quaternion q(initial_state.object_pose.pose.orientation.x,
+						 initial_state.object_pose.pose.orientation.y,
+						 initial_state.object_pose.pose.orientation.z,
+						 initial_state.object_pose.pose.orientation.w);
+			double roll, pitch;
+			Quaternion::toEulerAngle(q,roll, pitch,new_yaw);
+
+		}
+
          vrep_common::simRosGetObjectPose object_pose_srv;
         object_pose_srv.request.relativeToObjectHandle = -1;
         object_pose_srv.request.handle = target_object_handle;
@@ -2058,13 +2072,24 @@ void VrepInterface::CreateObjectStartState(GraspingStateRealArm& initial_state, 
         initial_state.object_pose.pose.position.y = object_y;
         
         SetObjectPose(initial_state.object_pose, target_object_handle, -1);
-            
+        if(RobotInterface::version8)
+		{
+			Quaternion q(initial_state.object_pose.pose.orientation.x,
+								 initial_state.object_pose.pose.orientation.y,
+								 initial_state.object_pose.pose.orientation.z,
+								 initial_state.object_pose.pose.orientation.w);
+			double roll, pitch, yaw;
+			Quaternion::toEulerAngle(q,roll, pitch,yaw);
+			double theta_z = (new_yaw-yaw)*180/3.14;
+			graspObjects[initial_state.object_id]->rotateZ(theta_z);
+		}
 }
 
 void VrepInterface::CreateStartState(GraspingStateRealArm& initial_state, std::string type) const {
+
         
-        
-    
+	std::cout << "Creating start state" << std::endl;
+
             //Stop Simulation if its already running
     int stop_count = 0;
     vrep_common::simRosStopSimulation stop_srv;
@@ -2116,10 +2141,11 @@ void VrepInterface::CreateStartState(GraspingStateRealArm& initial_state, std::s
         SetGripperPose(i,j);
         std::cout << "Gripper pose set" << std::endl;
         
-        
+
+
         CreateObjectStartState(initial_state,type);
         
-        
+
         //std::cout << "Getting initial state" << std::endl;
         GetStateFromVrep(initial_state);
         if(!IsValidState(initial_state))
@@ -2160,7 +2186,72 @@ bool VrepInterface::IsReachableState(GraspingStateRealArm grasping_state, geomet
 }
  */
 
+void VrepInterface::EncodeObservation(GraspingObservation& grasping_obs, const GraspingStateRealArm& grasping_state, int action) const
+{
+	if(use_keras_models) //Used in particle filter, Search calls the batch function
+		{
+			if(grasping_obs.keras_observation.size() == 0) //Generate encoded grasping obbservation
+			{
+				//Prepare image_batch. Cannot call keras model fom python when using C++ keras api
+				std::vector<float> image_batch;
+				std::string image_dir = "./";
+				int image_vector_size = 184*208;
+				std::vector<tensorflow::Tensor> outputs;
+				PyObject *load_function = PyObject_GetAttrString(get_belief_module, "get_cropped_depth_image_for_keras_models");
+				if (!(load_function && PyCallable_Check(load_function)))
+				    {
+				        if (PyErr_Occurred())
+				                PyErr_Print();
+				            fprintf(stderr, "Cannot find function \"get_cropped_depth_image_for_keras_models\"\n");
+				    }
 
+				PyObject *pArgs, *pValue;
+				int num_args = 5;
+				pArgs = PyTuple_New(num_args);
+				pValue = PyFloat_FromDouble(grasping_obs.gripper_pose.pose.position.x);
+				PyTuple_SetItem(pArgs, 0, pValue);
+				pValue = PyFloat_FromDouble(grasping_obs.gripper_pose.pose.position.y);
+				PyTuple_SetItem(pArgs, 1, pValue);
+				pValue = PyFloat_FromDouble(grasping_obs.gripper_pose.pose.position.z);
+				PyTuple_SetItem(pArgs, 2, pValue);
+				pValue = PyString_FromString(grasping_obs.rgb_image_name.c_str());
+				PyTuple_SetItem(pArgs, 3, pValue);
+				pValue = PyString_FromString(image_dir.c_str());
+				PyTuple_SetItem(pArgs, 4, pValue);
+
+				PyObject* cropped_image = PyObject_CallObject(load_function, pArgs);
+				Py_DECREF(pArgs);
+				Py_DECREF(load_function);
+				if (cropped_image != NULL) {
+					std::cout << "Call to get cropped succeded \n";
+				}
+				else {
+
+					PyErr_Print();
+					fprintf(stderr,"Call to get cropped failed\n");
+					assert(0==1);
+				}
+				for(int i = 0; i < image_vector_size; i++)
+				{
+					PyObject* tmpObj = PyList_GetItem(cropped_image, i);
+					image_batch.push_back(float(PyFloat_AsDouble(tmpObj)));
+				}
+				Py_DECREF(cropped_image);
+
+				keras_models->run_observation_encoder_session(image_batch,action, outputs);
+
+
+				auto obs_vector = outputs[0].flat<float>().data();
+				grasping_obs.keras_observation.resize(KerasObservationVectorSize());
+				std::copy(obs_vector,obs_vector+ KerasObservationVectorSize(),grasping_obs.keras_observation.begin() );
+
+			}
+
+		}
+
+	return; // RobotInterface::ObsProb(grasping_obs, grasping_state, action);
+
+}
 std::pair <std::map<int,double>,std::vector<double> > VrepInterface::GetBeliefObjectProbability(std::vector<int> belief_object_ids) const {
     if(!RobotInterface::get_object_belief)
     {
@@ -2268,6 +2359,8 @@ std::pair <std::map<int,double>,std::vector<double> > VrepInterface::GetBeliefOb
     return std::make_pair(belief_object_weights,vision_observation);
     
 }
+
+
 
 
 VrepInterface::VrepInterface(const VrepInterface& orig) {
