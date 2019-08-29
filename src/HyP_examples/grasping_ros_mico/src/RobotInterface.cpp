@@ -40,6 +40,7 @@ bool RobotInterface::use_wider_object_workspace;
 bool RobotInterface::use_probabilistic_neighbour_step;
 bool RobotInterface::use_discrete_observation_in_step;
 bool RobotInterface::use_discrete_observation_in_update;
+bool RobotInterface::use_point_five_for_pick;
 
 RobotInterface::RobotInterface() {
     min_x_i = 0.3379; //range for gripper movement

@@ -26,8 +26,8 @@ KerasModels::KerasModels(int num_actions) {
 		observation_model_sessions.push_back(NULL);
 		observation_encoder_model_sessions.push_back(NULL);
 	}
-//Assuming maximum 500 particles
-	int batch_size = 500;
+//Assuming maximum 1000 particles
+	int batch_size = 1000;
 	tensorflow::TensorShape data_shape({batch_size, 1});
 	tensorflow::Tensor prob_data(tensorflow::DT_FLOAT, data_shape);
 	auto data_ = prob_data.flat<float>().data();
@@ -46,6 +46,7 @@ KerasModels::KerasModels(int num_actions) {
 	for (int i = 0; i < batch_size; ++i){
 	  reward_data_[i + 0] = -1000;
 	}
+	point_five_vector_for_pick.resize(batch_size, 0.5);
 	default_observation_prob_output.push_back(prob_data);
 	default_transition_output.push_back(prob_data); //Pushing in place of next state as it will not be accessed for default case
 	default_transition_output.push_back(terminal_data);
@@ -220,7 +221,14 @@ void KerasModels::run_observation_session(const std::vector<float>& obs_batch, c
 				{
 					tensorflow::TensorShape random_input_shape({batch_size, 1});
 					tensorflow::Tensor random_input(tensorflow::DT_FLOAT, random_input_shape);
-					std::copy_n(random_number_vecctor.begin(),random_number_vecctor.size(),random_input.flat<float>().data());
+					if(RobotInterface::use_point_five_for_pick)
+					{
+						std::copy_n(point_five_vector_for_pick.begin(),random_number_vecctor.size(),random_input.flat<float>().data());
+					}
+					else
+					{
+						std::copy_n(random_number_vecctor.begin(),random_number_vecctor.size(),random_input.flat<float>().data());
+					}
 					tensor_dict feed_dict = {
 					      {"input_state_1:0", state_input},{"random_number:0", random_input}
 					  };

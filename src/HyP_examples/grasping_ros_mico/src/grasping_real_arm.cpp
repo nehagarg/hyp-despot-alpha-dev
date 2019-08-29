@@ -382,6 +382,15 @@ GraspingRealArm::GraspingRealArm(std::string modelParamFileName, int start_state
     }
     std::cout << "discrete observation in update " << RobotInterface::use_discrete_observation_in_update << std::endl;
 
+    if(config["use_point_five_for_pick"])
+    {
+    	RobotInterface::use_point_five_for_pick = config["use_point_five_for_pick"].as<bool>();
+    }
+    else
+    {
+    	RobotInterface::use_point_five_for_pick = false;
+    }
+    std::cout << "use point five for pick " << RobotInterface::use_point_five_for_pick << std::endl;
 
     if(config["belief_object_ids"])
     {

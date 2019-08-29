@@ -27,6 +27,7 @@ public:
   std::vector<tensorflow::Session *> observation_encoder_model_sessions;
   std::vector<tensorflow::Tensor> default_observation_prob_output;
   std::vector<tensorflow::Tensor> default_transition_output;
+  std::vector<float> point_five_vector_for_pick;
 };
 
 
