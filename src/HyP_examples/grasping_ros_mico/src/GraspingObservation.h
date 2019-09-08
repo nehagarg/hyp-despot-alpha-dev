@@ -11,6 +11,7 @@
 #include "geometry_msgs/PoseStamped.h"
 #include "observation.h"
 #include "GraspingStateRealArm.h"
+#include "ActionSpecification.h"
 
 class GraspingObservation : public ObservationClass {
  public :
@@ -112,6 +113,41 @@ class GraspingObservation : public ObservationClass {
         touch_sensor_reading[1] = initial_state.touch_value[1];
 
         vision_movement = initial_state.vision_movement;
+
+    }
+
+    void fillObservableStateInKerasObservation(int image_observation_size, int action, bool close_called)
+    {
+    		//gripper_pose,gripper_joint_angles,close_called_input,touch_values,vision_movement
+    	keras_observation[image_observation_size] = (float)gripper_pose.pose.position.x;
+    	keras_observation[image_observation_size+1] = (float)gripper_pose.pose.position.y;
+    	keras_observation[image_observation_size+2] = (float)finger_joint_state[0];
+    	keras_observation[image_observation_size+3] = (float)finger_joint_state[2];
+    	if(close_called)
+    	{
+    		if(action == A_OPEN)
+    		{
+    			keras_observation[image_observation_size+4] = (float)0;
+    		}
+    		else
+    		{
+    			keras_observation[image_observation_size+4] = (float)1;
+    		}
+    	}
+    	else
+    	{
+    		if(action == A_CLOSE)
+			{
+				keras_observation[image_observation_size+4] = (float)1;
+			}
+			else
+			{
+				keras_observation[image_observation_size+4] = (float)0;
+			}
+    	}
+    	keras_observation[image_observation_size+5] = (float)touch_sensor_reading[0];
+    	keras_observation[image_observation_size+6] = (float)touch_sensor_reading[1];
+    	keras_observation[image_observation_size+7] = (float)vision_movement;
 
     }
 };

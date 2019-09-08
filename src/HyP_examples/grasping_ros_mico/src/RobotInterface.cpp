@@ -41,6 +41,7 @@ bool RobotInterface::use_probabilistic_neighbour_step;
 bool RobotInterface::use_discrete_observation_in_step;
 bool RobotInterface::use_discrete_observation_in_update;
 bool RobotInterface::use_point_five_for_pick;
+bool RobotInterface::use_combined_prob_output;
 
 RobotInterface::RobotInterface() {
     min_x_i = 0.3379; //range for gripper movement
@@ -2409,7 +2410,7 @@ bool validState = IsValidState(grasping_state);
             int initial_gripper_status = GetGripperStatus(initial_grasping_state);
             if((initial_gripper_status == 0 && action == A_OPEN) ||
               (initial_gripper_status !=0 && action <= A_CLOSE)  ||
-             ((!RobotInterface::version8) && ((initial_grasping_state.gripper_pose.pose.position.x <(min_x_i + 0.005) && (action >= A_DECREASE_X && action < A_INCREASE_Y)) ||
+             (((initial_grasping_state.gripper_pose.pose.position.x <(min_x_i + 0.005) && (action >= A_DECREASE_X && action < A_INCREASE_Y)) ||
               (initial_grasping_state.gripper_pose.pose.position.x >(max_x_i - 0.005)&& (action >= A_INCREASE_X && action < A_DECREASE_X)) ||
               (initial_grasping_state.gripper_pose.pose.position.y < (min_y_i + 0.005)&& (action >= A_DECREASE_Y && action < A_CLOSE) )||
               (initial_grasping_state.gripper_pose.pose.position.y > (max_y_i - 0.005)&& (action >= A_INCREASE_Y && action < A_DECREASE_Y) )))

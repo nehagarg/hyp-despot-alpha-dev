@@ -29,6 +29,7 @@ GraspingMicoParticleBelief::GraspingMicoParticleBelief(std::vector<State*> parti
         const DSPOMDP* model, Belief* prior, bool split): GraspingParticleBelief(particles, model,
 	 prior, split), grasping_model_(static_cast<const GraspingRealArm*>(model)) {
 
+	std::cout << text();
 }
 
 
@@ -127,6 +128,8 @@ GraspingMicoParticleBelief::GraspingMicoParticleBelief(std::vector<State*> parti
 
 		particles_ = new_belief;
 	}
+	std::cout << text();
+
 }
 
 
@@ -391,6 +394,16 @@ GraspingRealArm::GraspingRealArm(std::string modelParamFileName, int start_state
     	RobotInterface::use_point_five_for_pick = false;
     }
     std::cout << "use point five for pick " << RobotInterface::use_point_five_for_pick << std::endl;
+
+    if(config["use_combined_prob_output"])
+        {
+        	RobotInterface::use_combined_prob_output = config["use_combined_prob_output"].as<bool>();
+        }
+        else
+        {
+        	RobotInterface::use_combined_prob_output = false;
+        }
+        std::cout << "use combined prob output " << RobotInterface::use_combined_prob_output << std::endl;
 
     if(config["belief_object_ids"])
     {

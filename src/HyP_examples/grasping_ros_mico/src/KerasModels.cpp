@@ -96,7 +96,14 @@ void KerasModels::load_keras_models()
 	for(int i = 0; i < observation_model_sessions.size(); i ++)
 		{
 			std::stringstream sstr;
-			sstr << "scripts/observation_model/full_observation_model_v1_";
+			if(RobotInterface::use_combined_prob_output)
+			{
+				sstr << "scripts/observation_model/full_observation_model_v1_v2_";
+			}
+			else
+			{
+				sstr << "scripts/observation_model/full_observation_model_v1_";
+			}
 			sstr << i;
 			sstr << ".pb";
 	//const std::string graph_fn = "./transition/decoder_transition_model.pb";
@@ -194,8 +201,17 @@ void KerasModels::run_observation_session(const std::vector<float>& obs_batch, c
 		tensor_dict feed_dict = {
 		      {"input_state1:0", state_input},{"obs_input:0", obs_input}
 		  };
+		if(RobotInterface::use_combined_prob_output)
+		{
+			TF_CHECK_OK(
+				observation_model_sessions[action]->Run(feed_dict, {"get_combined_prob/Mul_20:0"}, {}, &outputs));
+
+		}
+		else
+		{
 		TF_CHECK_OK(
 				observation_model_sessions[action]->Run(feed_dict, {"model_1_1/final_dese_layer/BiasAdd:0"}, {}, &outputs));
+		}
 	}
 	else
 	{
@@ -251,15 +267,16 @@ void KerasModels::run_observation_session(const std::vector<float>& obs_batch, c
 						{
 							TF_CHECK_OK(
 									transition_model_sessions[action]->Run(feed_dict, {"full_model/concatenate_next_state_output/concat:0",
-																	"full_model/get_terminal_value_non_pick/zeros_like:0", "full_model/close_action_reward/Select_2:0", "decoder_6/dense_12/BiasAdd:0"}, {}, &outputs));
+																	"full_model/get_terminal_value_non_pick/zeros_like:0", "full_model/close_action_reward/Select_2:0",
+																	"concatenate_obs_output/concat:0"}, {}, &outputs));
 						}
 						else
 						{
 							TF_CHECK_OK(
 										transition_model_sessions[action]->Run(feed_dict, {"full_model/concatenate_next_state_output/concat:0",
 																							"full_model/get_terminal_value_non_pick/zeros_like:0",
-																							"full_model/move_action_reward/Select_3:0",
-																							"decoder_6/dense_12/BiasAdd:0"}, {}, &outputs));
+																							"full_model/move_action_reward/Select_4:0",
+																							"concatenate_obs_output/concat:0"}, {}, &outputs));
 						}
 					}
 					else
@@ -273,15 +290,15 @@ void KerasModels::run_observation_session(const std::vector<float>& obs_batch, c
 								transition_model_sessions[action]->Run(feed_dict, {"full_model/concatenate_next_state_output/concat:0",
 																					"full_model/get_terminal_value_non_pick/zeros_like:0",
 																					"full_model/open_action_reward/Select_2:0",
-																					"decoder_5/dense_12/BiasAdd:0"}, {}, &outputs));
+																					"concatenate_obs_output/concat:0"}, {}, &outputs));
 						}
 						else
 						{
 							TF_CHECK_OK(
 								transition_model_sessions[action]->Run(feed_dict, {"full_model/concatenate_next_state_output/concat:0",
 																					"full_model/get_terminal_value_non_pick/zeros_like:0",
-																					"full_model/move_action_reward/Select_3:0",
-																					"decoder_5/dense_12/BiasAdd:0"}, {}, &outputs));
+																					"full_model/move_action_reward/Select_4:0",
+																					"concatenate_obs_output/concat:0"}, {}, &outputs));
 						}
 					}
 				}

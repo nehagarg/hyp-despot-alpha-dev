@@ -2243,8 +2243,11 @@ void VrepInterface::EncodeObservation(GraspingObservation& grasping_obs, const G
 
 				auto obs_vector = outputs[0].flat<float>().data();
 				grasping_obs.keras_observation.resize(KerasObservationVectorSize());
-				std::copy(obs_vector,obs_vector+ KerasObservationVectorSize(),grasping_obs.keras_observation.begin() );
-
+				std::copy(obs_vector,obs_vector+ KerasImageObservationVectorSize(),grasping_obs.keras_observation.begin() );
+				if(use_combined_prob_output)
+				{
+					grasping_obs.fillObservableStateInKerasObservation(KerasImageObservationVectorSize(),grasping_state.closeCalled, action);
+				}
 			}
 
 		}

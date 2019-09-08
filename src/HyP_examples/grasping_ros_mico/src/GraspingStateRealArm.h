@@ -128,6 +128,9 @@ class GraspingStateRealArm : public despot::State {
 			{
 				keras_input_vector.push_back((float)0);
 			}
+			keras_input_vector.push_back((float)touch_value[0]);
+			keras_input_vector.push_back((float)touch_value[1]);
+			keras_input_vector.push_back((float)vision_movement);
     	}
     	std::copy(keras_input_vector.begin(),keras_input_vector.end(),&keras_input[particle_index]);
 

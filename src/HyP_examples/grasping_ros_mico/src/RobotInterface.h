@@ -157,6 +157,7 @@ public:
     static bool use_discrete_observation_in_step;
     static bool use_discrete_observation_in_update;
     static bool use_point_five_for_pick; //Used in keras models to have pick success if success prob > 0.5
+    static bool use_combined_prob_output; //Used in keras models to combine the prob from image with prob from observable state
     double epsilon = 0.01; //Smallest step value //Reset during gathering data 
     //double epsilon_multiplier = 2; //for step increments in amazon shelf
     double epsilon_multiplier = 8; //for open table
@@ -240,13 +241,27 @@ public:
 
 	static int KerasInputVectorSize()
 	{
-		return 9;
+		return 9+3;
 	}
 
 	static int KerasObservationVectorSize()
 		{
-			return 8;
+			if(use_combined_prob_output)
+			{
+				return 16;
+			}
+			else
+			{
+				return 8;
+			}
 		}
+	static int KerasImageObservationVectorSize()
+			{
+
+
+					return 8;
+
+			}
 };
 
 
