@@ -27,9 +27,9 @@ public:
         return ((LearningModel*)model_)->GetNextActionFromUser(history_);
     }
 
-    void Update(int action, OBS_TYPE obs){
+    void BeliefUpdate(int action, OBS_TYPE obs){
         history_.Add(action, obs);
-        belief_->Update(action, obs); //Useful for debuggin
+        //belief_->Update(action, obs); //Useful for debuggin
     }
     
     void belief(Belief* b) {
