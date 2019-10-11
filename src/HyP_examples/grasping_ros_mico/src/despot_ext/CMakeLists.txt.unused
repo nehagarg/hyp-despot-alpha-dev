@@ -1,0 +1,33 @@
+cmake_minimum_required(VERSION 3.8)
+
+project(despot_ext)
+
+set(HYPDESPOTALPHA_HOME "../hyp-despot-alpha/")
+set(BINARY_INSTALL_PATH "bin" CACHE PATH "Binary install path")
+set(LIBRARY_INSTALL_PATH "lib" CACHE PATH "Library install path")
+set(INCLUDE_INSTALL_PATH "include" CACHE PATH "Include install path")
+set(CONFIG_INSTALL_PATH "${LIBRARY_INSTALL_PATH}/${PROJECT_NAME}/cmake")
+
+include_directories("${HYPDESPOTALPHA_HOME}/src/HypDespot/include" "include")
+find_package(PythonLibs 2.7 REQUIRED)
+include_directories(${PYTHON_INCLUDE_DIRS})
+
+
+find_library(HYPDESPOTALPHA_LIB NAMES hyp_despot PATHS "${HYPDESPOTALPHA_HOME}/Release/devel/lib" HINTS "${HYPDESPOTALPHA_HOME}/Release")
+
+add_library("${PROJECT_NAME}" STATIC
+  src/DeepLearningSolver.cpp
+  src/LearningModel.cpp
+  #src/LearningPlanningSolver.cpp
+  #src/DespotWithLearnedDefaultPolicy.cpp
+  #src/DespotWithBeliefTracking.cpp
+
+)
+target_link_libraries("${PROJECT_NAME}"
+  "${HYPDESPOTALPHA_LIB}"
+  "${PYTHON_LIBRARIES}"
+)
+
+#install(TARGETS "${PROJECT_NAME}"
+#  RUNTIME DESTINATION "${BINARY_INSTALL_PATH}"
+#)

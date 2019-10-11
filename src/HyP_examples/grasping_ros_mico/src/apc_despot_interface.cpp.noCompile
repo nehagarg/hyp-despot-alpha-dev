@@ -1,0 +1,161 @@
+#include "apc_despot_interface.h"
+#include "solver.h"
+
+
+APCInterface::APCInterface()
+{
+	cout<<"APC Interface is going to initialize"<<endl;
+  ros::NodeHandle nh;
+	control_freq=3;
+	start_state_index_=0; //start state index
+  first_obs=true;
+	action_pub=nh.advertise<std_msgs::Int8>("rob_action",1);
+	obj_pose_sub=nh.subscribe("obj_pose",1,&APCInterface::GetGripperPoseCallback,this);
+	touch_sub=nh.subscribe("touch_feedback",1,&APCInterface::GetTouchCallback,this);
+	joint_sub=nh.subscribe("/joint_states",1,&APCInterface::GetFingerJointCallback,this);
+	action_executed=nh.serviceClient<checkmotionfinished::Ismotionfinished>("IsMotionFinished");
+	initSimulator();
+
+	timer_=nh.createTimer(ros::Duration(1.0/control_freq),&APCInterface::controlLoop,this);
+
+  ros::spin();
+}
+
+APCInterface::~APCInterface()
+{
+
+}
+
+void APCInterface::initSimulator()
+{
+  Globals::config.root_seed=1024;
+  //Globals::config.n_belief_particles=2000;
+  Globals::config.n_particles=300;
+  Globals::config.time_per_move = (1.0/control_freq) * 0.9;
+  Seeds::root_seed(Globals::config.root_seed);
+  cerr << "Random root seed set to " << Globals::config.root_seed << endl;
+
+  // Global random generator
+  double seed = Seeds::Next();
+  Random::RANDOM = Random(seed);
+  cerr << "Initialized global random generator with seed " << seed << endl;
+
+  despot=new GraspingRealArm(start_state_index_); 
+  despot->num_active_particles = 0;
+
+  RandomStreams* streams = NULL;
+  streams = new RandomStreams(Seeds::Next(Globals::config.n_particles), Globals::config.search_depth);
+  
+  //******Initialize Model Lower and Uppper Bound ********//
+  // despot->InitializeParticleLowerBound("smart");
+  despot->InitializeScenarioLowerBound(*streams,"CAP");
+  // despot->InitializeParticleUpperBound("smart", *streams);
+  // despot->InitializeScenarioUpperBound("smart", *streams);
+  solver = new DESPOT(despot, NULL, *streams);
+
+  initBelief();
+}
+
+void APCInterface::initBelief()
+{
+  State* state=despot->CreateStartState();
+
+  Belief* belief=despot->InitialBelief(state);
+  solver->belief(belief);
+}
+
+void APCInterface::controlLoop(const ros::TimerEvent &e)
+{
+	    static double starttime=get_time_second();
+      int action;
+        cout<<"*********************"<<endl;
+	    cout<<"entering control loop"<<endl;
+        cout<<"current time "<<get_time_second()-starttime<<endl;
+
+        ros::Rate err_retry_rate(10);
+
+        action_executed_srv.request.enquiry=true;
+
+        if (!action_executed.call(action_executed_srv))
+        {
+			    ROS_ERROR("Failed to call service checkmotionfinished");
+        	err_retry_rate.sleep();
+        	return;
+        }
+
+        if (!action_executed_srv.response.finished)
+        {
+        	cout<<"moving"<<endl;
+        	return;
+        }
+
+        if (first_obs) //search action based on initial belief
+        {
+          //Action Search
+          action=solver->Search().action;
+          //Publish Action
+          publishAction(action);
+          first_obs=false;
+        }
+        else
+        {
+           //Gather sensor info by call back functions by callback functions
+          copy_pose_stamped(obs,gripper_pose);
+          copy(finger_joint_state,finger_joint_state+4,obs.finger_joint_state);
+          copy(touch_sensor_reading,touch_sensor_reading+48,obs.touch_sensor_reading);
+
+          //Belief Update
+          solver->Update(action,obs); //no action is performed yet
+          //Action Search
+          action=solver->Search().action;
+          //Publish Action
+          publishAction(action);
+
+        }
+}
+
+void APCInterface::GetFingerJointCallback(const sensor_msgs::JointState::ConstPtr joint)
+{
+	//finger joint
+	finger_joint_state[0]=joint->position[6];
+	finger_joint_state[1]=joint->position[7];
+	finger_joint_state[2]=joint->position[8];
+	finger_joint_state[3]=joint->position[9];
+}
+
+void APCInterface::GetGripperPoseCallback(const geometry_msgs::PoseStamped::ConstPtr pose)
+{
+	gripper_pose.header=pose->header;
+  gripper_pose.pose=pose->pose; 
+}
+
+void APCInterface::GetTouchCallback(const std_msgs::Float64MultiArray::ConstPtr touch)
+{
+	for (int i=0;i<touch->data.size();i++)
+	{
+		touch_sensor_reading[i]=touch->data[i];
+	}
+}
+
+void APCInterface::publishAction(int action)
+{
+  std_msgs::Int8 msg;
+  msg.data=action;
+  action_pub.publish(msg);
+}
+
+void APCInterface::copy_pose_stamped(GraspingObservation& obs, geometry_msgs::PoseStamped gripper_pose)
+{
+  obs.gripper_pose.header=gripper_pose.header;
+  obs.gripper_pose.pose=gripper_pose.pose;
+}
+
+int main(int argc, char** argv)
+{
+    ros::init(argc, argv, "apc_pomdp");
+
+    srand(unsigned(time(0)));
+
+   
+    APCInterface* apc_interface=new APCInterface();
+}
