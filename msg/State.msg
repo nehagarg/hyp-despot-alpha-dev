@@ -1,0 +1,3 @@
+geometry_msgs/PoseStamped gripper_pose
+geometry_msgs/PoseStamped object_pose
+int32 observation
