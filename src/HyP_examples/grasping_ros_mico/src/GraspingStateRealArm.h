@@ -29,6 +29,7 @@ class GraspingStateRealArm : public despot::State {
         int vision_movement; //0 for no movement //1 for movement
         std::vector<float> keras_input_vector;
         double theta_z_degree;
+        std::vector<int> pick_success; //Storing in vector to keep it unitialized for true state from simulator
         GraspingStateRealArm() {
             object_id = -1;
             touch[0] = 0;
@@ -41,6 +42,7 @@ class GraspingStateRealArm : public despot::State {
             vision_movement = 0;
             keras_input_vector.resize(0);
             theta_z_degree = 36000.1;
+            //pick_success = 0;
         }
     
     GraspingStateRealArm(const GraspingStateRealArm& initial_state) : State()
@@ -340,7 +342,69 @@ class GraspingStateRealArm : public despot::State {
     {
         return ((x-y < e) && (x-y > -e));
     }
-    
+    std::string text() const
+    {
+    	std::ostringstream out;
+    	char last_char = '\n';
+    	    if(keras_input_vector.size() > 0)
+    	        {
+    	        	for(int i = 0; i < keras_input_vector.size(); i++)
+    	        	{
+    	        		out << keras_input_vector[i] << " ";
+    	        	}
+    	        	out << last_char;
+    	        	return out.str();
+    	        }
+    	    out << gripper_pose.pose.position.x << " " <<
+    	                        gripper_pose.pose.position.y << " " <<
+    	                        gripper_pose.pose.position.z << " " <<
+    	                        gripper_pose.pose.orientation.x << " " <<
+    	                        gripper_pose.pose.orientation.y << " " <<
+    	                        gripper_pose.pose.orientation.z << " " <<
+    	                        gripper_pose.pose.orientation.w << "|" <<
+    	                        object_pose.pose.position.x << " " <<
+    	                        object_pose.pose.position.y << " " <<
+    	                        object_pose.pose.position.z << " " <<
+    	                        object_pose.pose.orientation.x << " " <<
+    	                        object_pose.pose.orientation.y << " " <<
+    	                        object_pose.pose.orientation.z << " " <<
+    	                        object_pose.pose.orientation.w << "|" ;
+    	    for(int i = 0; i < 4; i++)
+    	    {
+    	        out << finger_joint_state[i];
+    	        if(i==3)
+    	        {
+    	            out<<"|";
+    	        }
+    	        else
+    	        {
+    	            out<<" ";
+    	        }
+    	    }
+
+    	    for(int i = 0; i < 2; i++)
+			{
+				out << touch_value[i];
+				if(i==1)
+				{
+					out<<"|";
+				}
+				else
+				{
+					out<<" ";
+				}
+			}
+    	    //std::cout << "Here\n";
+    	    out << theta_z_degree << "|";
+    	    out << vision_movement << "|";
+    	    for(int i = 0; i < pick_success.size(); i++)
+    	    {
+    	    	out << pick_success[i];
+    	    }
+    	    out << "|\n";
+    	    return out.str();
+
+    }
     
 };
 

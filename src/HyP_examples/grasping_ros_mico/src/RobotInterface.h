@@ -195,7 +195,7 @@ public:
 
     int GetGripperStatus(GraspingStateRealArm grasping_state) const;
     int GetGripperStatus(double finger_joint_state_readings[], bool closeCalled) const;
-    void GetObsUsingDefaultFunction(GraspingStateRealArm grasping_state, GraspingObservation& grasping_obs, bool debug = false) const;
+    void GetObsUsingDefaultFunction(GraspingStateRealArm grasping_state, GraspingObservation& grasping_obs, int action, bool debug = false) const;
     void GetNextStateAndObsFromData(GraspingStateRealArm current_grasping_state, GraspingStateRealArm& next_grasping_state, GraspingObservation& grasping_obs,double random_num, int action, bool debug = false) const;
     void GetNextStateAndObsFromDynamicModel(GraspingStateRealArm current_grasping_state, GraspingStateRealArm& next_grasping_state, GraspingObservation& grasping_obs, double random_num, int action, bool debug = false) const;
     SimulationData GetNextStateUsingNearestNeighbourSearch(std::vector<SimulationData> :: iterator xy_lower_bound,

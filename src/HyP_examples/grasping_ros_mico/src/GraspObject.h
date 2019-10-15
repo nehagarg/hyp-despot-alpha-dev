@@ -9,7 +9,7 @@
 #define	GRASPOBJECT_H
 
 #include "ActionSpecification.h"
-#include "simulation_data_reader.h"
+#include "simulation_data.h"
 #include "ScikitModels.h"
 #include "Python.h"
 #include "GraspingStateRealArm.h"
@@ -27,7 +27,7 @@ public:
     std::pair<int, int> getDiscretizationIndex(double x1, double y1);
     std::tuple<int, int,int> getDiscretizationIndex(double x1, double y1,double theta_z_degrees);
     std::vector<SimulationData> getSimulationData(geometry_msgs::PoseStamped object_pose, geometry_msgs::PoseStamped gripper_pose, int action, bool use_next = false);
-    void getSimulationData(geometry_msgs::PoseStamped object_pose, geometry_msgs::PoseStamped gripper_pose, double theta_z_degrees, std::vector<SimulationData> & tempDataVector,int action, bool use_next = false);
+    void getSimulationData(geometry_msgs::PoseStamped object_pose, geometry_msgs::PoseStamped gripper_pose, double theta_z_degrees,  std::vector<SimulationData> & tempDataVector,int action, bool use_next = false);
     geometry_msgs::PoseStamped getInitialObjectPose();
     static std::string getObjectPropertyDir(std::string object_name);
     
@@ -37,6 +37,7 @@ public:
     static std::string object_pointcloud_for_classification_dir ;
     static std::string raw_vision_feedback_dir;
     static std::string with_pca_txt_file_dir;
+    static std::vector<double> default_image_pca[A_PICK];
     
     std::vector<SimulationData> simulationDataCollectionWithObject[A_PICK+1];
     //std::vector<int> simulationDataIndexWithObject[A_PICK+1];

@@ -34,6 +34,7 @@ class GraspingObservation : public ObservationClass {
     std::string rgb_image_name;
     std::string depth_view_image_name;
     std::vector<float> keras_observation;
+    std::vector<double> image_pca_values;
 
    void getObsFromString(std::string obs_string, int version_no)
     {

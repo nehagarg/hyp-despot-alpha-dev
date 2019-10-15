@@ -17,6 +17,7 @@ std::string GraspObject::object_pointcloud_dir = "point_clouds";
 std::string GraspObject::object_pointcloud_for_classification_dir = "point_clouds_for_classification";
 std::string GraspObject::raw_vision_feedback_dir = "raw_vision_feedback_dir";
 std::string GraspObject::with_pca_txt_file_dir = "scripts/structure_data_model";
+std::vector<double> GraspObject::default_image_pca[A_PICK];
 double GraspObject::pick_point_x_diff = -0.03;
 double GraspObject::pick_point_y_diff = 0.0;
 
@@ -355,11 +356,11 @@ std::vector<SimulationData> GraspObject::getSimulationData(geometry_msgs::PoseSt
     std::vector<int> simulationDataIndices;
     if(use_next)
     {
-        simulationDataIndices = discretizedSimulationDataNextState[action][d_index];
+        simulationDataIndices = discretizedSimulationDataWithoutAngleNextState[action][d_index];
     }
     else
     {
-        simulationDataIndices = discretizedSimulationDataInitState[action][d_index];
+        simulationDataIndices = discretizedSimulationDataWithoutAngleInitState[action][d_index];
     }
     for(int i = 0; i < simulationDataIndices.size(); i++)
     {
@@ -368,24 +369,26 @@ std::vector<SimulationData> GraspObject::getSimulationData(geometry_msgs::PoseSt
     return tempDataVector;
 }
 
-void GraspObject::getSimulationData(geometry_msgs::PoseStamped object_pose, geometry_msgs::PoseStamped gripper_pose, double theta_z_degrees, int action, std::vector<SimulationData> & tempDataVector, bool use_next) {
+
+
+void GraspObject::getSimulationData(geometry_msgs::PoseStamped object_pose, geometry_msgs::PoseStamped gripper_pose, double theta_z_degrees, std::vector<SimulationData> & tempDataVector, int action, bool use_next) {
     //std::vector<SimulationData> tempDataVector;
     double x1 = object_pose.pose.position.x - gripper_pose.pose.position.x;
     double y1 = object_pose.pose.position.y - gripper_pose.pose.position.y;
-    std::tuple<int, int> d_index = getDiscretizationIndex(x1,y1, theta_z_degrees);
+    std::tuple<int, int, int> d_index = getDiscretizationIndex(x1,y1, theta_z_degrees);
     std::vector<int> simulationDataIndices;
     if(use_next)
     {
-        tempDataVector = discretizedSimulationDataNextState[action][d_index];
+    	simulationDataIndices = discretizedSimulationDataNextState[action][d_index];
     }
     else
     {
-        tempDataVector = discretizedSimulationDataInitState[action][d_index];
+    	simulationDataIndices = discretizedSimulationDataInitState[action][d_index];
     }
-    /*for(int i = 0; i < simulationDataIndices.size(); i++)
+    for(int i = 0; i < simulationDataIndices.size(); i++)
     {
         tempDataVector.push_back(simulationDataCollectionWithObject[action][simulationDataIndices[i]]);
-    }*/
+    }
     return ;
 }
 

@@ -170,6 +170,7 @@ public:
     RobotInterface* robotInterface;
 
     std::hash<std::string> obsHash;
+    //std::hash<std::vector<int> > obsVectorHash;
     mutable std::map<uint64_t, GraspingObservation> obsHashMap;
     mutable GraspingStateRealArm initial_state;
     mutable std::map<int, double> belief_object_weights;

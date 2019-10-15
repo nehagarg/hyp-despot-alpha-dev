@@ -300,7 +300,7 @@ GraspingRealArm::GraspingRealArm(std::string modelParamFileName, int start_state
         RobotInterface::use_discretized_data = false;
     }
 
-
+    std::cout << "use discretized data " << RobotInterface::use_discretized_data << std::endl;
     if(config["use_probabilistic_step"])
     {
         RobotInterface::use_probabilistic_step = config["use_probabilistic_step"].as<bool>();
@@ -824,15 +824,26 @@ bool GraspingRealArm::Step(State& state, double random_num, int action,
     //Update observation class hash
     std::ostringstream obs_string;
 
-    if(RobotInterface::use_discrete_observation_in_step)
+    uint64_t hashValue;
+    /*if(RobotInterface::version8)
     {
-        robotInterface->PrintDicretizedObs(grasping_obs, action, obs_string);
+    	//std::hash<std::vector<int>> obsVectorHash;
+
+
+    	hashValue = obsVectorHash(grasping_obs.image_pca_values); //Avoid printing obs first for fast computation of hash values
     }
-    else
+    else*/
     {
-        PrintObs(grasping_obs, obs_string);
+    	if(RobotInterface::use_discrete_observation_in_step)
+    	{
+    		robotInterface->PrintDicretizedObs(grasping_obs, action, obs_string);
+    	}
+    	else
+    	{
+    		PrintObs(grasping_obs, obs_string);
+    	}
+    	hashValue = obsHash(obs_string.str());
     }
-    uint64_t hashValue = obsHash(obs_string.str());
     obs.SetIntObs(hashValue);
     if (store_obs_hash) {
         obsHashMap[hashValue] = grasping_obs;

@@ -251,6 +251,17 @@ void VrepDataInterface::GetDefaultPickState(GraspingStateRealArm& grasping_state
 grasping_state.gripper_pose.pose.position.z = grasping_state.gripper_pose.pose.position.z + pick_z_diff;
         grasping_state.gripper_pose.pose.position.x =  pick_x_val; 
         grasping_state.gripper_pose.pose.position.y =  pick_y_val;
+        if(RobotInterface::version8)
+		{
+			if(grasping_state.pick_success.size()> 0)
+			{
+				grasping_state.pick_success[0] = 0;
+			}
+			else
+			{
+				grasping_state.pick_success.push_back(0);
+			}
+		}
         int gripper_status = pick_type + 1;
         if(pick_type == 2)
         {
@@ -267,6 +278,17 @@ grasping_state.gripper_pose.pose.position.z = grasping_state.gripper_pose.pose.p
                 grasping_state.object_pose.pose.position.x = grasping_state.gripper_pose.pose.position.x + x_diff_from_cylinder + 0.03;
                 grasping_state.object_pose.pose.position.y = grasping_state.gripper_pose.pose.position.y + y_diff_from_cylinder;
                 grasping_state.object_pose.pose.position.z = grasping_state.gripper_pose.pose.position.z + z_diff_from_cylinder;
+                if(RobotInterface::version8)
+				{
+					if(grasping_state.pick_success.size()> 0)
+					{
+						grasping_state.pick_success[0] = 1;
+					}
+					else
+					{
+						grasping_state.pick_success.push_back(1);
+					}
+				}
             }
         }
 }
@@ -312,7 +334,10 @@ void VrepDataInterface::GetRewardBasedOnGraspStability(GraspingStateRealArm gras
 
 bool VrepDataInterface::IsValidPick(GraspingStateRealArm grasping_state, GraspingObservation grasping_obs) const {
 bool isValidPick = true;
-    
+    if(grasping_state.pick_success.size() > 0)
+    {
+    	return grasping_state.pick_success[0] == 1;
+    }
     //if object and tip are far from each other set false
     double distance = 0;
     double z_diff_from_cylinder = graspObjects[grasping_state.object_id]->initial_object_pose_z - graspObjects[grasping_state.object_id]->default_initial_object_pose_z;

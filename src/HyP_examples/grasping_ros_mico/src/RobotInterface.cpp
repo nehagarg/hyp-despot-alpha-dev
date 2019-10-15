@@ -664,6 +664,26 @@ void RobotInterface::getSimulationDataFromPythonGeneratedTxtFiles(int object_id)
 				"/with_pca_" + graspObjects[object_id]->GetObject_name() + "_"
 				+ std::to_string(action) + ".txt";
 		simDataReader.parsePythonGeneratedTxtFile(txt_file_name, action, graspObjects[object_id]);
+		if(action !=A_PICK)
+		{
+			if(GraspObject::default_image_pca[action].size() == 0)
+			{
+				txt_file_name = GraspObject::with_pca_txt_file_dir +
+								"/default_image_pca_"
+								+ std::to_string(action) + ".txt";
+				std::ifstream simulationDataFile;
+				simulationDataFile.open(txt_file_name);
+				std::string line;
+				std::getline(simulationDataFile, line);
+				std::istringstream iss(line);
+				double image_pca_components;
+				for(int i = 0; i < 150; i++)
+				{
+					iss >> image_pca_components;
+					GraspObject::default_image_pca[action].push_back(image_pca_components);
+				}
+			}
+		}
 
 	}
 }
@@ -920,6 +940,7 @@ double RobotInterface::ObsProb(GraspingObservation grasping_obs, const GraspingS
     double gripper_position_weight = 2;
     double gripper_orientation_weight = 0;
     double vision_sensor_weight = 2;
+    double image_pca_weight = 2;
     if(action == A_CLOSE)
     {
         finger_weight = 2;
@@ -932,7 +953,19 @@ double RobotInterface::ObsProb(GraspingObservation grasping_obs, const GraspingS
     {
         tau = tau + vision_sensor_weight;
     }
-
+    if(RobotInterface::version8)
+    {
+    	tau = tau + image_pca_weight;
+    }
+    double pca_distance = 0;
+    if(RobotInterface::version8)
+    {
+    	for(int i = 0; i < grasping_obs.image_pca_values.size(); i++)
+    	{
+    		pca_distance = pca_distance + (grasping_obs.image_pca_values[i]- grasping_obs_expected.image_pca_values[i]);
+    	}
+    	pca_distance = pow(pca_distance, 0.5);
+    }
     double finger_distance = 0;
     int gripper_status, gripper_status_expected;
     if(RobotInterface::use_discrete_observation_in_update)
@@ -1029,7 +1062,8 @@ double RobotInterface::ObsProb(GraspingObservation grasping_obs, const GraspingS
                      (sensor_distance*sensor_weight) +
                      (gripper_distance*gripper_position_weight) +
                      (gripper_quaternion_distance*gripper_orientation_weight)+
-                      (vision_sensor_weight*vision_sensor_distance)  ;
+                      (vision_sensor_weight*vision_sensor_distance) +
+                      (image_pca_weight*pca_distance);
     double temperature = 5;
     double prob = pow(2, -1*temperature*total_distance/tau);
 
@@ -1170,6 +1204,11 @@ void RobotInterface::PrintObs(GraspingObservation& grasping_obs, std::ostream& o
         {
           out << "|"  ;
           out << grasping_obs.rgb_image_name;
+          out << "|"  ;
+          for(int i = 0; i < grasping_obs.image_pca_values.size(); i++)
+          {
+        	  out << grasping_obs.image_pca_values[i] << " ";
+          }
         }
         
         
@@ -1545,7 +1584,15 @@ void RobotInterface::GetObsFromData(GraspingStateRealArm current_grasping_state,
 
         if(use_discretized_data)
         {
-            tempDataVector = graspObjects[object_id]->getSimulationData(current_grasping_state.object_pose, current_grasping_state.gripper_pose, action, true);
+        	if(RobotInterface::version8)
+			{
+				graspObjects[object_id]->getSimulationData(current_grasping_state.object_pose, current_grasping_state.gripper_pose, current_grasping_state.get_theta_z_degree(), tempDataVector, action, true);
+			}
+			else
+			{
+				tempDataVector = graspObjects[object_id]->getSimulationData(current_grasping_state.object_pose, current_grasping_state.gripper_pose, action, true);
+			}
+            //tempDataVector = graspObjects[object_id]->getSimulationData(current_grasping_state.object_pose, current_grasping_state.gripper_pose, action, true);
             if(debug)
                 {
                     std::cout << "Matched obs particles" << std::endl;
@@ -1682,18 +1729,22 @@ void RobotInterface::GetObsFromData(GraspingStateRealArm current_grasping_state,
                 grasping_obs.touch_sensor_reading[i] = tempData.touch_sensor_reading[i];
             }
             grasping_obs.vision_movement = tempData.vision_movement;
+            if(RobotInterface::version8)
+            {
+            	grasping_obs.image_pca_values = tempData.image_pca_components;
+            }
             //ConvertObs48ToObs2(tempData.touch_sensor_reading, grasping_obs.touch_sensor_reading);
 
         }
         else
         {
-            GetObsUsingDefaultFunction(current_grasping_state, grasping_obs);
+            GetObsUsingDefaultFunction(current_grasping_state, grasping_obs, action);
         }
 
     }
     else
     {
-        GetObsUsingDefaultFunction(current_grasping_state, grasping_obs);
+        GetObsUsingDefaultFunction(current_grasping_state, grasping_obs, action);
     }
 }
 
@@ -2057,7 +2108,7 @@ void RobotInterface::GetNextStateAndObsFromData(GraspingStateRealArm current_gra
         GetNextStateAndObsFromDynamicModel(current_grasping_state, grasping_state, grasping_obs, random_num, action, debug);
         return;
     }
-
+    //debug = true;
     bool stateInObjectData = false;
     bool stateInGripperData = false;
     int object_id = current_grasping_state.object_id;
@@ -2263,31 +2314,51 @@ void RobotInterface::GetNextStateAndObsFromData(GraspingStateRealArm current_gra
         }
         else //Move to absolute position for PICK action
         {
-            grasping_state.gripper_pose.pose.position.x = tempData.next_gripper_pose.pose.position.x;
-            grasping_state.gripper_pose.pose.position.y = tempData.next_gripper_pose.pose.position.y;
+        	if(RobotInterface::version8)
+        	{
+        		if(grasping_state.pick_success.size() == 0)
+        		{
+        			grasping_state.pick_success.push_back(tempData.pick_success);
+        		}
+        		else
+        		{
+        			grasping_state.pick_success[0] = tempData.pick_success;
+        		}
+        	}
+        	else
+        	{
+        		grasping_state.gripper_pose.pose.position.x = tempData.next_gripper_pose.pose.position.x;
+        		grasping_state.gripper_pose.pose.position.y = tempData.next_gripper_pose.pose.position.y;
 
-            grasping_state.object_pose.pose.position.x = tempData.next_object_pose.pose.position.x;
-            grasping_state.object_pose.pose.position.y = tempData.next_object_pose.pose.position.y;
+        		grasping_state.object_pose.pose.position.x = tempData.next_object_pose.pose.position.x;
+        		grasping_state.object_pose.pose.position.y = tempData.next_object_pose.pose.position.y;
+        	}
 
         }
 
         CheckAndUpdateGripperBounds(grasping_state, action);
 
-
-        //Update next observation
-        grasping_obs.gripper_pose = grasping_state.gripper_pose;
-        grasping_obs.mico_target_pose = tempData.mico_target_pose; //Needed to check if pick is valid
-        for(int i = 0; i < 4; i++)
+        if(!RobotInterface::version8 || (RobotInterface::version8 && action != A_PICK))
         {
-            grasping_state.finger_joint_state[i] = tempData.next_finger_joint_state[i];
-            grasping_obs.finger_joint_state[i] = tempData.next_finger_joint_state[i];
+        	//Update next observation
+        	grasping_obs.gripper_pose = grasping_state.gripper_pose;
+        	grasping_obs.mico_target_pose = tempData.mico_target_pose; //Needed to check if pick is valid
+        	for(int i = 0; i < 4; i++)
+        	{
+        		grasping_state.finger_joint_state[i] = tempData.next_finger_joint_state[i];
+        		grasping_obs.finger_joint_state[i] = tempData.next_finger_joint_state[i];
+        	}
+        	for(int i = 0; i < 2; i++)
+        	{
+        		grasping_obs.touch_sensor_reading[i] = tempData.touch_sensor_reading[i];
+        	}
+        	grasping_obs.vision_movement = tempData.vision_movement;
+        	if(RobotInterface::version8)
+        	{
+        		grasping_obs.image_pca_values = tempData.image_pca_components;
+        	}
+        	//ConvertObs48ToObs2(tempData.touch_sensor_reading, grasping_obs.touch_sensor_reading);
         }
-        for(int i = 0; i < 2; i++)
-        {
-            grasping_obs.touch_sensor_reading[i] = tempData.touch_sensor_reading[i];
-        }
-        grasping_obs.vision_movement = tempData.vision_movement;
-        //ConvertObs48ToObs2(tempData.touch_sensor_reading, grasping_obs.touch_sensor_reading);
 
     }
     else
@@ -2373,10 +2444,10 @@ void RobotInterface::GetNextStateAndObsUsingDefaulFunction(GraspingStateRealArm&
     CheckAndUpdateGripperBounds(grasping_state, action);
 
 
-    GetObsUsingDefaultFunction(grasping_state, grasping_obs);
+    GetObsUsingDefaultFunction(grasping_state, grasping_obs, action);
 }
 
-void RobotInterface::GetObsUsingDefaultFunction(GraspingStateRealArm grasping_state, GraspingObservation& grasping_obs, bool debug) const {
+void RobotInterface::GetObsUsingDefaultFunction(GraspingStateRealArm grasping_state, GraspingObservation& grasping_obs, int action, bool debug) const {
     //Gripper pose
     grasping_obs.gripper_pose = grasping_state.gripper_pose;
 
@@ -2430,6 +2501,13 @@ void RobotInterface::GetObsUsingDefaultFunction(GraspingStateRealArm grasping_st
         ConvertObs48ToObs2(touch_sensor_reading, grasping_obs.touch_sensor_reading);
     }
     grasping_obs.vision_movement = 0;
+    if(RobotInterface::version8)
+    {
+    	if(action!=A_PICK)
+    	{
+    		grasping_obs.image_pca_values = GraspObject::default_image_pca[action];
+    	}
+    }
 }
 
 void RobotInterface::GetReward(GraspingStateRealArm initial_grasping_state, GraspingStateRealArm grasping_state, GraspingObservation grasping_obs, int action, double& reward) const {

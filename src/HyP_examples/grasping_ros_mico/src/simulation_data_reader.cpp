@@ -6,6 +6,7 @@
  */
 
 #include "simulation_data_reader.h"
+#include "ActionSpecification.h"
 
 
 void SimulationData::PrintSimulationData(std::ostream& out){
@@ -219,7 +220,7 @@ void SimulationDataReader::parsePythonGeneratedTxtFile(std::string txt_file_name
 	for(int j = 0; j < num_samples; j++)
 	{
 		std::getline(simulationDataFile, line);
-		std::istringstream iss(line);
+		iss.str(line);
 		SimulationData simData;
 		iss >> simData.current_gripper_pose.pose.position.x;
 		iss >> simData.current_gripper_pose.pose.position.y;
@@ -251,9 +252,11 @@ void SimulationDataReader::parsePythonGeneratedTxtFile(std::string txt_file_name
 			iss >> simData.theta_z_degree_current_object_pose;
 			iss >> simData.theta_z_degree_next_object_pose;
 			iss >> simData.image_file_name;
+			double image_pca_components;
 			for(int i = 0; i < 150; i++)
 			{
-				iss >> simData.image_pca_components[i];
+				iss >> image_pca_components;
+				simData.image_pca_components.push_back(image_pca_components);
 			}
 
 		}
@@ -266,12 +269,12 @@ void SimulationDataReader::parsePythonGeneratedTxtFile(std::string txt_file_name
 	}
 
 	std::getline(simulationDataFile, line);
-	std::istringstream iss(line);
+	iss.str(line);
 	iss >> num_samples;
 	for(int j = 0; j < num_samples; j++)
 	{
 		std::getline(simulationDataFile, line);
-		std::istringstream iss(line);
+		iss.str(line);
 		int rel_x, rel_y, theta_z;
 		iss >> rel_x;
 		iss >> rel_y;
@@ -289,12 +292,12 @@ void SimulationDataReader::parsePythonGeneratedTxtFile(std::string txt_file_name
 	if(action !=A_PICK)
 	{
 		std::getline(simulationDataFile, line);
-		std::istringstream iss(line);
+		iss.str(line);
 		iss >> num_samples;
 		for(int j = 0; j < num_samples; j++)
 		{
 			std::getline(simulationDataFile, line);
-			std::istringstream iss(line);
+			iss.str(line);
 			int rel_x, rel_y, theta_z;
 			iss >> rel_x;
 			iss >> rel_y;
