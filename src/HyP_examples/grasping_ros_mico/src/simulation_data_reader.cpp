@@ -74,6 +74,14 @@ void SimulationData::PrintSimulationData(std::ostream& out){
         out <<  touch_sensor_reading[i]; 
         out << " ";
     }
+    out << "|";
+    //if(RobotInterface::version8)
+    {
+    	out << theta_z_degree_current_object_pose << " ";
+    	out << theta_z_degree_next_object_pose << " ";
+    }
+    out << "|";
+    out << pick_success;
     out << std::endl;
 }
 
@@ -221,6 +229,7 @@ void SimulationDataReader::parsePythonGeneratedTxtFile(std::string txt_file_name
 	{
 		std::getline(simulationDataFile, line);
 		iss.str(line);
+		iss.clear();
 		SimulationData simData;
 		iss >> simData.current_gripper_pose.pose.position.x;
 		iss >> simData.current_gripper_pose.pose.position.y;
@@ -247,8 +256,9 @@ void SimulationDataReader::parsePythonGeneratedTxtFile(std::string txt_file_name
 			        iss >> simData.touch_sensor_reading[i];
 			    }
 
-
-			iss >> simData.vision_movement;
+			double vision_movement_double;
+			iss >> vision_movement_double;
+			simData.vision_movement = int(vision_movement_double);
 			iss >> simData.theta_z_degree_current_object_pose;
 			iss >> simData.theta_z_degree_next_object_pose;
 			iss >> simData.image_file_name;
@@ -266,21 +276,30 @@ void SimulationDataReader::parsePythonGeneratedTxtFile(std::string txt_file_name
 			iss >> simData.pick_success;
 		}
 		graspObject->simulationDataCollectionWithObject[action].push_back(simData);
+		/*if(j==1584)
+		{
+			simData.PrintSimulationData();
+		}*/
 	}
 
 	std::getline(simulationDataFile, line);
 	iss.str(line);
+	iss.clear();
 	iss >> num_samples;
 	for(int j = 0; j < num_samples; j++)
 	{
 		std::getline(simulationDataFile, line);
 		iss.str(line);
+		iss.clear();
 		int rel_x, rel_y, theta_z;
 		iss >> rel_x;
 		iss >> rel_y;
 		iss >> theta_z;
 		int num_entries;
 		iss >> num_entries;
+		//std::cout << "Line is " << line << std::endl;
+		//std::cout << "Iss str is " << iss.str() << std::endl;
+		//std::cout << "Index " << rel_x << " " << rel_y << " " << theta_z << " " << num_entries << std::endl;
 		for(int i = 0; i < num_entries; i++)
 		{
 			int entry;
@@ -293,11 +312,13 @@ void SimulationDataReader::parsePythonGeneratedTxtFile(std::string txt_file_name
 	{
 		std::getline(simulationDataFile, line);
 		iss.str(line);
+		iss.clear();
 		iss >> num_samples;
 		for(int j = 0; j < num_samples; j++)
 		{
 			std::getline(simulationDataFile, line);
 			iss.str(line);
+			iss.clear();
 			int rel_x, rel_y, theta_z;
 			iss >> rel_x;
 			iss >> rel_y;

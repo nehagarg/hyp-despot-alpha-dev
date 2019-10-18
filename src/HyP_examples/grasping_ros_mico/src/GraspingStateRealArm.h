@@ -30,6 +30,7 @@ class GraspingStateRealArm : public despot::State {
         std::vector<float> keras_input_vector;
         double theta_z_degree;
         std::vector<int> pick_success; //Storing in vector to keep it unitialized for true state from simulator
+        uint64_t obs_hash_value; //Used in Robot versionn 8 for fast obs prob computation
         GraspingStateRealArm() {
             object_id = -1;
             touch[0] = 0;
@@ -42,6 +43,7 @@ class GraspingStateRealArm : public despot::State {
             vision_movement = 0;
             keras_input_vector.resize(0);
             theta_z_degree = 36000.1;
+            //obs_hash_value = -1
             //pick_success = 0;
         }
     
@@ -74,6 +76,8 @@ class GraspingStateRealArm : public despot::State {
         touch_value[1] = initial_state.touch_value[1];
         closeCalled = initial_state.closeCalled;
         vision_movement = initial_state.vision_movement;
+        theta_z_degree = initial_state.theta_z_degree;
+        pick_success = initial_state.pick_success;
     }
 
     ~GraspingStateRealArm() {
@@ -107,6 +111,7 @@ class GraspingStateRealArm : public despot::State {
     
     double get_theta_z_degree()
     {
+    	//std::cout << "Current theta_z_degree value " << theta_z_degree << std::endl;
     	if(theta_z_degree > 36000)
     	{
     	Quaternion q(object_pose.pose.orientation.x,
@@ -117,6 +122,7 @@ class GraspingStateRealArm : public despot::State {
 		Quaternion::toEulerAngle(q,roll, pitch,yaw);
 		theta_z_degree =  yaw*180/3.14;
     	}
+    	//std::cout << "Returning " << theta_z_degree << std::endl;
     	return theta_z_degree;
     }
     void get_keras_input(std::vector<float>& keras_input, int particle_index = 0)
@@ -401,7 +407,7 @@ class GraspingStateRealArm : public despot::State {
     	    {
     	    	out << pick_success[i];
     	    }
-    	    out << "|\n";
+    	    out << "|" << object_id << "\n";
     	    return out.str();
 
     }

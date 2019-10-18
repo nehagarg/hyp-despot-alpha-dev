@@ -102,6 +102,7 @@ void VrepDataInterface::CreateStartState(GraspingStateRealArm& initial_state, st
 					initial_state.object_pose.pose.orientation.y,
 											 initial_state.object_pose.pose.orientation.z,
 											 initial_state.object_pose.pose.orientation.w);
+			initial_state.get_theta_z_degree();
 
 
         }

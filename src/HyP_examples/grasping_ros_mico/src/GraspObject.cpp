@@ -331,6 +331,7 @@ std::pair<int, int> GraspObject::getDiscretizationIndex(double x1, double y1) {
 std::tuple<int, int,int> GraspObject::getDiscretizationIndex(double x1, double y1,double theta_z_degree) {
     int x1_index = (int)(round(x1/discretization_step));
     int y1_index = (int)(round(y1/discretization_step));
+    //std::cout << "theta_z_degree " << theta_z_degree << std::endl;
     while (theta_z_degree < -180)
     {
 		theta_z_degree = theta_z_degree + 360;
@@ -376,6 +377,7 @@ void GraspObject::getSimulationData(geometry_msgs::PoseStamped object_pose, geom
     double x1 = object_pose.pose.position.x - gripper_pose.pose.position.x;
     double y1 = object_pose.pose.position.y - gripper_pose.pose.position.y;
     std::tuple<int, int, int> d_index = getDiscretizationIndex(x1,y1, theta_z_degrees);
+    //std::cout << "Query " << action << " " << use_next << " " << std::get<0>(d_index) << " " << std::get<1>(d_index) << " " << std::get<2>(d_index) << std::endl;
     std::vector<int> simulationDataIndices;
     if(use_next)
     {
@@ -385,6 +387,7 @@ void GraspObject::getSimulationData(geometry_msgs::PoseStamped object_pose, geom
     {
     	simulationDataIndices = discretizedSimulationDataInitState[action][d_index];
     }
+    //std::cout << "Num entries retreived " << simulationDataIndices.size() << std::endl;
     for(int i = 0; i < simulationDataIndices.size(); i++)
     {
         tempDataVector.push_back(simulationDataCollectionWithObject[action][simulationDataIndices[i]]);

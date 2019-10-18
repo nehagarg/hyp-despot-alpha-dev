@@ -797,12 +797,19 @@ bool GraspingRealArm::StepActual(State& state, double random_num, int action,
     bool ans = robotInterface->StepActual(grasping_state, random_num, action, reward, grasping_obs);
 
 
+    //Clear observations stored during search
+    obsHashMap.clear();
 
     //Update observation class hash and store in hashMap
+
     std::ostringstream obs_string;
     PrintObs(grasping_obs, obs_string);
     uint64_t hashValue = obsHash(obs_string.str());
     obs.SetIntObs(hashValue);
+    if(RobotInterface::version8)
+    {
+    	grasping_state.obs_hash_value = hashValue;
+    }
     obsHashMap[hashValue] = grasping_obs;
 
     return ans;
@@ -815,7 +822,7 @@ bool GraspingRealArm::Step(State& state, double random_num, int action,
         double& reward, ObservationClass& obs) const {
 
     //std::cout << " Starting step \n";
-    double step_start_t = get_time_second();
+    //double step_start_t = get_time_second();
     GraspingStateRealArm& grasping_state = static_cast<GraspingStateRealArm&> (state);
     GraspingObservation grasping_obs;
 
@@ -825,14 +832,17 @@ bool GraspingRealArm::Step(State& state, double random_num, int action,
     std::ostringstream obs_string;
 
     uint64_t hashValue;
-    /*if(RobotInterface::version8)
+    if(RobotInterface::version8)
     {
     	//std::hash<std::vector<int>> obsVectorHash;
 
 
-    	hashValue = obsVectorHash(grasping_obs.image_pca_values); //Avoid printing obs first for fast computation of hash values
+    	//hashValue = obsVectorHash(grasping_obs.image_pca_values); //Avoid printing obs first for fast computation of hash values
+    	hashValue = obsHashMap.size();
+    	grasping_state.obs_hash_value = hashValue;
+
     }
-    else*/
+    else
     {
     	if(RobotInterface::use_discrete_observation_in_step)
     	{
@@ -845,14 +855,14 @@ bool GraspingRealArm::Step(State& state, double random_num, int action,
     	hashValue = obsHash(obs_string.str());
     }
     obs.SetIntObs(hashValue);
-    if (store_obs_hash) {
+    if (store_obs_hash || Globals::config.track_alpha_vector) {
         obsHashMap[hashValue] = grasping_obs;
     }
     //Not storing the hash value in map for all cases as the observation returned is not compared using ObsProb function
     //Need to do so in StepActual
 
-    double step_end_t = get_time_second();
-   // std::cout << "Step took " << step_end_t - step_start_t << std::endl;
+    //double step_end_t = get_time_second();
+    //std::cout << "Step took " << step_end_t - step_start_t << std::endl;
     //Decide if terminal state is reached
 
     return ans;
@@ -892,6 +902,7 @@ void GraspingRealArm::GetObservationProbability(const std::vector<float>& keras_
 
 /* Functions related to beliefs and starting states.*/
 double GraspingRealArm::ObsProb(ObservationClass obs, const State& state, int action) const {
+	//double step_start_t = get_time_second();
     const GraspingStateRealArm& grasping_state = static_cast<const GraspingStateRealArm&> (state);
     std::map<uint64_t,GraspingObservation>::iterator it = obsHashMap.find(obs.GetHash());
     if(it == obsHashMap.end())
@@ -900,8 +911,28 @@ double GraspingRealArm::ObsProb(ObservationClass obs, const State& state, int ac
         assert(false);
     }
     GraspingObservation grasping_obs = it->second;
+    double obs_prob;
+    if(RobotInterface::version8)
+    {
+    	it = obsHashMap.find(grasping_state.obs_hash_value);
+    	//std::cout << "Looking for observation " << grasping_state.obs_hash_value;
+    	 if(it == obsHashMap.end())
+    	    {
+    	        std::cout << "Ver 8: Obs " << grasping_state.obs_hash_value << "not in hash map. This should not happen" <<  std::endl;
+    	        assert(false);
+    	    }
+    	 GraspingObservation grasping_obs_expected = it->second;
+    	 obs_prob = robotInterface->ObsProb(grasping_obs, grasping_obs_expected, action);
 
-    return robotInterface->ObsProb(grasping_obs, grasping_state, action);
+    }
+    else
+    {
+    	obs_prob = robotInterface->ObsProb(grasping_obs, grasping_state, action);
+    }
+    //double step_end_t = get_time_second();
+    //std::cout << "Obs Prob  took" << step_end_t - step_start_t << std::endl;
+    return obs_prob;
+
 }
 
 
@@ -1160,6 +1191,11 @@ void GraspingRealArm::PrintState(const State& state, std::ostream& out) const {
     robotInterface->PrintState(grasping_state, out);
     if(&out != &std::cout || RobotInterface::version8)
     {
+    	out << grasping_state.theta_z_degree << "*" ;
+    	for(int i = 0; i < grasping_state.pick_success.size(); i++)
+    	{
+    		out << grasping_state.pick_success[i] << "*" ;
+    	}
         out << grasping_state.object_id << "\n";
     }
 
@@ -1171,6 +1207,7 @@ void GraspingRealArm::PrintParticles(const std::vector<State*> particles, std::o
 	{
 		const GraspingStateRealArm& grasping_state = static_cast<const GraspingStateRealArm&> (*(particles[i]));
 		 out << grasping_state.object_id << "|";
+		 out << grasping_state.theta_z_degree << "*" ;
 		robotInterface->PrintState(grasping_state, out);
 	}
 }

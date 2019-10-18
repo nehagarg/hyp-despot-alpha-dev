@@ -751,6 +751,7 @@ std::map<std::string, std::vector<int> > RobotInterface::getSimulationData(int o
 bool RobotInterface::Step(GraspingStateRealArm& grasping_state, double random_num, int action, double& reward, GraspingObservation& grasping_obs, bool debug) const {
 GraspingStateRealArm initial_grasping_state = grasping_state;
 
+//debug = true;
 /*if(use_keras_models) //Used during belief update. Search uses the batch call
     {
     	std::vector<float> keras_input;
@@ -931,8 +932,11 @@ double RobotInterface::ObsProb(GraspingObservation grasping_obs, const GraspingS
         	double prob = (double)((outputs[0].flat<float>().data())[0]);
         	return prob;
         }*/
-    GetObsFromData(grasping_state, grasping_obs_expected, despot::Random::RANDOM.NextDouble(), action);
 
+    GetObsFromData(grasping_state, grasping_obs_expected, despot::Random::RANDOM.NextDouble(), action);
+    return ObsProb(grasping_obs, grasping_obs_expected, action);
+}
+    double RobotInterface::ObsProb(GraspingObservation grasping_obs, GraspingObservation grasping_obs_expected, int action) const {
    // PrintObs(grasping_obs_expected);
     double total_distance = 0;
     double finger_weight = 1;
@@ -962,9 +966,10 @@ double RobotInterface::ObsProb(GraspingObservation grasping_obs, const GraspingS
     {
     	for(int i = 0; i < grasping_obs.image_pca_values.size(); i++)
     	{
-    		pca_distance = pca_distance + (grasping_obs.image_pca_values[i]- grasping_obs_expected.image_pca_values[i]);
+    		pca_distance = pca_distance + ((grasping_obs.image_pca_values[i]- grasping_obs_expected.image_pca_values[i])*(grasping_obs.image_pca_values[i]- grasping_obs_expected.image_pca_values[i]));
     	}
     	pca_distance = pow(pca_distance, 0.5);
+    	pca_distance = pca_distance/grasping_obs.image_pca_values.size();
     }
     double finger_distance = 0;
     int gripper_status, gripper_status_expected;
@@ -1314,11 +1319,13 @@ void RobotInterface::GenerateGaussianParticleFromState_V8(GraspingStateRealArm& 
 			double roll, pitch,yaw;
 			Quaternion::toEulerAngle(q,roll, pitch,yaw);
 			double new_yaw = yaw + angle_add;
+			//std::cout << "New yaw " << new_yaw*180/3.14;
 			Quaternion::toQuaternion(new_yaw,pitch,roll,initial_state.object_pose.pose.orientation.x,
 					initial_state.object_pose.pose.orientation.y,
 											 initial_state.object_pose.pose.orientation.z,
 											 initial_state.object_pose.pose.orientation.w);
-
+			initial_state.theta_z_degree = new_yaw*180/3.14;
+			//std::cout << "Theta_z_set " << initial_state.get_theta_z_degree();
 
 }
 
@@ -1347,10 +1354,13 @@ void RobotInterface::GenerateUniformParticleFromState_V8(GraspingStateRealArm& i
 			double roll, pitch,yaw;
 			Quaternion::toEulerAngle(q,roll, pitch,yaw);
 			double new_yaw = yaw + angle_add;
+			//std::cout << "New yaw " << new_yaw*180/3.14;
 			Quaternion::toQuaternion(new_yaw,pitch,roll,initial_state.object_pose.pose.orientation.x,
 					initial_state.object_pose.pose.orientation.y,
 											 initial_state.object_pose.pose.orientation.z,
 											 initial_state.object_pose.pose.orientation.w);
+			initial_state.theta_z_degree = new_yaw*180/3.14;
+			//std::cout << "Theta_z_set " << initial_state.get_theta_z_degree();
 }
 
 
@@ -2300,6 +2310,7 @@ void RobotInterface::GetNextStateAndObsFromData(GraspingStateRealArm current_gra
 
             grasping_state.object_pose.pose.position.x = grasping_state.gripper_pose.pose.position.x + tempData.next_object_pose.pose.position.x - (tempData.next_gripper_pose.pose.position.x + next_gripper_pose_boundary_margin_x );
             grasping_state.object_pose.pose.position.y = grasping_state.gripper_pose.pose.position.y + tempData.next_object_pose.pose.position.y - (tempData.next_gripper_pose.pose.position.y + next_gripper_pose_boundary_margin_y );
+            grasping_state.theta_z_degree = current_grasping_state.theta_z_degree + tempData.theta_z_degree_next_object_pose - tempData.theta_z_degree_current_object_pose;
             if(use_probabilistic_step)
             {
                 if (action < A_CLOSE)
