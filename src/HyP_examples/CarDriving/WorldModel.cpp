@@ -1,6 +1,7 @@
 #include<limits>
 #include<cmath>
 #include<cstdlib>
+#include<numeric>
 #include"WorldModel.h"
 
 #include <despot/GPUcore/thread_globals.h>
