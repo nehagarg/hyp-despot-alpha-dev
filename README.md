@@ -99,7 +99,7 @@ For model using parallelization, additional GPU model needs to be built as descr
 ```
 DEVICE float Dvc_ObsProb(OBS_TYPE& obs, Dvc_State& state, int action)
 ```
-in Dvc_DSPOMDP model. For example see defintion in src/HyP_examples/unkown_navigation/src/GPU_Unk_nav/GPU_UncNavigation.cu This function should be linked to global function pointer DvcModelObsProb_ like in For example see  src/HyP_examples/unkown_navigation/src/GPU_Unk_nav/main.cu
+in Dvc_DSPOMDP model. For example see defintion in src/HyP_examples/unkown_navigation/src/GPU_Unk_nav/GPU_UncNavigation.cu This function should be linked to global function pointer DvcModelObsProb_ .For example see  src/HyP_examples/unkown_navigation/src/GPU_Unk_nav/main.cu
 
 2) Specify one additional function
 ```
