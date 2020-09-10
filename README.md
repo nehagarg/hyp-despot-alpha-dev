@@ -1,95 +1,109 @@
-# HyP-DESPOT-Release
+# HyP-DESPOT-ALPHA
 
-The HyP-DESPOT package is developed based on [the DESPOT package](https://github.com/AdaCompNUS/despot). The API in HyP-DESPOT closely follows that in the DESPOT package. See [here](https://github.com/AdaCompNUS/despot/tree/API_redesign/doc) for detailed documentations of the DESPOT package.
+This is the source code of Hyp-DESPOT-ALPHA algorithm published in RSS 2019 paper:
 
-The algorithm was initially published in our RSS paper:
+Neha Priyadarshini Garg, David Hsu, Wee Sun Lee : DESPOT-Alpha: Online POMDP Planning with Large State and Observation Spaces. Robotics: Science & Systems XV 2019  [PDF](http://www.roboticsproceedings.org/rss15/p06.pdf).
 
-Cai, P., Luo, Y., Hsu, D. and Lee, W.S., HyP-DESPOT: A Hybrid Parallel Algorithm for Online Planning under Uncertainty. Robotics: Science & System 2018. [(PDF)](http://motion.comp.nus.edu.sg/wp-content/uploads/2018/06/rss18hyp.pdf)
+The code was tested on ubuntu 16 with cuda 9 with GTX1080 GPUs. To run this code for for problems mentioned the paper:
 
-## Getting Started
+1. Clone HyP-Despot-LargeObservation-Without-Grasping branch for the ubuntu 16 code :
+```git clone https://github.com/AdaCompNUS/HyP-DESPOT-Release.git -b HyP-Despot-LargeObservation-Without-Grasping
+```
+For ubuntu 18 and cuda 11, use master branch. Though ubuntu 18 and cuda 11 version hasn't been tested.
+2. Compile the code :
+```mkdir build
+   cd build
+   cmake -G "Eclipse CDT4 - Unix Makefiles" -D CMAKE_BUILD_TYPE=Release ../
+   make
+```
+3. Run the code :
 
-### Pre-requisites
-* ROS
-  * ROS enables HyP-DESPOT to bridge with external system 
-* Catkin
-  * Catkin is a compliation tool designed for ROS based on CMake.
-* Cmake 
-  * Version >=3.8 is required for CUDA integration
-* CUDA and an NVIDIA GPU with computational capacity >=3.0
-* libunwind
-  * For memory checking and error handling
-  
-### 1. Create a catkin workspace:
-```bash
-source /opt/ros/kinetic/setup.bash
-mkdir -p ~/catkin_ws/src
-cd ~/catkin_ws/
-catkin_make
-source ~/catkin_ws/devel/setup.bash
+* [TigerI](src/HyP_examples/tiger/src) CPU only
+For Despot
 ```
-### 2. Download the HyP-DESPOT package:
-```bash
-cd ~/catkin_ws/src
-git clone https://github.com/AdaCompNUS/HyP-DESPOT-Release.git
-mv HyP-DESPOT-Release HyP_despot
+./devel/lib/hyp_despot/hyp_despot_tiger -v 3 -t 1 -n 500
 ```
-### 3. Compile HyP-DESPOT and examples:
-```bash
-cd ~/catkin_ws
-catkin_make --pkg hyp_despot -DCMAKE_BUILD_TYPE=Release 
+For Despot-ALPHA
 ```
-## Main Extensions in HyP-DESPOT from the DESPOT Package
-The source files of HyP-DESPOT and examples are in folder [src/HypDespot](src/HypDespot). Main extensions from DESPOT include:
+./devel/lib/hyp_despot/hyp_despot_tiger -v 3 -t 1 -n 100 --nobs 10 --solver BTDESPOTALPHAST
 ```
-include/despot/GPUinterface/             Header files: GPU versions of interface classes in DESPOT
-include/despot/GPUcore/                  Header files: GPU versions of core classes in DESPOT
-include/despot/GPUutil/                  Header files: GPU versions of utility classes in DESPOT
-src/GPUinterface                         Source files: GPU versions of interface classes in DESPOT
-src/GPUcore                              Source files: GPU versions of core classes in DESPOT
-src/GPUutil                              Source files: GPU versions of utility classes in DESPOT
-src/solvers/Hyp_despot.cu                Main file of the HyP-DESPOT solver
-src/Parallel_planner.cu                  Parallel extension of the planner class in DESPOT
-src/GPUrandom_streams.cu                 GPU version of the RandomStreams class in DESPOT
+* [Danger Tag](src/HyP_examples/tag/src) CPU only
+For Despot
 ```
-See this [GPU model documentation](doc/Build_GPU_POMDP_model_with_CUDA.md) for detailed descriptions on these extensions and how to build a custom GPU POMDP model.
+./devel/lib/hyp_despot/hyp_despot_danger_tag -v 3 -m ../src/HyP_examples/tag/config_files/danger_tag/openSingleR14x14-movementError6.txt -l DANGERTAG -t 1 -n 1600
 
-## Examples
-The HyP-DESPOT package implements the three examples presented in our [RSS paper](http://motion.comp.nus.edu.sg/wp-content/uploads/2018/06/rss18hyp.pdf). They include:
+```
+For Despot-ALPHA
+```
+./devel/lib/hyp_despot/hyp_despot_danger_tag -v 3 -m ../src/HyP_examples/tag/config_files/danger_tag/openSingleR14x14-movementError6.txt -l DANGERTAG -t 1 -n 50 --nobs 10 --solver=BTDESPOTALPHAST
 
-* Autonomous driving in a crowd [(HyP_examples/CarDriving/)](src/HyP_examples/CarDriving/). The key files in this example are:
 ```
-ped_pomdp.cpp                       CPU POMDP model of the car driving problem
-GPU_Car_Drive/GPU_Car_Drive.cu      GPU POMDP model of the car driving problem
-simulator.cpp                       Custom World (simulator) of the problem
-controller.cpp                      The custom planner and the main function
+* [Navigation in unknown environment](src/HyP_examples/unknown_navigation/src)
+For Despot
 ```
+./devel/lib/hyp_despot/hyp_despot_unknav -v 3 -m ../src/HyP_examples/unkown_navigation/config_files/new_belief_16bits_02noise.txt -n 100 --CPU 1 --num_thread 10 --GPU 1 --GPUID <GPUID> -t 1 -l RANDOM -d 60
 
-* Navigation in a partially known map [(HyP_examples/unkown_navigation/)](src/HyP_examples/unkown_navigation/src). The key files in this example are:
 ```
-Unc_Navigation/UncNavigation.cpp       CPU POMDP model of the navigation problem
-GPU_Unk_nav/GPU_UncNavigation.cu       GPU POMDP model of the navigation problem
-Unc_Navigation/main.cu                 The custom planner and the main function
+For Despot-ALPHA
 ```
+./devel/lib/hyp_despot/hyp_despot_unknav -v 3 -m ../src/HyP_examples/unkown_navigation/config_files/new_belief_16bits_02noise.txt -d 60 -n 100 --nobs 10 --CPU 1 --num_thread 10 --GPU 1 --GPUID <GPUID> -t 1 -l RANDOM  --solver=BTDESPOTALPHAST
 
-* Multi-agent RockSample [(HyP_examples/ma_rock_sample/)](src/HyP_examples/ma_rock_sample/src). The key files in this example are:
 ```
-ma_rock_sample/ma_rock_sample.cpp       CPU POMDP model of the car driving problem
-GPU_MA_RS/GPU_ma_rock_sample.cu         GPU POMDP model of the MARS problem
-ma_rock_sample/main.cu                  The custom planner and the main function
-```
+Set --CPU and --GPU to 0 for non-parallel version
+For navigation with information gathering actions, give ../src/HyP_examples/unkown_navigation/config_files/new_belief_16bits_04noise_stay002.txt as argument to -m
 
-## (Optional) Debugging Tools in HyP-DESPOT Package
-The  [tools](tools) folder provides tools for debugging HyP-DESPOT when implementing new problems, including:
+* [Multi-agent RockSample](src/HyP_examples/ma_rock_sample/src)
+
+For Despot
 ```
-Particles*.txt                 Text files: particles (starting states of scenarios) for different simulation steps to be loaded and used to fix scenarios in HyP-DESPOT.
-Streams*.txt                   Text files: random streams in scenarios for different simulation steps to be loaded and used to fix scenarios in HyP-DESPOT
-draw_car_cross.py              Script: to visualize the execution record output by HyP-DESPOT (through cout and cerr)
-run_Car_hyp_debug.sh           Script: to run experiments with HyP-DESPOT
+./devel/lib/hyp_despot/hyp_despot_mars -v 3 -m ../src/HyP_examples/ma_rock_sample/config_files/continuous_obs_2agents.txt --CPU 1 --num_thread 10 --GPU 1 --GPUID <GPUID> -n 50  -t 1
+
 ```
-The best way to debug is to fix the scenarios and output the search process. This can be acheived by setting the **FIX_SCENARIO** flag defined in [GPUcore/thread_globals.h](src/HypDespot/include/despot/GPUcore/thread_globals.h). Possible vaues to be set are:
+For Despot-ALPHA
 ```
-0         Normal mode
-1         Read scenarios from Particles*.txt and Streams*.txt
-2         Run in normal mode and export Particles*.txt and Streams*.txt during each simulation step
+./devel/lib/hyp_despot/hyp_despot_mars -v 3 -m ../src/HyP_examples/ma_rock_sample/config_files/continuous_obs_2agents.txt --CPU 1 --num_thread 10 --GPU 1 --GPUID <GPUID> --nobs 10 -n 50  -t 1 --solver=BTDESPOTALPHAST
+
 ```
-Alternatively, setting the **DESPOT::Debug_mode** defined in [despot.cpp](src/HypDespot/src/solver/despot.cpp) to be **true** will fix all random seeds used in HyP-DESPOT, and thus the search will be fully determinized for easier debugging.
+Set --CPU and --GPU to 0 for non-parallel version
+For single agent, give ../src/HyP_examples/ma_rock_sample/config_files/continuous_obs.txt as argument to -m . For discrete obsservation with 1 agent, give ../src/HyP_examples/ma_rock_sample/config_files/1_agent.txt to -m. If -m is not specified, by default discrete observation and 2 agents will be used. --size can be used to specify size of the square grid and --number to specify number of rocks. Default size is 15 and default number of rocks is 15.
+
+
+
+* [Autonomous driving in a crowd](src/HyP_examples/CarDriving/src)
+For Despot
+```
+./devel/lib/hyp_despot/hyp_despot_CarDriving -v 3 -s 200 -t 0.1 -n 1000 --max-policy-simlen 90 --GPUID <GPUID>
+
+```
+For Despot-ALPHA
+```
+./devel/lib/hyp_despot/hyp_despot_CarDriving -v 3 -s 200 -t 0.1 --nobs 10 -n 1000 --max-policy-simlen 6 -v 3 --GPUID <GPUID>  --econst 0.95 --oeconst 0.01 -l DONOTHING -d 10 --solver=BTDESPOTALPHAST
+
+```
+Set --CPU and --GPU to 0 for non-parallel version. Also set -n to 200 for DESPOT and to 100 for DESPOT-ALPHA for non parallel version.
+
+
+The code is based on [HyP-DESPOT package](https://github.com/AdaCompNUS/hyp-despot) which closely follows the [API](https://github.com/AdaCompNUS/despot/tree/API_redesign/doc) in [the DESPOT package](https://github.com/AdaCompNUS/despot).
+
+To use DESPOT-ALPHA for your own problem, a POMDP model needs to be created. For model not using parallelization, DESPOT package [tutorial](https://github.com/AdaCompNUS/despot/blob/API_redesign/doc/cpp_model_doc/Tutorial%20on%20Using%20DESPOT%20with%20cpp%20model.md) needs to followed. In addition, dummy GPU functions need to be declared for code compilation. See [tiger](src/HyP_examples/tiger/src/tiger.h) problem for example.
+
+For model using parallelization, additional GPU model needs to be built as described in this [doc](doc/Build_GPU_POMDP_model_with_CUDA.md) for HyP-Despot. For HyP-Despot-Alpha, apart from this,
+
+1) Specify one additional function
+```
+DEVICE float Dvc_ObsProb(OBS_TYPE& obs, Dvc_State& state, int action)
+```
+in Dvc_DSPOMDP model. For example see defintion in src/HyP_examples/unkown_navigation/src/GPU_Unk_nav/GPU_UncNavigation.cu This function should be linked to global function pointer DvcModelObsProb_ like in For example see  src/HyP_examples/unkown_navigation/src/GPU_Unk_nav/main.cu
+
+2) Specify one additional function
+```
+Dvc_State* GetPointerToParticleList(int offset, Dvc_State* full_list) const;
+```
+in DSPOMDP model. For example see  src/HyP_examples/unkown_navigation/src/Unc_Navigation/UncNavigation.h and src/HyP_examples/unkown_navigation/src/GPU_Unk_nav/GPU_UncNavigation.cu
+
+3) Change the GPU memory allocation size in
+```Dvc_State* AllocGPUParticles(int numParticles, MEMORY_MODE mode, Dvc_State*** particles_for_all_actions) const
+```
+function. See the [commit](https://github.com/nehagarg/hyp-despot-alpha-dev/commit/0ae03f5a87dc8cedd534d5af225ff12e45aa87e5) for example.
+
+```
