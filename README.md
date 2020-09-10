@@ -4,7 +4,7 @@ This is the source code of Hyp-DESPOT-ALPHA algorithm published in RSS 2019 pape
 
 Neha Priyadarshini Garg, David Hsu, Wee Sun Lee : DESPOT-Alpha: Online POMDP Planning with Large State and Observation Spaces. Robotics: Science & Systems XV 2019  [PDF](http://www.roboticsproceedings.org/rss15/p06.pdf).
 
-The code was tested on ubuntu 16 with cuda 9 with GTX1080 GPUs. To run this code for for problems mentioned the paper:
+The code was tested on ubuntu 16 with cuda 9 with GTX1080 GPUs. To run this code for the problems described in the paper:
 
 1. Clone HyP-Despot-LargeObservation-Without-Grasping branch for the ubuntu 16 code :
 ```
