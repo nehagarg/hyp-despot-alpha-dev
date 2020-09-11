@@ -11,6 +11,7 @@ The code was tested on ubuntu 16 with cuda 9 with GTX1080 GPUs. To run this code
 git clone https://github.com/AdaCompNUS/HyP-DESPOT-Release.git -b HyP-Despot-LargeObservation-Without-Grasping
 ```
 For ubuntu 18 and cuda 11, use master branch. Though ubuntu 18 and cuda 11 version hasn't been tested.
+
 2. Compile the code :
 ```
 mkdir build
@@ -70,7 +71,7 @@ For Despot-ALPHA
 
 ```
 Set --CPU and --GPU to 0 for non-parallel version
-For single agent, give ../src/HyP_examples/ma_rock_sample/config_files/continuous_obs.txt as argument to -m . For discrete obsservation with 1 agent, give ../src/HyP_examples/ma_rock_sample/config_files/1_agent.txt to -m. If -m is not specified, by default discrete observation and 2 agents will be used. --size can be used to specify size of the square grid and --number to specify number of rocks. Default size is 15 and default number of rocks is 15.
+For single agent, give ../src/HyP_examples/ma_rock_sample/config_files/continuous_obs.txt as argument to -m . For discrete observation with 1 agent, give ../src/HyP_examples/ma_rock_sample/config_files/1_agent.txt to -m. If -m is not specified, by default discrete observation and 2 agents will be used. --size can be used to specify size of the square grid and --number to specify number of rocks. Default size is 15 and default number of rocks is 15.
 
 
 
@@ -91,15 +92,15 @@ Set --CPU and --GPU to 0 for non-parallel version. Also set -n to 200 for DESPOT
 
 The code is based on [HyP-DESPOT package](https://github.com/AdaCompNUS/hyp-despot) which closely follows the [API](https://github.com/AdaCompNUS/despot/tree/API_redesign/doc) in [the DESPOT package](https://github.com/AdaCompNUS/despot).
 
-To use DESPOT-ALPHA for your own problem, a POMDP model needs to be created. For model not using parallelization, DESPOT package [tutorial](https://github.com/AdaCompNUS/despot/blob/API_redesign/doc/cpp_model_doc/Tutorial%20on%20Using%20DESPOT%20with%20cpp%20model.md) needs to followed. In addition, dummy GPU functions need to be declared for code compilation. See [tiger](src/HyP_examples/tiger/src/tiger.h) problem for example.
+To use DESPOT-ALPHA for your own problem, a POMDP model needs to be created. If you do not need to use parallelization, please follow DESPOT package [tutorial](https://github.com/AdaCompNUS/despot/blob/API_redesign/doc/cpp_model_doc/Tutorial%20on%20Using%20DESPOT%20with%20cpp%20model.md) to create the POMDP model. In addition, dummy GPU functions need to be declared for code compilation. See [tiger](src/HyP_examples/tiger/src/tiger.h) problem for example.
 
-For model using parallelization, additional GPU model needs to be built as described in this [doc](doc/Build_GPU_POMDP_model_with_CUDA.md) for HyP-Despot. For HyP-Despot-Alpha, apart from this,
+If you need to use parallelization, additional GPU model needs to be built as described in this [doc](doc/Build_GPU_POMDP_model_with_CUDA.md) for HyP-Despot. For HyP-Despot-Alpha, apart from this,
 
 1) Specify one additional function
 ```
 DEVICE float Dvc_ObsProb(OBS_TYPE& obs, Dvc_State& state, int action)
 ```
-in Dvc_DSPOMDP model. For example see defintion in src/HyP_examples/unkown_navigation/src/GPU_Unk_nav/GPU_UncNavigation.cu This function should be linked to global function pointer DvcModelObsProb_ .For example see  src/HyP_examples/unkown_navigation/src/GPU_Unk_nav/main.cu
+in Dvc_DSPOMDP model. For example see defintion in src/HyP_examples/unkown_navigation/src/GPU_Unk_nav/GPU_UncNavigation.cu. This function should be linked to global function pointer DvcModelObsProb_ .For example see  src/HyP_examples/unkown_navigation/src/GPU_Unk_nav/main.cu
 
 2) Specify one additional function
 ```
