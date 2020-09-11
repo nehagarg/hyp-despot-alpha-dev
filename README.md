@@ -70,7 +70,7 @@ For Despot-ALPHA
 ./devel/lib/hyp_despot/hyp_despot_mars -v 3 -m ../src/HyP_examples/ma_rock_sample/config_files/continuous_obs_2agents.txt --CPU 1 --num_thread 10 --GPU 1 --GPUID <GPUID> --nobs 10 -n 50  -t 1 --solver=BTDESPOTALPHAST
 
 ```
-Set --CPU and --GPU to 0 for non-parallel version
+Set --CPU and --GPU to 0 for non-parallel version.
 For single agent, give ../src/HyP_examples/ma_rock_sample/config_files/continuous_obs.txt as argument to -m . For discrete observation with 1 agent, give ../src/HyP_examples/ma_rock_sample/config_files/1_agent.txt to -m. If -m is not specified, by default discrete observation and 2 agents will be used. --size can be used to specify size of the square grid and --number to specify number of rocks. Default size is 15 and default number of rocks is 15.
 
 
