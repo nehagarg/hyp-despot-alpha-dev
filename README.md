@@ -8,7 +8,7 @@ The code was tested on ubuntu 16 with cuda 9 with GTX1080 GPUs. To run this code
 
 1. Clone HyP-Despot-LargeObservation-Without-Grasping branch for the ubuntu 16 code :
 ```
-git clone https://github.com/AdaCompNUS/HyP-DESPOT-Release.git -b HyP-Despot-LargeObservation-Without-Grasping
+git clone https://github.com/nehagarg/hyp-despot-alpha-dev.git -b HyP-Despot-LargeObservation-Without-Grasping
 ```
 For ubuntu 18 and cuda 11, use master branch. Though ubuntu 18 and cuda 11 version hasn't been tested.
 
