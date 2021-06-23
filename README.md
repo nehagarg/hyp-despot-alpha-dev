@@ -1,3 +1,5 @@
+This branch combines despot-alpha with the autonomous grasping code that uses a table to store the object motion data and provide transition and observation function for POMDP solver.
+<!-- 
 # HyP-DESPOT-Release
 
 The HyP-DESPOT package is developed based on [the DESPOT package](https://github.com/AdaCompNUS/despot). The API in HyP-DESPOT closely follows that in the DESPOT package. See [here](https://github.com/AdaCompNUS/despot/tree/API_redesign/doc) for detailed documentations of the DESPOT package.
@@ -93,3 +95,4 @@ The best way to debug is to fix the scenarios and output the search process. Thi
 2         Run in normal mode and export Particles*.txt and Streams*.txt during each simulation step
 ```
 Alternatively, setting the **DESPOT::Debug_mode** defined in [despot.cpp](src/HypDespot/src/solver/despot.cpp) to be **true** will fix all random seeds used in HyP-DESPOT, and thus the search will be fully determinized for easier debugging.
+-->
