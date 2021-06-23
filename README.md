@@ -1,4 +1,4 @@
-This branch combines despot-alpha with the autonomous grasping code that uses a table to store the object motion data and provide transition and observation function for POMDP solver.
+This branch combines despot-alpha with the autonomous grasping code that uses a table to store the object motion data and provide transition and observation function for POMDP solver. The python scripts used in the [master branch of autonomous grasping repo](https://github.com/nehagarg/autonomousGrasping) are used by this code.
 <!-- 
 # HyP-DESPOT-Release
 
